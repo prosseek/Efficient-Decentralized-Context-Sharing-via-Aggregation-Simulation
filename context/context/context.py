@@ -3,6 +3,7 @@ r"""Module Context -- the representation of contexts in Grapevine middleware
 
 import sys
 import os
+import zlib
 
 from .utils import *
 
@@ -162,6 +163,118 @@ class Context(object):
         False
         """
         return 1 == get_number_of_one_from_bytearray(self.cohorts)
+
+    def cohorts_size_in_bytes(self):
+        """Returns the number of bit widths of cohorts
+
+        >>> c = Context(value=1.0, cohorts=set([1,2,3]))
+        >>> c.cohorts_size_in_bytes()
+        1
+        >>> c = Context(value=1.0, cohorts=set([1023]))
+        >>> c.cohorts_size_in_bytes()
+        128
+        """
+        return len(self.cohorts)
+
+    def maximum_cohorts(self):
+        """Returns the number of bit widths of cohorts
+
+        >>> c = Context(value=1.0, cohorts=set([1,2,3]))
+        >>> c.maximum_cohorts()
+        7
+        >>> c = Context(value=1.0, cohorts=set([1023]))
+        >>> c.maximum_cohorts() # 1023 -> 1024/8 bytes * 8 - 1
+        1023
+        >>> c = Context(value=1.0, cohorts=set([0, 1024]))
+        >>> c.maximum_cohorts()
+        1031
+        """
+        # length of cohorts are byte size
+        # *8 to get bit size
+        # -1 needed as 0 is the starting number
+        return (len(self.cohorts)*8 - 1)
+    #
+    # Serialization
+    #
+
+    def serialize(self, zipped = False):
+        """
+
+        value is stored in double (d) : 8 bytes
+        hop_count is stored in signed short (h) : 2 bytes
+
+        time_stamp is stored in unsigned short (H) : 2 bytes
+        The rest of the data is serialized cohorts
+
+        >>> c = Context(value=1.0, cohorts=set([1,2,3]))
+        >>> c.serialize()
+        '\\x00\\x00\\x00\\x00\\x00\\x00\\xf0?\\x00\\x00\\x00\\x00\\x0e'
+        """
+
+        if self.value is None:
+            value = float("inf")
+        else:
+            value = self.value
+
+        if self.time_stamp is None:
+            time_stamp = 0
+        else:
+            time_stamp = self.time_stamp
+
+        v = struct.pack('d', value)
+        h = struct.pack('h', self.hop_count)
+        t = struct.pack('H', time_stamp)
+
+        result = v + h + t
+
+        if self.cohorts is not None:
+            result = v + h + t + str(self.cohorts)
+
+        if zipped:
+            return zlib.compress(result)
+        else:
+            return result
+
+    @staticmethod
+    def deserialize(stream, zipped = False):
+        """Returns a Context object from a stream
+
+        >>> c = Context(value=1.0, cohorts=set([0,1,2]))
+        >>> s = c.serialize()
+        >>> c2 = Context.deserialize(s)
+        >>> c == c2
+        True
+        >>> c = Context(value=1.0, cohorts=set([0,1,2]))
+        >>> s = c.serialize(zipped=True)
+        >>> c2 = Context.deserialize(s,zipped=True)
+        >>> c == c2
+        True
+        >>> c = Context()
+        >>> s = c.serialize()
+        >>> c2 = Context.deserialize(s)
+        >>> c == c2
+        True
+        """
+        if zipped:
+            value = zlib.decompress(stream)
+        else:
+            value = stream
+
+        # result = v + h + t + str(self.cohorts)
+        # first 8 byte as a value
+        v = struct.unpack('d', value[0:8])[0]
+        h = struct.unpack('h', value[8:10])[0]
+        t = struct.unpack('H', value[10:12])[0]
+
+        if stream[12:]:
+            c = bytearray(value[12:])
+        else:
+            c = None
+
+        if v == float('inf'): v = None
+        if t == 0: t = None
+
+        return Context(value=v, hop_count=h, time_stamp=t, cohorts=c)
 
 if __name__ == "__main__": # and __package__ is None:
     import doctest
