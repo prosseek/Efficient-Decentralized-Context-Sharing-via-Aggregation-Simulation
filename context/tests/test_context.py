@@ -10,9 +10,11 @@ from context.context import Context
 
 class TestContext(unittest.TestCase):
     def test_simple(self):
-        c = Context()
-        a = Context()
-        assert c == a
+        a = Context(value=1.0, cohorts=set([0]))
+        b = Context(value=2.0, cohorts=set([1]))
+        c = a + b
+        self.assertTrue(str(c) == "v(1.5):c([0, 1]):h(-1)")
+
         
 if __name__ == "__main__":
     unittest.main(verbosity=2)

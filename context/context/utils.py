@@ -15,26 +15,68 @@ MAXIMUM_INTEGER_BYTES=8
 # utilities that can be used other routins
 #
 
-def get_number_of_one(value):
+def get_number_of_one_from_number(value, number_of_bytes = MAXIMUM_INTEGER_BYTES):
     """Returns the number of 1 in a value
     assumes that the value is integer with 8 bytes (unsigned long long int)
 
-    >>> get_number_of_one(2**3-1)
+    >>> get_number_of_one_from_number(2**3-1)
     3
-    >>> get_number_of_one(2**8-1)
+    >>> get_number_of_one_from_number(2**8-1)
     8
-    >>> get_number_of_one(2**16-1)
+    >>> get_number_of_one_from_number(2**16-1)
     16
-    >>> int(get_number_of_one(2**32-1)) # return value is 32L, so make it integer
+    >>> int(get_number_of_one_from_number(2**32-1)) # return value is 32L, so make it integer
     32
-    >>> int(get_number_of_one(2**(8*8)-1))
+    >>> int(get_number_of_one_from_number(2**(8*8)-1))
     64
     """
     count = 0
-    for i in range(MAXIMUM_INTEGER_BYTES*8):
+    for i in range(number_of_bytes*8):
         count += (value >> i) & 1
     return count
-
+    
+def get_number_of_one_from_set(value):
+    """Returns the number of elements in a set
+    This is equivalent to calculate the 1s in a long typed data, or in a bytearray
+    
+    >>> get_number_of_one_from_set(set([0,1,2,3]))
+    4
+    >>> get_number_of_one_from_set(set([]))
+    0
+    """
+    return len(value)
+    
+def get_number_of_one_from_bytearray(value):
+    """Returns the number of 1's in a byte array
+    
+    >>> get_number_of_one_from_bytearray(long2bytearray(7))
+    3
+    >>> get_number_of_one_from_bytearray(long2bytearray(568152328328))
+    10
+    """
+    count = 0
+    
+    for i in value:
+        count += get_number_of_one_from_number(i, number_of_bytes = 1)
+    return count
+    
+def get_number_of_one(value):
+    """Returns the numbe of one regardless of input type
+    
+    >>> get_number_of_one(4.5)
+    Traceback (most recent call last):
+    ...
+    TypeError: not supported type
+    """
+    t = type(value)
+    if t in [long, int]:
+        return get_number_of_one_from_long(value)
+    elif t is [bytearray]:
+        return get_number_of_one_from_bytearray(value)
+    elif t is [set]:
+        return get_number_of_one_from_set(value)
+    else:
+        raise TypeError("not supported type")
 
 def byte2set(value, offset = 0):
     """Returns a set from 1 byte data (0 - 255)
@@ -51,7 +93,7 @@ def byte2set(value, offset = 0):
     Traceback (most recent call last):
     ...
     AssertionError: value 256
-    >>> byte2set(7, 6) == set([6, 7, 8])
+    >>> byte2set(7, offset=6) == set([6, 7, 8])
     True
     """
 
@@ -242,8 +284,8 @@ def sub(cohort1, cohort2):
     ch1 = cohort_type_as_set(cohort1)
     ch2 = cohort_type_as_set(cohort2)
 
-    if cohort1 >= cohort2:
-        return cohort1 - cohort2
+    if ch1 >= ch2:
+        return ch1 - ch2
     else:
         return None
 
