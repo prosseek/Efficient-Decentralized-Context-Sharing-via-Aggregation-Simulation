@@ -4,8 +4,12 @@ r"""Module Context -- the representation of contexts in Grapevine middleware
 import sys
 import os
 import zlib
+#import platform
 
-from .utils import *
+#sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+#print sys.path
+#print os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+from utils import *
 
 class Context(object):
     r"""Context is a tuple of (value, cohorts, time_stamp, hop_count (Tau))
@@ -164,29 +168,37 @@ class Context(object):
         """
         return 1 == get_number_of_one_from_bytearray(self.cohorts)
 
-    def cohorts_size_in_bytes(self):
+    def get_cohorts_as_set(self):
+        """
+        >>> c = Context(value=1.0, cohorts=set([1,2,3]))
+        >>> c.get_cohorts_as_set() == set([1,2,3])
+        True
+        """
+        return bytearray2set(self.cohorts)
+
+    def get_cohorts_size_in_bytes(self):
         """Returns the number of bit widths of cohorts
 
         >>> c = Context(value=1.0, cohorts=set([1,2,3]))
-        >>> c.cohorts_size_in_bytes()
+        >>> c.get_cohorts_size_in_bytes()
         1
         >>> c = Context(value=1.0, cohorts=set([1023]))
-        >>> c.cohorts_size_in_bytes()
+        >>> c.get_cohorts_size_in_bytes()
         128
         """
         return len(self.cohorts)
 
-    def maximum_cohorts(self):
+    def get_maximum_cohorts(self):
         """Returns the number of bit widths of cohorts
 
         >>> c = Context(value=1.0, cohorts=set([1,2,3]))
-        >>> c.maximum_cohorts()
+        >>> c.get_maximum_cohorts()
         7
         >>> c = Context(value=1.0, cohorts=set([1023]))
-        >>> c.maximum_cohorts() # 1023 -> 1024/8 bytes * 8 - 1
+        >>> c.get_maximum_cohorts() # 1023 -> 1024/8 bytes * 8 - 1
         1023
         >>> c = Context(value=1.0, cohorts=set([0, 1024]))
-        >>> c.maximum_cohorts()
+        >>> c.get_maximum_cohorts()
         1031
         """
         # length of cohorts are byte size
@@ -207,8 +219,9 @@ class Context(object):
         The rest of the data is serialized cohorts
 
         >>> c = Context(value=1.0, cohorts=set([1,2,3]))
-        >>> c.serialize()
-        '\\x00\\x00\\x00\\x00\\x00\\x00\\xf0?\\x00\\x00\\x00\\x00\\x0e'
+        >>> c.serialize() == '\\x00\\x00\\x00\\x00\\x00\\x00\\xf0?\\x00\\x00\\x00\\x00\\x0e' \
+            or c.serialize() == '?\\xf0\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x0e'
+        True
         """
 
         if self.value is None:

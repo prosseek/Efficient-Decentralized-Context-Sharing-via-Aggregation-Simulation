@@ -70,7 +70,7 @@ def get_number_of_one(value):
     """
     t = type(value)
     if t in [long, int]:
-        return get_number_of_one_from_long(value)
+        return get_number_of_one_from_number(value)
     elif t is [bytearray]:
         return get_number_of_one_from_bytearray(value)
     elif t is [set]:
@@ -85,10 +85,10 @@ def byte2set(value, offset = 0):
         value (int) : range 0 - 255
         offset (int) : the offset value added to the result
 
-    >>> byte2set(7)
-    set([0, 1, 2])
-    >>> byte2set(255)
-    set([0, 1, 2, 3, 4, 5, 6, 7])
+    >>> byte2set(7) == set([0, 1, 2])
+    True
+    >>> byte2set(255) == set([0, 1, 2, 3, 4, 5, 6, 7])
+    True
     >>> byte2set(256)
     Traceback (most recent call last):
     ...
@@ -112,10 +112,10 @@ def byte2set(value, offset = 0):
 def bytearray2set(value):
     """Returns a set from bytearry
 
-    >>> bytearray2set(bytearray([7]))
-    set([0, 1, 2])
-    >>> bytearray2set(bytearray([7,7]))
-    set([0, 1, 2, 8, 9, 10])
+    >>> bytearray2set(bytearray([7])) == set([0, 1, 2])
+    True
+    >>> bytearray2set(bytearray([7,7])) == set([0, 1, 2, 8, 9, 10])
+    True
     >>> bytearray2set(bytearray([7,7,7])) == set([0, 1, 2, 8, 9, 10, 16, 17, 18])
     True
     """
@@ -195,8 +195,9 @@ def bytearray2long(value):
 def long2set(value):
     """Returns set from long value
 
-    >>> long2set(7)
-    set([0, 1, 2])
+    >>> r = long2set(7)
+    >>> sorted(list(r))
+    [0, 1, 2]
     """
     r = long2bytearray(value)
     return bytearray2set(r)
@@ -216,8 +217,9 @@ def set2long(value):
 def cohort_type_as_set(cohort):
     """Cohorts from bytearray/int/set to set
 
-    >>> cohort_type_as_set(set([1,2,3]))
-    set([1, 2, 3])
+    >>> r = cohort_type_as_set(set([1,2,3]))
+    >>> sorted(list(r))
+    [1, 2, 3]
     >>> cohort_type_as_set(65794) == set([1, 8, 16])
     True
     """
@@ -237,8 +239,8 @@ def cohort_type_as_set(cohort):
 def cohort_type_as_bytearray(cohort):
     """Cohorts from bytearray/int/set to set
 
-    >>> bytearray2set(cohort_type_as_bytearray(set([1,2,3])))
-    set([1, 2, 3])
+    >>> bytearray2set(cohort_type_as_bytearray(set([1,2,3]))) == set([1, 2, 3])
+    True
     >>> bytearray2set(cohort_type_as_bytearray(65794)) == set([1, 8, 16])
     True
     """
