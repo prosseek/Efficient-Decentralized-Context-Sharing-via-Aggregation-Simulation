@@ -56,6 +56,7 @@ def is_prime(context, contexts):
     >>> is_prime(g, set([g1,g2]))
     False
     """
+    #list_contexts = list(contexts)
     for c in contexts:
         if not is_exclusive(context, c):
             return False
@@ -104,6 +105,57 @@ def separate_single_and_group_contexts(contexts):
             groups.add(c)
 
     return singles, groups
+
+def is_in(context, contexts, ignore_value=False):
+    """Returns if context is a member of contexts in a sense of equivalence
+
+    >>> s3 = context.Context(value=0.0, cohorts=set([3]))
+    >>> g1 = context.Context(value=2.0, cohorts=set([0,1,2]))
+    >>> g2 = context.Context(value=3.0, cohorts=set([0,1,2,3]))
+    >>> cs = set([s3,g1,g2])
+    >>> s = context.Context(value=1.0, cohorts=set([3]))
+    >>> is_in(s, cs, ignore_value=True)
+    True
+    >>> is_in(s, cs, ignore_value=False)
+    False
+    """
+    for c in contexts:
+        if context.equiv(c, ignore_value):
+            return True
+    return False
+
+def sort(contexts):
+    """Given a set, sort the set in terms of size of elements, and return a sorted list
+
+    >>> g1 = context.Context(value=2.0, cohorts=set([0,1,2]))
+    >>> g2 = context.Context(value=3.0, cohorts=set([0,1,2,3]))
+    >>> g3 = context.Context(value=2.0, cohorts=set([0,1]))
+    >>> g4 = context.Context(value=0.0, cohorts=set([0]))
+    >>> result = sort(set([g1, g2, g3, g4]))
+    >>> result[0] == g4
+    True
+    >>> result[1] == g3
+    True
+    >>> result[2] == g1
+    True
+    >>> result[3] == g2
+    True
+    """
+    cs = list(contexts)
+    result = sorted(cs, key=len) # cmp=lambda m,n: len(m)-len(n))
+    return  result
+
+
+def dis_aggregate(contexts):
+    """Given a set of contexts, subtract all the contexts
+
+    >>> g1 = context.Context(value=2.0, cohorts=set([0,1,2]))
+    >>> g2 = context.Context(value=3.0, cohorts=set([0,1,2,3]))
+    >>> g3 = context.Context(value=2.0, cohorts=set([0,1]))
+    >>> g4 = context.Context(value=0.0, cohorts=set([0]))
+    >>> dis_aggregate(set([g1,g2,g3,g4]))
+    """
+    pass
 
 if __name__ == "__main__": # and __package__ is None:
     import doctest

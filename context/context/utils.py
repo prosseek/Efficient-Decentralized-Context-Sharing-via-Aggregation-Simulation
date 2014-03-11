@@ -44,6 +44,8 @@ def get_number_of_one_from_set(value):
     >>> get_number_of_one_from_set(set([]))
     0
     """
+
+    if value is None: return 0
     return len(value)
     
 def get_number_of_one_from_bytearray(value):
@@ -54,6 +56,8 @@ def get_number_of_one_from_bytearray(value):
     >>> get_number_of_one_from_bytearray(long2bytearray(568152328328))
     10
     """
+    if value is None: return 0
+
     count = 0
     
     for i in value:

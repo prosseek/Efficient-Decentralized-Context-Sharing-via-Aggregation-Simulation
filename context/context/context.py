@@ -60,9 +60,20 @@ class Context(object):
     def __eq__(self, other):
         """Checks if two contexts are the same
 
-        >>> c1 = Context(1, cohorts=set([0]))
-        >>> c2 = Context(1, cohorts=set([0]))
-        >>> assert c1 == c2
+        >>> c1 = Context(1, cohorts=set([0,3,4]), time_stamp=1, hop_count=4)
+        >>> c2 = Context(1, cohorts=set([0,3,4]), time_stamp=1, hop_count=4)
+        >>> c1 == c2
+        True
+
+        >>> c1 = Context(1, cohorts=set([0,3]), time_stamp=1, hop_count=4)
+        >>> c2 = Context(1, cohorts=set([0,3,4]), time_stamp=1, hop_count=4)
+        >>> c1 == c2
+        False
+
+        >>> c1 = Context(1, cohorts=set([0,3,4]), time_stamp=1, hop_count=3)
+        >>> c2 = Context(1, cohorts=set([0,3,4]), time_stamp=1, hop_count=4)
+        >>> c1 == c2
+        False
         """
         if other is None: return False
         if id(self) == id(other): return True
@@ -71,6 +82,32 @@ class Context(object):
            self.time_stamp == other.time_stamp and \
            self.hop_count == other.hop_count: 
             return True
+        return False
+
+    def equiv(self, other, ignore_value=False):
+        """Check if this context is equivalent to the other context
+        Equivalence means the same value and same cohorts
+
+        >>> c1 = Context(1, cohorts=set([0,3,4]), time_stamp=1, hop_count=3)
+        >>> c2 = Context(1, cohorts=set([0,3,4]), time_stamp=1, hop_count=4)
+        >>> c1.equiv(c2)
+        True
+
+        When ignore_value is True, compare only the cohorts
+        >>> c1 = Context(4, cohorts=set([0,3,4]), time_stamp=1, hop_count=3)
+        >>> c2 = Context(1, cohorts=set([0,3,4]), time_stamp=1, hop_count=4)
+        >>> c1.equiv(c2, ignore_value=True)
+        True
+        """
+        if other is None: return False
+        if self.cohorts == other.cohorts:
+            if not ignore_value:
+                if self.value == other.value:
+                    return True
+                else:
+                    return False
+            else:
+                return True
         return False
         
     def __ne__(self, other):
@@ -128,6 +165,7 @@ class Context(object):
         v(0.67):c([1, 2, 3]):h(-1)
         >>> c.is_single()
         False
+
         >>> a = Context(value=1.0, cohorts=set([0,1]))
         >>> b = Context(value=2.0, cohorts=set([0]))
         >>> c = a - b
@@ -135,10 +173,27 @@ class Context(object):
         v(0.00):c([1]):h(-2)
         >>> c.is_single()
         True
+
+        When a is not a subset of b, None returns
+        >>> a = Context(value=1.0, cohorts=set([0,1]))
+        >>> b = Context(value=2.0, cohorts=set([1,2]))
+        >>> c = a - b
+        >>> print c
+        None
+
+        >>> a = Context(value=1.0, cohorts=set([0,1]))
+        >>> b = Context(value=2.0, cohorts=set([1,0]))
+        >>> c = a - b
+        >>> print c
+        None
+
         """
         r = sub(self.cohorts, other.cohorts)
-        # when cohorts share element, return will be returned
+        # when cohorts share element, None will return
         if r is None: return None
+
+        # When the two cohorts are the same, None will return
+        if r == set([]): return None
 
         n1 = get_number_of_one_from_bytearray(self.cohorts)
         n2 = get_number_of_one_from_bytearray(other.cohorts)
@@ -151,6 +206,19 @@ class Context(object):
         else:
             hop_count = Context.AGGREGATED_CONTEXT
         return Context(value=value, cohorts=r, hop_count=hop_count)
+
+    def __len__(self):
+        """
+        length of a context means the number of elements in it
+
+        >>> c = Context(value=1.0, cohorts=set([0,1,2,3,4,5]))
+        >>> len(c)
+        6
+        >>> c = Context()
+        >>> len(c)
+        0
+        """
+        return get_number_of_one_from_bytearray(self.cohorts)
 
     #
     # Utilities
