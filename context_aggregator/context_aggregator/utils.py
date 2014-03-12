@@ -4,6 +4,23 @@ import sys
 #print sys.path
 import context.context as context
 
+def compare_contexts_and_cohorts(contexts, lists):
+    """
+    >>> g1 = context.Context(value=1.0, cohorts=set([0,1,2]))
+    >>> g2 = context.Context(value=2.0, cohorts=set([3,4,5]))
+    >>> g3 = context.Context(value=2.0, cohorts=set([6,7,8]))
+    >>> compare_contexts_and_cohorts(set([g1,g2,g3]), [[3, 4, 5],[7, 8, 6],[0, 1, 2]])
+    True
+    """
+    result1 = set()
+    result2 = set()
+    for c in contexts:
+        result1.add(frozenset(c.get_cohorts_as_set()))
+    for c in lists:
+        result2.add(frozenset(c))
+
+    return result1 == result2
+
 def get_prime(contexts):
     """get prime contexts that does not have any common element with other contexts
 

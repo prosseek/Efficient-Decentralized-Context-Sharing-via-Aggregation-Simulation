@@ -1,51 +1,34 @@
 """input
 
 """
-import copy
-from utils import *
 
-from disaggregator import Disaggregator
-from maxcover import MaxCover
+from context.context import Context
+from inputoutput import InputOutput
 
-import gc
+class Input(InputOutput):
+    """database class
 
-class Input(object):
-    """database class"""
+    >>> i = Input()
+    >>> i[10] = Context(value=1.0, cohorts=[1,2,3])
+    >>> i[10].value
+    1.0
+    >>> i[20] # None will be returned
+    >>> i.reset()
+    """
 
     def __init__(self):
-        self.reset()
+        self.dictionary = {}
 
-    def reset(self):
-        self.input_dictionary = {}
-
-    def __getitem__(self, key):
-        """
-
-        >>> i = Input()
-        >>> # Return returned when there is no corresponding element -> KeyError
-        >>> i[3]
-        """
-        try:
-            return self.input_dictionary[key]
-        except KeyError:
-            return None
-
-    def __setitem__(self, key, value):
+    def get_senders(self):
         """
 
         >>> c = Input()
-        >>> c[1] = context.Context(value=1.0, cohorts=[0,1,2])
-        >>> context = c[1]
-        >>> context.value == 1.0 and context.get_cohorts_as_set() == set([0,2,1])
+        >>> c[1] = Context(value=1.0, cohorts=[0,1,2])
+        >>> c[2] = Context(value=1.0, cohorts=[0,1,2,4])
+        >>> set(c.get_senders()) == set([1,2])
         True
         """
-        self.input_dictionary[key] = value
-    #
-    # def set_context_database(self):
-    #     pass
-    #
-    # def reset_input_dictionary(self):
-    #     self.input_dictionary = {}
+        return self.dictionary.keys()
 
 if __name__ == "__main__":
     import doctest
