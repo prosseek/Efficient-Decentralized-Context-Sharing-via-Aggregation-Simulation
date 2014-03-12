@@ -118,6 +118,9 @@ def is_in(context, contexts, ignore_value=False):
     True
     >>> is_in(s, cs, ignore_value=False)
     False
+    >>> s = context.Context(value=1.0, cohorts=set([10]))
+    >>> is_in(s, cs, ignore_value=True)
+    False
     """
     for c in contexts:
         if context.equiv(c, ignore_value):
@@ -145,6 +148,23 @@ def sort(contexts):
     result = sorted(cs, key=len) # cmp=lambda m,n: len(m)-len(n))
     return  result
 
+def remove(c, cs, ignore_value=False):
+    """Remove context c from a set of contexts cs
+    >>> g1 = context.Context(value=2.0, cohorts=set([0,1,2]))
+    >>> g2 = context.Context(value=3.0, cohorts=set([0,1,2,3]))
+    >>> g3 = context.Context(value=2.0, cohorts=set([0,1]))
+    >>> g4 = context.Context(value=0.0, cohorts=set([0]))
+    >>> result = remove(g1, set([g1,g2,g3,g4]))
+    >>> is_in(g1, result)
+    False
+    >>> len(result)
+    3
+    """
+    result = set()
+    for i in cs:
+        if not c.equiv(i, ignore_value=ignore_value):
+            result.add(i)
+    return result
 
 def dis_aggregate(contexts):
     """Given a set of contexts, subtract all the contexts
@@ -153,9 +173,40 @@ def dis_aggregate(contexts):
     >>> g2 = context.Context(value=3.0, cohorts=set([0,1,2,3]))
     >>> g3 = context.Context(value=2.0, cohorts=set([0,1]))
     >>> g4 = context.Context(value=0.0, cohorts=set([0]))
-    >>> dis_aggregate(set([g1,g2,g3,g4]))
+    >>> result = dis_aggregate(set([g1,g2,g3,g4]))
+    >>> s1 = context.Context(value=0.0, cohorts=set([0]))
+    >>> s2 = context.Context(value=0.0, cohorts=set([1]))
+    >>> s3 = context.Context(value=0.0, cohorts=set([2]))
+    >>> s4 = context.Context(value=0.0, cohorts=set([3]))
+    >>> s5 = context.Context(value=0.0, cohorts=set([10]))
+    >>> is_in(s1, result) and is_in(s2, result) and is_in(s3, result)
+    True
+    >>> is_in(s4, result) and is_in(s5, result)
+    True
     """
+
     pass
+    # cs = contexts
+    # index = 0
+    # while True:
+    #     l = sorted(contexts)
+    #     sub = l[0]
+    #     sup = l[1:]
+    #
+    #     broken_contexts = []
+    #     newly_generated_contexts = []
+    #     for c in sup:
+    #         r = c - sub
+    #         if r:
+    #             newly_generated_contexts.append(r)
+    #             broken_contexts.append(sup)
+    #             remove(r, cs)
+    #
+    #     # if something is divided
+    #     if divided:
+    #
+    #
+    #     if index >= len(l): break
 
 if __name__ == "__main__": # and __package__ is None:
     import doctest

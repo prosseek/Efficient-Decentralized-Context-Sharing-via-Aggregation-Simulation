@@ -115,7 +115,6 @@ def byte2set(value, offset = 0):
 
 def bytearray2set(value):
     """Returns a set from bytearry
-
     >>> bytearray2set(bytearray([7])) == set([0, 1, 2])
     True
     >>> bytearray2set(bytearray([7,7])) == set([0, 1, 2, 8, 9, 10])
@@ -123,6 +122,7 @@ def bytearray2set(value):
     >>> bytearray2set(bytearray([7,7,7])) == set([0, 1, 2, 8, 9, 10, 16, 17, 18])
     True
     """
+    assert value is not None
 
     result = set()
     for e, i in enumerate(value):
@@ -148,7 +148,14 @@ def set2bytearray(value):
     bytearray(b'\\x19X\\r')
     >>> bytearray2set(set2bytearray(set([0, 3, 4, 11, 12, 14, 16, 18, 19]))) == set([0, 3, 4, 11, 12, 14, 16, 18, 19])
     True
+    >>> # No empty set allwed
+    >>> set2bytearray(set([]))
+    Traceback (most recent call last):
+        ...
+    AssertionError: Empty set not allowed
     """
+    assert value != set([]), "Empty set not allowed"
+
     max_byte_size = (max(value) / 8) + 1
     result = bytearray(max_byte_size)
     for i in value:
@@ -249,7 +256,7 @@ def cohort_type_as_bytearray(cohort):
     True
     """
     t = type(cohort)
-    assert t in [int, long, bytearray, set]
+    assert t in [int, long, bytearray, set], "wrong type %s" % t
 
     if t in [int, long]:
         ch = long2bytearray(cohort)

@@ -21,6 +21,12 @@ class Context(object):
         AGGREGATED_CONTEXT : aggregated context
         RECOVERED_CONTEXT : recovered context from context disaggregation
         SPECIAL_CONTEXT : special single context that should be shared by every host
+
+    Things to know
+    ==============
+
+    1. In the initializer(__init__), cohorts can be list or set. However, in inner structure,
+       the data is transformed into set().
         
     """
     SENSED_CONTEXT = 0
@@ -50,7 +56,10 @@ class Context(object):
         self.value = value
         if value is not None:
             assert cohorts is not None, "value %4.2f, cohorts %s" % (value, cohorts)
-            cohorts = cohort_type_as_bytearray(cohorts)
+            # cohorts is transformed into a set
+            # This makes the testing a little bit easier as you don't need to
+            # use set([...]), but [...]
+            cohorts = cohort_type_as_bytearray(set(cohorts))
 
         self.cohorts = cohorts
         self.time_stamp = time_stamp
@@ -220,6 +229,57 @@ class Context(object):
         """
         return get_number_of_one_from_bytearray(self.cohorts)
 
+    def __gt__(self, other):
+        """c1 > c2 means elements of c1 is a superset of c2
+
+        >>> c1 = Context(value=1.0, cohorts=set([0,1,2,3,4,5]))
+        >>> c2 = Context(value=1.0, cohorts=set([0,1,2,3,4]))
+        >>> c3 = Context(value=1.0, cohorts=set([1,3,4,5,6]))
+        >>> c1 > c2
+        True
+        >>> c1 > c3
+        False
+        >>> # You can't compare the contexts that doens't have cohorts
+        >>> c0 = Context()
+        >>> c0 > c1
+        Traceback (most recent call last):
+           ...
+            assert value is not None
+        AssertionError
+        """
+        c1 = bytearray2set(self.cohorts)
+        c2 = bytearray2set(other.cohorts)
+
+        # We don't expect the contexts doesn't have any elements
+        assert c1 != set([]) and c2 != set([])
+
+        return c2 - c1 == set([])
+
+    def __lt__(self, other):
+        """c1 > c2 means elements of c1 is a superset of c2
+
+        >>> c1 = Context(value=1.0, cohorts=set([0,1,2,3,4,5]))
+        >>> c2 = Context(value=1.0, cohorts=set([0,1,2,3,4]))
+        >>> c3 = Context(value=1.0, cohorts=set([1,3,4,5,6]))
+        >>> c2 < c1
+        True
+        >>> c3 < c1
+        False
+        >>> # You can't compare the contexts that doens't have cohorts
+        >>> c0 = Context()
+        >>> c0 < c1
+        Traceback (most recent call last):
+           ...
+            assert value is not None
+        AssertionError
+        """
+        c1 = bytearray2set(self.cohorts)
+        c2 = bytearray2set(other.cohorts)
+
+        # We don't expect the contexts doesn't have any elements
+        assert c1 != set([]) and c2 != set([])
+
+        return c1 - c2 == set([])
     #
     # Utilities
     #
@@ -243,6 +303,16 @@ class Context(object):
         True
         """
         return bytearray2set(self.cohorts)
+
+    # def get_cohorts_as_tuple(self):
+    #     """
+    #     >>> c = Context(value=1.0, cohorts=set([1,2,3]))
+    #     >>> c.get_cohorts_as_tuple() == (1,2,3)
+    #     True
+    #     """
+    #     s = bytearray2set(self.cohorts)
+    #     l = sorted(s)
+    #     return tuple(l)
 
     def get_cohorts_size_in_bytes(self):
         """Returns the number of bit widths of cohorts
@@ -273,6 +343,20 @@ class Context(object):
         # *8 to get bit size
         # -1 needed as 0 is the starting number
         return (len(self.cohorts)*8 - 1)
+
+    def get_index(self):
+        """Works only for single, returns the index of a single contex
+
+        >>> c = Context(value=1.0, cohorts=set([1]))
+        >>> c.get_index()
+        1
+        >>> c = Context(value=1.0, cohorts=set([7]))
+        >>> c.get_index()
+        7
+        """
+
+        if self.is_single(): return list(self.get_cohorts_as_set())[0]
+        return None
     #
     # Serialization
     #
