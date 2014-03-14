@@ -3,6 +3,7 @@ r"""Module Context -- the representation of contexts in Grapevine middleware
 
 import sys
 import os
+import copy
 import zlib
 #import platform
 
@@ -53,13 +54,14 @@ class Context(object):
         >>> bytearray2long(a.cohorts)
         65794
         """
+
         self.value = value
         if value is not None:
             assert cohorts is not None, "value %4.2f, cohorts %s" % (value, cohorts)
             # cohorts is transformed into a set
             # This makes the testing a little bit easier as you don't need to
             # use set([...]), but [...]
-            cohorts = cohort_type_as_bytearray(set(cohorts))
+            cohorts = cohort_type_as_bytearray(cohorts)
 
         self.cohorts = cohorts
         self.time_stamp = time_stamp
@@ -134,7 +136,11 @@ class Context(object):
         v(1.00):c([0, 1, 2]):h(0)
         """
         if self.cohorts is not None:
-            cohorts = bytearray2set(self.cohorts)
+            if type(self.cohorts) is bytearray:
+                cohorts = bytearray2set(self.cohorts)
+            elif type(self.cohorts) in [long, int]:
+                cohorts = long2set(self.cohorts)
+
             cohorts = sorted(list(cohorts))
         else:
             cohorts = ""
@@ -304,16 +310,6 @@ class Context(object):
         """
         return bytearray2set(self.cohorts)
 
-    # def get_cohorts_as_tuple(self):
-    #     """
-    #     >>> c = Context(value=1.0, cohorts=set([1,2,3]))
-    #     >>> c.get_cohorts_as_tuple() == (1,2,3)
-    #     True
-    #     """
-    #     s = bytearray2set(self.cohorts)
-    #     l = sorted(s)
-    #     return tuple(l)
-
     def get_cohorts_size_in_bytes(self):
         """Returns the number of bit widths of cohorts
 
@@ -357,6 +353,49 @@ class Context(object):
 
         if self.is_single(): return list(self.get_cohorts_as_set())[0]
         return None
+
+    @staticmethod
+    def increase_hop_count(context):
+        """
+
+        >>> c = Context(value=1.0, cohorts=[1,2,3], hop_count = -1)
+        >>> # Increase hop_count has a meaning with single context
+        >>> c2 = Context.increase_hop_count(c)
+        >>> c2.hop_count == c.hop_count == -1
+        True
+        >>> c = Context(value=1.0, cohorts=[1], hop_count=5)
+        >>> # Increase hop_count has a meaning with single context
+        >>> c = Context.increase_hop_count(c)
+        >>> c.hop_count == 5+1
+        True
+        >>> c = [Context(value=1.0, cohorts=[1], hop_count=0), Context(value=1.0, cohorts=[1], hop_count=1), Context(value=1.0, cohorts=[1], hop_count=2)]
+        >>> # Increase hop_count has a meaning with single context
+        >>> c = Context.increase_hop_count(c)
+        >>> c[0].hop_count == 1 and c[1].hop_count == 2 and c[2].hop_count == 3
+        True
+        """
+        if type(context) is set:
+            result = set()
+            for c in context:
+                result.add(Context.increase_hop_count(c))
+            return result
+
+        elif type(context) is list:
+            result = []
+            for c in context:
+                result.append(Context.increase_hop_count(c))
+            return result
+
+        elif type(context) is Context:
+            if len(context) == 1:
+                c = copy.deepcopy(context)
+                c.hop_count = context.hop_count + 1
+            else:
+                c = context
+            return c
+        else:
+            raise Exception("Only set/list of Contexts or Context is allowed")
+
     #
     # Serialization
     #

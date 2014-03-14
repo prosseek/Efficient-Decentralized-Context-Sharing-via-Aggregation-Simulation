@@ -256,12 +256,16 @@ def cohort_type_as_bytearray(cohort):
     True
     """
     t = type(cohort)
-    assert t in [int, long, bytearray, set], "wrong type %s" % t
+    # [2014/03/14] - list is added for cohort conversion process
+    # This is for utility (made my life easier)
+    assert t in [int, list, long, bytearray, set], "wrong type %s" % t
 
     if t in [int, long]:
         ch = long2bytearray(cohort)
     elif t in [set]:
         ch = set2bytearray(cohort)
+    elif t in [list]:
+        ch = set2bytearray(set(cohort))
     else:
         ch = cohort
 

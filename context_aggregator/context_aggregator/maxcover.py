@@ -3,6 +3,7 @@
 import sys
 from copy import *
 from collections import OrderedDict
+from utils import *
 
 class MaxCover(object):
     def __init__(self): 
@@ -123,7 +124,7 @@ class MaxCover(object):
         True
         """
 
-        Xp = deepcopy(all_dictionary)
+        Xp = copy(all_dictionary)
         path = []
         results = []
         self._solve(Xp.keys(), Xp, path, results)
@@ -138,6 +139,14 @@ class MaxCover(object):
                 max_path = path
 
         return max_path
+
+    def run(self, non_primes): # all_dictionary):
+        all_dictionary, map_contexts = get_maxcover_dictionary(non_primes)
+        max_path = self.solve(all_dictionary)
+        result = set()
+        for i in max_path:
+            result.add(map_contexts[i])
+        return result
 
     def _solve(self, keys, world_dictionary, cover, covers):
         """It's the inner method for finding **all** paths that gives any kind of cover

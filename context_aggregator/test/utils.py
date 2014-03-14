@@ -1,5 +1,11 @@
 __author__ = 'smcho'
 
+def avg(set_of_single_contexts):
+    sum = 0.0
+    for i in set_of_single_contexts:
+        sum += i.value
+    return sum/len(set_of_single_contexts)
+
 def same(v1, v2):
     t1 = type(v1)
     t2 = type(v2)

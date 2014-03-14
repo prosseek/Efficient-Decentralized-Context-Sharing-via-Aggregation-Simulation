@@ -3,6 +3,7 @@
 import sys
 #print sys.path
 import context.context as context
+from collections import OrderedDict
 
 def compare_contexts_and_cohorts(contexts, lists):
     """
@@ -27,27 +28,32 @@ def get_prime(contexts):
     >>> g1 = context.Context(value=1.0, cohorts=set([0,1,2]))
     >>> g2 = context.Context(value=2.0, cohorts=set([3,4,5]))
     >>> g3 = context.Context(value=2.0, cohorts=set([6,7,8]))
-    >>> get_prime(set([g1,g2,g3])) == set([g1, g3, g2])
+    >>> get_prime(set([g1,g2,g3]))[0] == set([g1, g3, g2])
     True
     >>> g1 = context.Context(value=1.0, cohorts=set([0,1,2]))
     >>> g2 = context.Context(value=2.0, cohorts=set([3,4,5]))
     >>> g3 = context.Context(value=2.0, cohorts=set([5, 6,7,8]))
-    >>> get_prime(set([g1,g2,g3])) == set([g1])
+    >>> get_prime(set([g1,g2,g3]))[0] == set([g1])
     True
     >>> g1 = context.Context(value=1.0, cohorts=set([0]))
     >>> g2 = context.Context(value=2.0, cohorts=set([3,4,5]))
     >>> g3 = context.Context(value=2.0, cohorts=set([5, 6,7,8]))
-    >>> get_prime(set([g1,g2,g3])) == set([g1])
+    >>> get_prime(set([g1,g2,g3]))[0] == set([g1])
+    True
+    >>> get_prime(set([g1,g2,g3]))[1] == set([g2, g3])
     True
     """
-    result = set()
+    prime = set()
+    non_prime = set()
     # Index works only with list
     contexts = list(contexts)
     for i, c in enumerate(contexts):
         cs = exclude_context(i, contexts)
         if is_prime(c, cs):
-            result.add(c)
-    return result
+            prime.add(c)
+        else:
+            non_prime.add(c)
+    return prime, non_prime
 
 def exclude_context(index, contexts):
     """Exclude context among contexts
@@ -188,6 +194,21 @@ def remove(c, cs, ignore_value=False):
         if not c.equiv(i, ignore_value=ignore_value):
             result.add(i)
     return result
+
+def get_maxcover_dictionary(contexts):
+    """
+    d = {'A': [1, 2, 3], 'B': [3, 4], 'C': [4, 5, 6]}
+    >>> i = set([context.Context(value=1.0, cohorts=[3,1,2]), context.Context(value=2.0, cohorts=[3,4]), context.Context(value=3.0, cohorts=[4,5,6])])
+    >>> r, r_context = get_maxcover_dictionary(i)
+    >>> set(map(frozenset, r.values())) == set(map(frozenset, [[1,2,3],[3,4],[4,5,6]]))
+    True
+    """
+    result = {}
+    result_map_contexts = {}
+    for i, c in enumerate(contexts):
+        result[i] = list(c.get_cohorts_as_set())
+        result_map_contexts[i] = c
+    return result, result_map_contexts
 
 if __name__ == "__main__": # and __package__ is None:
     import doctest
