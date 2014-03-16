@@ -14,14 +14,13 @@ Refrence
 `Context Aggregation <http://wiki.rubichev/contextAggregation/design/>`_
 """
 
-import copy
 from utils import *
 
 from context.context import Context
 
 from input import Input
 from context_database import ContextDatabase
-from filtered_context_database import FilteredContextDatabase
+from assorted_context_database import AssortedContextDatabase
 from output import Output
 from context_history import ContextHistory
 
@@ -29,6 +28,7 @@ from disaggregator import Disaggregator
 from maxcover import MaxCover
 
 import gc
+
 
 class DataFlow(object):
     """database class"""
@@ -48,17 +48,17 @@ class DataFlow(object):
         # inner data structure
         self.input = Input()
         self.context_database = ContextDatabase()
-        self.filtered_context_database = FilteredContextDatabase()
+        self.assorted_context_database = AssortedContextDatabase()
         self.output = Output()
         self.context_history = ContextHistory()
 
-
         self.new_aggregate = None
+        self.filtered_singles = None
 
     def __reset(self):
         self.input.reset()
         self.context_database.reset()
-        self.filtered_context_database.reset()
+        self.assorted_context_database.reset()
         self.output.reset()
         self.context_history.reset()
 
@@ -115,7 +115,7 @@ class DataFlow(object):
     # Database
     #
 
-    def update_database(self, singles, aggregates, timestamp = None):
+    def set_database(self, singles, aggregates, timestamp = None):
         """TODO: update information based on the time stamp
         """
         self.context_database.set(singles, aggregates)
@@ -127,22 +127,25 @@ class DataFlow(object):
         return self.context_database.get_aggregates()
 
     def get_singles(self):
-        return self.filtered_context_database.get_singles()
+        return self.assorted_context_database.get_singles()
 
     def get_primes(self):
-        return self.filtered_context_database.get_primes()
+        return self.assorted_context_database.get_primes()
 
     def get_non_primes(self):
-        return self.filtered_context_database.get_non_primes()
+        return self.assorted_context_database.get_non_primes()
 
     def get_selected_non_primes(self):
-        return self.filtered_context_database.get_selected_non_primes()
+        return self.assorted_context_database.get_selected_non_primes()
 
     def get_output(self):
         return self.output
 
     def get_new_aggregate(self):
         return self.new_aggregate
+
+    def get_filtered_singles(self):
+        return self.filtered_singles
 
     def create_current_aggregate(self, contexts):
         """Given contexts (a list of a set of contexts, create a context that collects all
@@ -165,8 +168,18 @@ class DataFlow(object):
                 elements = elements.union(c.get_cohorts_as_set())
         value = sum / len(elements)
         #TODO: Timestamp should be adjusted
-        c = Context(value=value, cohorts=elements, hop_count=Context.AGGREGATED_CONTEXT, time_stamp = None)
+        c = Context(value=value, cohorts=elements, hop_count=Context.AGGREGATED_CONTEXT, time_stamp=None)
         return c
+
+    #
+    # Filter
+    #
+    def filter_singles(self, singles):
+        results = set()
+        for s in singles:
+            if s.hop_count == Context.SPECIAL_CONTEXT or 0 <= s.hop_count <= self.max_tau:
+                results.add(s)
+        return results
 
     def run(self):
         """when input data has received information, it processes the data to generate the output
@@ -179,22 +192,23 @@ class DataFlow(object):
         5. [3,4,5] is selected_non_prime
         6. new aggregates has [0,1,2,3,4,5,7,8] as elements
 
-        >>> d = DataFlow()
+        >>> d = DataFlow(config={"propagation_mode": DataFlow.AGGREGATION_MODE, "max_tau": 1})
         >>> d.initialize() # Always execute initialize before newly receive data
         >>> # Emulating receive data from neighbors
         >>> d.receive_data(1, set([Context(value=1.0, cohorts=[0,1,2])]))
         >>> d.receive_data(2, set([Context(value=2.0, cohorts=[0])]))
         >>> d.receive_data(3, set([Context(value=3.0, cohorts=[1])]))
+        >>> d.receive_data(4, set([Context(value=7.0, cohorts=[9], hop_count=Context.SPECIAL_CONTEXT)]))
         >>> # Emulating accumulated contexts
-        >>> d.update_database(set([]), set([Context(value=1.0, cohorts=[2,4,5,3]),Context(value=1.0, cohorts=[5,6]),Context(value=7.0, cohorts=[7,8])]))
+        >>> d.set_database(set([]), set([Context(value=1.0, cohorts=[2,4,5,3]),Context(value=1.0, cohorts=[5,6]),Context(value=7.0, cohorts=[7,8])]))
         >>> d.run()
         >>> # Emulating newly found singles and aggregates from database
-        >>> compare_contexts_and_cohorts(d.get_database_singles(), [[0],[1],[2]])
+        >>> compare_contexts_and_cohorts(d.get_database_singles(), [[0],[1],[2],[9]])
         True
         >>> compare_contexts_and_cohorts(d.get_database_aggregates(),[[7,8],[3,4,5],[6,5]])
         True
         >>> # Emulating the disaggregation process
-        >>> compare_contexts_and_cohorts(d.get_singles(), [[0],[1],[2]])
+        >>> compare_contexts_and_cohorts(d.get_singles(), [[0],[1],[2],[9]])
         True
         >>> compare_contexts_and_cohorts(d.get_primes(), [[7,8]])
         True
@@ -203,10 +217,9 @@ class DataFlow(object):
         >>> compare_contexts_and_cohorts(d.get_selected_non_primes(), [[3,4,5]])
         True
         >>> ### Check the new aggregate has correct elements
-        >>> d.get_new_aggregate().get_cohorts_as_set() == set([0,1,2,3,4,5,7,8])
+        >>> d.get_new_aggregate().get_cohorts_as_set() == set([0,1,2,3,4,5,7,8,9])
         True
-        >>> # All the out has the same context
-
+        >>> compare_contexts_and_cohorts(d.get_filtered_singles(), [[0],[1],[9]])
         True
         """
         # >>> r = d.get_output()
@@ -216,37 +229,56 @@ class DataFlow(object):
         # True
         # >>> compare_contexts_and_cohorts(r[3], [[0,1,2,3,4,5,7,8]])
 
-        # 1. collect all the data received from other hosts
+        # 1. DISAGGREGATES
         input_contexts = self.get_received_data()
-        db_aggregates = self.get_database_aggregates()
+
         db_singles = self.get_database_singles()
+        union_contexts = input_contexts.union(db_singles)
 
-        input_contexts = input_contexts.union(db_aggregates)
-        input_contexts = input_contexts.union(db_singles)
+        if self.propagation_mode == DataFlow.AGGREGATION_MODE:
+            db_aggregates = self.get_database_aggregates()
+            union_contexts = union_contexts.union(db_aggregates)
 
-        d = Disaggregator(input_contexts)
-        result_singles, result_aggregates = d.run()
-        self.update_database(result_singles, result_aggregates)
+            d = Disaggregator(union_contexts)
+            combined_singles, combined_aggregates = d.run()
+        else:
+            combined_singles = union_contexts
+            combined_aggregates = set()
 
+        self.set_database(combined_singles, combined_aggregates)
+
+        # ASSORT
         primes = set()
         non_primes = set()
         selected_non_primes = set()
-        if result_aggregates:
-            # get primes
-            primes, non_primes = get_prime(result_aggregates)
-            # get maximum
+        if self.propagation_mode == DataFlow.AGGREGATION_MODE:
+            if combined_aggregates:
+                primes, non_primes = get_prime(combined_aggregates)
+                if non_primes:
+                    m = MaxCover()
+                    selected_non_primes = m.run(non_primes)
+                self.new_aggregate = self.create_current_aggregate([combined_singles, primes, selected_non_primes])
 
-            if non_primes:
-                m = MaxCover()
-                #maxcover_dictionary = get_maxcover_dictionary(non_primes)
-                selected_non_primes = m.run(non_primes)
+        self.assorted_context_database.set(combined_singles, primes, non_primes, selected_non_primes)
 
-        self.filtered_context_database.update(result_singles, primes, non_primes, selected_non_primes)
-        self.new_aggregate = self.create_current_aggregate([result_singles, primes, selected_non_primes])
+        # Only filtered singles are the candidates
+        self.filtered_singles = self.filter_singles(combined_singles)
 
-        if self.context_history.is_new_info_and_set(self.new_aggregate):
-            # ask context history what to send to each neighbor node
-            self.output = self.context_history.calculate_output(self.new_aggregate, self.get_received_data())
+        # Send candidates are one of the two
+        # 1. self.new_aggregate
+        # 2. self.filtered_singles
+
+        # Given input_contexts
+        # history.
+
+        output_singles = self.context_history.calculate_output_for_singles(self.filtered_singles, input_contexts)
+        output_aggregates = {}
+        if self.propagation_mode == DataFlow.AGGREGATION_MODE:
+            if self.context_history.is_new_aggregate_and_set(self.new_aggregate):
+                # ask context history what to send to each neighbor node
+                output_aggregates = self.context_history.calculate_output_for_aggregates(self.new_aggregate, input_contexts)
+
+        self.ouput.combine_outputs(output_singles, output_aggregates)
 
 
 if __name__ == "__main__":

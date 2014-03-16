@@ -42,7 +42,7 @@ class TestDataFlow(unittest.TestCase):
         d = DataFlow()
         d.receive_data(1, set([Context(value=1.0, cohorts=[0,1,2])]))
         d.receive_data(2, set([Context(value=2.0, cohorts=[0])]))
-        d.update_database(set([Context(value=1.0, cohorts=[0,1,2,3,4,5]), Context(value=2.0, cohorts=[1])]), set([Context(value=1.0, cohorts=[2,3])]))
+        d.set_database(set([Context(value=1.0, cohorts=[0,1,2,3,4,5]), Context(value=2.0, cohorts=[1])]), set([Context(value=1.0, cohorts=[2,3])]))
         d.run()
         self.assertTrue(compare_contexts_and_cohorts(d.get_singles(), [[0],[1],[2],[3]]))
         self.assertTrue(compare_contexts_and_cohorts(d.get_primes(), [[4,5]]))

@@ -368,10 +368,11 @@ class Context(object):
         >>> c = Context.increase_hop_count(c)
         >>> c.hop_count == 5+1
         True
-        >>> c = [Context(value=1.0, cohorts=[1], hop_count=0), Context(value=1.0, cohorts=[1], hop_count=1), Context(value=1.0, cohorts=[1], hop_count=2)]
+        >>> c = [Context(value=1.0, cohorts=[1], hop_count=0), Context(value=1.0, cohorts=[1], hop_count=1), \
+            Context(value=1.0, cohorts=[1], hop_count=2), Context(value=1.0, cohorts=[9], hop_count=Context.SPECIAL_CONTEXT)]
         >>> # Increase hop_count has a meaning with single context
         >>> c = Context.increase_hop_count(c)
-        >>> c[0].hop_count == 1 and c[1].hop_count == 2 and c[2].hop_count == 3
+        >>> c[0].hop_count == 1 and c[1].hop_count == 2 and c[2].hop_count == 3 and c[3].hop_count == Context.SPECIAL_CONTEXT
         True
         """
         if type(context) is set:
@@ -387,7 +388,7 @@ class Context(object):
             return result
 
         elif type(context) is Context:
-            if len(context) == 1:
+            if len(context) == 1 and context.hop_count >= 0:
                 c = copy.deepcopy(context)
                 c.hop_count = context.hop_count + 1
             else:
