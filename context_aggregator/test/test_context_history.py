@@ -94,5 +94,14 @@ class TestContextHistory(unittest.TestCase):
         self.assertTrue(1 not in r)
         self.assertTrue(2 not in r)
 
+
+    def test_calculate_output(self):
+        h = ContextHistory()
+        h.sent(1, [[1,4]])
+        contexts =set([Context(value=1.0, cohorts=[1]), Context(value=2.0, cohorts=[2]), Context(value=3.0, cohorts=[3,4,5,6])])
+        inputs={1:set([Context(value=1.0, cohorts=[1])])}
+        r = h.calculate_output(contexts=contexts, inputs=inputs)
+        compare_contexts_and_cohorts(r[1], [[2],[3,4,5,6]])
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)

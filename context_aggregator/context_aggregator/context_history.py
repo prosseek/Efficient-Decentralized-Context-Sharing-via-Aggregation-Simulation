@@ -77,6 +77,32 @@ class ContextHistory(object):
         else:
             return container.old_aggregate_as_set
 
+    def sent(self, index, contexts, timestamp=0):
+        """
+        >>> h = ContextHistory()
+        >>> h.sent(1, [[1],[2],[3],[4,5,6,7]], timestamp=10)
+        >>> h.context_history[10].sent_singles[1] == set([1,2,3])
+        True
+        >>> h.context_history[10].sent_aggregate[1] == set([4,5,6,7])
+        True
+        """
+        singles = set([])
+        aggregate = set([])
+        for c in contexts:
+            if type(c) is Context:
+                if c.is_single():
+                    singles = singles.union(c.get_cohorts_as_set())
+                else:
+                    aggregates = c.get_cohorts_as_set()
+            elif type(c) in [list, set]:
+                c = list(c)
+                if len(c) == 1:
+                    singles.add(c[0])
+                else:
+                    aggregate = aggregate.union(c)
+        self.set_sent_singles(index, singles, timestamp)
+        self.set_sent_aggregate(index, aggregate, timestamp)
+
 
     def set_sent_singles(self, index, singles, timestamp=0):
         """Sets the singles as input of a list of Contexts to store it corresponding history
@@ -262,6 +288,8 @@ class ContextHistory(object):
                 # Assumption: There is only one aggregate
                 if not context.is_single():
                     result[i] = context.get_cohorts_as_set()
+                else: # even though there is no aggregate, set none to get comparison
+                    result[i] = set([])
 
         # Check all the previous aggregates that was sent
         try:
@@ -352,6 +380,35 @@ class ContextHistory(object):
                 not_sent_singles = ContextHistory.filter_not_sent_singles(result[i], new_singles)
                 final_result[i] = not_sent_singles
 
+        return final_result
+
+    def calculate_output(self, contexts, inputs, timestamp=0):
+        """Given a set of contexts filtered and inputs, calculate the output directory
+
+        >>> h = ContextHistory()
+        >>> contexts =set([Context(value=1.0, cohorts=[1]), Context(value=2.0, cohorts=[2]), Context(value=3.0, cohorts=[3,4,5,6])])
+        >>> inputs={1:set([Context(value=1.0, cohorts=[1])])}
+        >>> r = h.calculate_output(contexts=contexts, inputs=inputs)
+        >>> compare_contexts_and_cohorts(r[1], [[2],[3,4,5,6]])
+        True
+        """
+        singles = set()
+        for c in contexts:
+            if c.is_single():
+                singles.add(c)
+            else:
+                aggregate = c
+
+        single_results = self.calculate_output_for_singles(singles, inputs, timestamp)
+        aggregate_results = self.calculate_output_for_aggregates(aggregate, inputs, timestamp)
+        final_result = {}
+        for s in single_results:
+            final_result[s] = single_results[s]
+        for a in aggregate_results:
+            if a in final_result:
+                final_result[a].add(aggregate_results[a])
+            else:
+                final_result[a] = set([aggregate_results[a]])
         return final_result
 
 if __name__ == "__main__":
