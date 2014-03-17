@@ -124,7 +124,7 @@ class ContextHistory(object):
         result = set()
         for c in singles:
             if type(c) is Context:
-                s = list[c.get_cohorts_as_set()]
+                s = list(c.get_cohorts_as_set())
                 assert len(s) == 1
                 s = s[0]
             else:

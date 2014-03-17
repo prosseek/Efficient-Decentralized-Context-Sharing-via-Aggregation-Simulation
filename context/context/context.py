@@ -13,7 +13,7 @@ import zlib
 from utils import *
 
 class Context(object):
-    r"""Context is a tuple of (value, cohorts, time_stamp, hop_count (Tau))
+    r"""Context is a tuple of (value, cohorts, timestamp, hop_count (Tau))
     
     hop_count ::
     
@@ -64,25 +64,25 @@ class Context(object):
             cohorts = cohort_type_as_bytearray(cohorts)
 
         self.cohorts = cohorts
-        self.time_stamp = timestamp
+        self.timestamp = timestamp
         self.cohorts = cohorts
         self.hop_count = hop_count
         
     def __eq__(self, other):
         """Checks if two contexts are the same
 
-        >>> c1 = Context(1, cohorts=set([0,3,4]), time_stamp=1, hop_count=4)
-        >>> c2 = Context(1, cohorts=set([0,3,4]), time_stamp=1, hop_count=4)
+        >>> c1 = Context(1, cohorts=set([0,3,4]), timestamp=1, hop_count=4)
+        >>> c2 = Context(1, cohorts=set([0,3,4]), timestamp=1, hop_count=4)
         >>> c1 == c2
         True
 
-        >>> c1 = Context(1, cohorts=set([0,3]), time_stamp=1, hop_count=4)
-        >>> c2 = Context(1, cohorts=set([0,3,4]), time_stamp=1, hop_count=4)
+        >>> c1 = Context(1, cohorts=set([0,3]), timestamp=1, hop_count=4)
+        >>> c2 = Context(1, cohorts=set([0,3,4]), timestamp=1, hop_count=4)
         >>> c1 == c2
         False
 
-        >>> c1 = Context(1, cohorts=set([0,3,4]), time_stamp=1, hop_count=3)
-        >>> c2 = Context(1, cohorts=set([0,3,4]), time_stamp=1, hop_count=4)
+        >>> c1 = Context(1, cohorts=set([0,3,4]), timestamp=1, hop_count=3)
+        >>> c2 = Context(1, cohorts=set([0,3,4]), timestamp=1, hop_count=4)
         >>> c1 == c2
         False
         """
@@ -90,7 +90,7 @@ class Context(object):
         if id(self) == id(other): return True
         if self.value == other.value and \
            self.cohorts == other.cohorts and \
-           self.time_stamp == other.time_stamp and \
+           self.timestamp == other.timestamp and \
            self.hop_count == other.hop_count: 
             return True
         return False
@@ -99,14 +99,14 @@ class Context(object):
         """Check if this context is equivalent to the other context
         Equivalence means the same value and same cohorts
 
-        >>> c1 = Context(1, cohorts=set([0,3,4]), time_stamp=1, hop_count=3)
-        >>> c2 = Context(1, cohorts=set([0,3,4]), time_stamp=1, hop_count=4)
+        >>> c1 = Context(1, cohorts=set([0,3,4]), timestamp=1, hop_count=3)
+        >>> c2 = Context(1, cohorts=set([0,3,4]), timestamp=1, hop_count=4)
         >>> c1.equiv(c2)
         True
 
         When ignore_value is True, compare only the cohorts
-        >>> c1 = Context(4, cohorts=set([0,3,4]), time_stamp=1, hop_count=3)
-        >>> c2 = Context(1, cohorts=set([0,3,4]), time_stamp=1, hop_count=4)
+        >>> c1 = Context(4, cohorts=set([0,3,4]), timestamp=1, hop_count=3)
+        >>> c2 = Context(1, cohorts=set([0,3,4]), timestamp=1, hop_count=4)
         >>> c1.equiv(c2, ignore_value=True)
         True
         """
@@ -407,7 +407,7 @@ class Context(object):
         value is stored in double (d) : 8 bytes
         hop_count is stored in signed short (h) : 2 bytes
 
-        time_stamp is stored in unsigned short (H) : 2 bytes
+        timestamp is stored in unsigned short (H) : 2 bytes
         The rest of the data is serialized cohorts
 
         >>> c = Context(value=1.0, cohorts=set([1,2,3]))
@@ -421,14 +421,14 @@ class Context(object):
         else:
             value = self.value
 
-        if self.time_stamp is None:
-            time_stamp = 0
+        if self.timestamp is None:
+            timestamp = 0
         else:
-            time_stamp = self.time_stamp
+            timestamp = self.timestamp
 
         v = struct.pack('d', value)
         h = struct.pack('h', self.hop_count)
-        t = struct.pack('H', time_stamp)
+        t = struct.pack('H', timestamp)
 
         result = v + h + t
 

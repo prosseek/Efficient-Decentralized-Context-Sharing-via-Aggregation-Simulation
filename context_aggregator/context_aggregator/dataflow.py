@@ -10,6 +10,7 @@ It has the following objects
 5. OutputDictionary
 
 For each object dataflow.py exports the API.
+We have 14 APIs as of [2014/03/17]
 
 1. initialize()
     Empty the Input, should be executed whenever new propagation is started.
@@ -18,41 +19,35 @@ For each object dataflow.py exports the API.
 3. run(timestamp)
     Executes the disaggregation and aggregation until all the data structures for timestamp is calculated and stored
 
-After the run() is executed, we can get the results with the API.
+After the run() is executed, we can get the results that is timestamp dependent with the API.
 
 1. get_database_singles(timestamp)
     Returns a set of contexts recovered/received
-2. get_database_aggregates
+2. get_database_aggregates(timestamp)
+3. get_singles(timestamp)
+    Returns the recovered and received singles so far
+4. get_primes(timestamp)
+    Returns the prime aggregates so far
+5. get_non_primes(timestamp)
+6. get_selected_non_primes(timestamp)
+    Returns the non-prime and selected-non-primes
 
+After the run() is executed, we get the temporary (timestamp independent) with the API.
+They are time indepdent, as they can be recovered anytime from the timestamp depdendent data structure.
 
-        >>> compare_contexts_and_cohorts(d.get_database_singles(), [[0],[1],[2],[9]])
-        True
-        >>> compare_contexts_and_cohorts(d.get_database_aggregates(),[[7,8],[3,4,5],[6,5]])
-        True
-        >>> # Emulating the disaggregation process
-        >>> compare_contexts_and_cohorts(d.get_singles(), [[0],[1],[2],[9]])
-        True
-        >>> compare_contexts_and_cohorts(d.get_primes(), [[7,8]])
-        True
-        >>> compare_contexts_and_cohorts(d.get_non_primes(), [[3,4,5], [5,6]])
-        True
-        >>> compare_contexts_and_cohorts(d.get_selected_non_primes(), [[3,4,5]])
-        True
-        >>> ### Check the new aggregate has correct elements
-        >>> d.get_new_aggregate().get_cohorts_as_set() == set([0,1,2,3,4,5,7,8,9])
-        True
-        >>> compare_contexts_and_cohorts(d.get_filtered_singles(), [[0],[1],[9]])
-        True
-        >>> r = d.get_output()
-        >>> compare_contexts_and_cohorts(r[1], [[0,1,2,3,4,5,7,8,9],[0],[1],[9]])
-        True
-        >>> compare_contexts_and_cohorts(r[2], [[0,1,2,3,4,5,7,8,9],[1],[9]])
-        True
-        >>> compare_contexts_and_cohorts(r[3], [[0,1,2,3,4,5,7,8,9],[0],[9]])
-        True
-        >>> compare_contexts_and_cohorts(r[4], [[0,1,2,3,4,5,7,8,9],[0],[1]])
-        True
+1. get_filtered_singles()
+    Returns a set of filtered single contexts based on configurations
+2. get_new_aggregate()
+    Returns a context of newly generated aggregate.
+3. get_output()
+    Returns a dictionary that is going to be sent to each host
 
+The API for other kinds of information.
+
+1. get_configuration()
+    Returns current configuration
+2. reset()
+    Deletes all the data structure created in the dataflow, and start garbage collection
 
 Refrence
 --------
@@ -103,6 +98,11 @@ class DataFlow(object):
 
         self.new_aggregate = None
         self.filtered_singles = None
+
+    def get_configuration(self):
+        return {"max_tau": self.max_tau,
+                "propagation_mode": self.propagation_mode,
+                "propagate_recovered_singles": self.propagate_recovered_singles}
 
     def __reset(self):
         self.input.reset()
@@ -336,21 +336,11 @@ class DataFlow(object):
         # Only filtered singles are the candidates
         self.filtered_singles = self.filter_singles(combined_singles)
 
-        # Send candidates are one of the two
-        # 1. self.new_aggregate
-        # 2. self.filtered_singles
-
-        # Given input_contextsR
-        # history.
-
         contexts = copy(self.filtered_singles)
         contexts.add(self.new_aggregate)
         input_dictionary = self.input.get_dictionary()
         self.output_dictionary = self.context_history.calculate_output(contexts, input_dictionary, timestamp=timestamp)
-        pass
 
 if __name__ == "__main__":
     import doctest
     doctest.testmod()
-
-
