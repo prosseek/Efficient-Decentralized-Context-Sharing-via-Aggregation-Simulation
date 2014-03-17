@@ -1,13 +1,58 @@
 """context database
 
 Context database stores **all** the necessary information for processing contexts.
-It has
+It has the following objects
 
-1. InputDictionary
+1. Input
 2. ContextDatabase
-3. FilteredContextDatabase
-4. OutputDictionary
-5. ContextHistory
+3. AssortedContextDatabase
+4. ContextHistory
+5. OutputDictionary
+
+For each object dataflow.py exports the API.
+
+1. initialize()
+    Empty the Input, should be executed whenever new propagation is started.
+2. receive_data(index, a set of contexts)
+    Receive and store the data into Input from host index
+3. run(timestamp)
+    Executes the disaggregation and aggregation until all the data structures for timestamp is calculated and stored
+
+After the run() is executed, we can get the results with the API.
+
+1. get_database_singles(timestamp)
+    Returns a set of contexts recovered/received
+2. get_database_aggregates
+
+
+        >>> compare_contexts_and_cohorts(d.get_database_singles(), [[0],[1],[2],[9]])
+        True
+        >>> compare_contexts_and_cohorts(d.get_database_aggregates(),[[7,8],[3,4,5],[6,5]])
+        True
+        >>> # Emulating the disaggregation process
+        >>> compare_contexts_and_cohorts(d.get_singles(), [[0],[1],[2],[9]])
+        True
+        >>> compare_contexts_and_cohorts(d.get_primes(), [[7,8]])
+        True
+        >>> compare_contexts_and_cohorts(d.get_non_primes(), [[3,4,5], [5,6]])
+        True
+        >>> compare_contexts_and_cohorts(d.get_selected_non_primes(), [[3,4,5]])
+        True
+        >>> ### Check the new aggregate has correct elements
+        >>> d.get_new_aggregate().get_cohorts_as_set() == set([0,1,2,3,4,5,7,8,9])
+        True
+        >>> compare_contexts_and_cohorts(d.get_filtered_singles(), [[0],[1],[9]])
+        True
+        >>> r = d.get_output()
+        >>> compare_contexts_and_cohorts(r[1], [[0,1,2,3,4,5,7,8,9],[0],[1],[9]])
+        True
+        >>> compare_contexts_and_cohorts(r[2], [[0,1,2,3,4,5,7,8,9],[1],[9]])
+        True
+        >>> compare_contexts_and_cohorts(r[3], [[0,1,2,3,4,5,7,8,9],[0],[9]])
+        True
+        >>> compare_contexts_and_cohorts(r[4], [[0,1,2,3,4,5,7,8,9],[0],[1]])
+        True
+
 
 Refrence
 --------
@@ -122,7 +167,7 @@ class DataFlow(object):
     def set_database(self, singles, aggregates, timestamp = 0):
         """TODO: update information based on the time stamp
         """
-        self.context_database.set(singles, aggregates)
+        self.context_database.set(singles, aggregates, timestamp)
 
     def get_database_singles(self, timestamp=0):
         return self.context_database.get_singles(timestamp)
@@ -227,18 +272,18 @@ class DataFlow(object):
         >>> d.set_database(singles=set([]), aggregates=context_db, timestamp=10)
         >>> d.run(timestamp=10)
         >>> # Emulating newly found singles and aggregates from database
-        >>> compare_contexts_and_cohorts(d.get_database_singles(), [[0],[1],[2],[9]])
+        >>> compare_contexts_and_cohorts(d.get_database_singles(timestamp=10), [[0],[1],[2],[9]])
         True
-        >>> compare_contexts_and_cohorts(d.get_database_aggregates(),[[7,8],[3,4,5],[6,5]])
+        >>> compare_contexts_and_cohorts(d.get_database_aggregates(timestamp=10),[[7,8],[3,4,5],[6,5]])
         True
         >>> # Emulating the disaggregation process
-        >>> compare_contexts_and_cohorts(d.get_singles(), [[0],[1],[2],[9]])
+        >>> compare_contexts_and_cohorts(d.get_singles(timestamp=10), [[0],[1],[2],[9]])
         True
-        >>> compare_contexts_and_cohorts(d.get_primes(), [[7,8]])
+        >>> compare_contexts_and_cohorts(d.get_primes(timestamp=10), [[7,8]])
         True
-        >>> compare_contexts_and_cohorts(d.get_non_primes(), [[3,4,5], [5,6]])
+        >>> compare_contexts_and_cohorts(d.get_non_primes(timestamp=10), [[3,4,5], [5,6]])
         True
-        >>> compare_contexts_and_cohorts(d.get_selected_non_primes(), [[3,4,5]])
+        >>> compare_contexts_and_cohorts(d.get_selected_non_primes(timestamp=10), [[3,4,5]])
         True
         >>> ### Check the new aggregate has correct elements
         >>> d.get_new_aggregate().get_cohorts_as_set() == set([0,1,2,3,4,5,7,8,9])
@@ -259,11 +304,11 @@ class DataFlow(object):
         # 1. DISAGGREGATES
         input_contexts = self.get_received_data()
 
-        db_singles = self.get_database_singles()
+        db_singles = self.get_database_singles(timestamp)
         union_contexts = input_contexts.union(db_singles)
 
         if self.propagation_mode == DataFlow.AGGREGATION_MODE:
-            db_aggregates = self.get_database_aggregates()
+            db_aggregates = self.get_database_aggregates(timestamp)
             union_contexts = union_contexts.union(db_aggregates)
 
             d = Disaggregator(union_contexts)
@@ -286,7 +331,7 @@ class DataFlow(object):
                     selected_non_primes = m.run(non_primes)
                 self.new_aggregate = self.create_current_aggregate([combined_singles, primes, selected_non_primes])
 
-        self.assorted_context_database.set(combined_singles, primes, non_primes, selected_non_primes)
+        self.assorted_context_database.set(combined_singles, primes, non_primes, selected_non_primes, timestamp)
 
         # Only filtered singles are the candidates
         self.filtered_singles = self.filter_singles(combined_singles)
