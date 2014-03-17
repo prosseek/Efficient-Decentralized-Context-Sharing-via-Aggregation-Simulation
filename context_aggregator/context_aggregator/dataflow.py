@@ -23,6 +23,7 @@ from context_database import ContextDatabase
 from assorted_context_database import AssortedContextDatabase
 from output import Output
 from context_history import ContextHistory
+from copy import copy
 
 from disaggregator import Disaggregator
 from maxcover import MaxCover
@@ -42,14 +43,15 @@ class DataFlow(object):
         self.max_tau = 1
 
         if config is not None:
-            if config["max_tau"]: self.max_tau = config["max_tau"]
-            if config["propagation_mode"]: self.propagation_mode = config["propagation_mode"]
+            if "max_tau" in config: self.max_tau = config["max_tau"]
+            if "propagation_mode" in config: self.propagation_mode = config["propagation_mode"]
 
         # inner data structure
         self.input = Input()
         self.context_database = ContextDatabase()
         self.assorted_context_database = AssortedContextDatabase()
-        self.output = Output()
+        self.output_dictionary = None
+        #self.output = Output()
         self.context_history = ContextHistory()
 
         self.new_aggregate = None
@@ -73,7 +75,7 @@ class DataFlow(object):
         """initialization is needed for starting execution of dataflow
         """
         self.input.reset()
-        self.output.reset()
+        #self.output.reset()
 
     #
     # Input
@@ -115,31 +117,31 @@ class DataFlow(object):
     # Database
     #
 
-    def set_database(self, singles, aggregates, timestamp = None):
+    def set_database(self, singles, aggregates, timestamp = 0):
         """TODO: update information based on the time stamp
         """
         self.context_database.set(singles, aggregates)
 
-    def get_database_singles(self):
-        return self.context_database.get_singles()
+    def get_database_singles(self, timestamp=0):
+        return self.context_database.get_singles(timestamp)
 
-    def get_database_aggregates(self):
-        return self.context_database.get_aggregates()
+    def get_database_aggregates(self, timestamp=0):
+        return self.context_database.get_aggregates(timestamp)
 
-    def get_singles(self):
-        return self.assorted_context_database.get_singles()
+    def get_singles(self, timestamp=0):
+        return self.assorted_context_database.get_singles(timestamp)
 
-    def get_primes(self):
-        return self.assorted_context_database.get_primes()
+    def get_primes(self, timestamp=0):
+        return self.assorted_context_database.get_primes(timestamp)
 
-    def get_non_primes(self):
-        return self.assorted_context_database.get_non_primes()
+    def get_non_primes(self, timestamp=0):
+        return self.assorted_context_database.get_non_primes(timestamp)
 
-    def get_selected_non_primes(self):
-        return self.assorted_context_database.get_selected_non_primes()
+    def get_selected_non_primes(self, timestamp=0):
+        return self.assorted_context_database.get_selected_non_primes(timestamp)
 
-    def get_output(self):
-        return self.output
+    # def get_output(self):
+    #     return self.output
 
     def get_new_aggregate(self):
         return self.new_aggregate
@@ -147,9 +149,13 @@ class DataFlow(object):
     def get_filtered_singles(self):
         return self.filtered_singles
 
-    def create_current_aggregate(self, contexts):
+    def create_current_aggregate(self, contexts, timestamp=0):
         """Given contexts (a list of a set of contexts, create a context that collects all
-        the information in them
+        the information in them)
+
+        Things to consider: we pack the single context with Context.SPECIAL_CONTEXT (let's say it as x), because
+        1. We can recover the aggregate without the x, whenever x is available.
+        2. We can cover larger aggregate even when x is lost (or unavailable with any reason).
 
         >>> d = DataFlow()
         >>> s1 = set([Context(value=1.0, cohorts=[0])])
@@ -167,9 +173,12 @@ class DataFlow(object):
                 sum += c.value * len(c)
                 elements = elements.union(c.get_cohorts_as_set())
         value = sum / len(elements)
-        #TODO: Timestamp should be adjusted
-        c = Context(value=value, cohorts=elements, hop_count=Context.AGGREGATED_CONTEXT, time_stamp=None)
+
+        c = Context(value=value, cohorts=elements, hop_count=Context.AGGREGATED_CONTEXT, timestamp=timestamp)
         return c
+
+    def get_output(self):
+        return self.output_dictionary
 
     #
     # Filter
@@ -181,7 +190,7 @@ class DataFlow(object):
                 results.add(s)
         return results
 
-    def run(self):
+    def run(self, timestamp=0):
         """when input data has received information, it processes the data to generate the output
 
         In this example, when [0,1,2][0][1] is given as a input, and [[2,3,4,5][5,6],[7,8]] is already stored as contexts
@@ -200,8 +209,9 @@ class DataFlow(object):
         >>> d.receive_data(3, set([Context(value=3.0, cohorts=[1])]))
         >>> d.receive_data(4, set([Context(value=7.0, cohorts=[9], hop_count=Context.SPECIAL_CONTEXT)]))
         >>> # Emulating accumulated contexts
-        >>> d.set_database(set([]), set([Context(value=1.0, cohorts=[2,4,5,3]),Context(value=1.0, cohorts=[5,6]),Context(value=7.0, cohorts=[7,8])]))
-        >>> d.run()
+        >>> context_db = set([Context(value=1.0, cohorts=[2,4,5,3]),Context(value=1.0, cohorts=[5,6]),Context(value=7.0, cohorts=[7,8])])
+        >>> d.set_database(singles=set([]), aggregates=context_db, timestamp=10)
+        >>> d.run(timestamp=10)
         >>> # Emulating newly found singles and aggregates from database
         >>> compare_contexts_and_cohorts(d.get_database_singles(), [[0],[1],[2],[9]])
         True
@@ -221,13 +231,16 @@ class DataFlow(object):
         True
         >>> compare_contexts_and_cohorts(d.get_filtered_singles(), [[0],[1],[9]])
         True
+        >>> r = d.get_output()
+        >>> compare_contexts_and_cohorts(r[1], [[0,1,2,3,4,5,7,8,9],[0],[1],[9]])
+        True
+        >>> compare_contexts_and_cohorts(r[2], [[0,1,2,3,4,5,7,8,9],[1],[9]])
+        True
+        >>> compare_contexts_and_cohorts(r[3], [[0,1,2,3,4,5,7,8,9],[0],[9]])
+        True
+        >>> compare_contexts_and_cohorts(r[4], [[0,1,2,3,4,5,7,8,9],[0],[1]])
+        True
         """
-        # >>> r = d.get_output()
-        # >>> compare_contexts_and_cohorts(r[1], [[0,1,2,3,4,5,7,8]])
-        # True
-        # >>> compare_contexts_and_cohorts(r[2], [[0,1,2,3,4,5,7,8]])
-        # True
-        # >>> compare_contexts_and_cohorts(r[3], [[0,1,2,3,4,5,7,8]])
 
         # 1. DISAGGREGATES
         input_contexts = self.get_received_data()
@@ -245,7 +258,7 @@ class DataFlow(object):
             combined_singles = union_contexts
             combined_aggregates = set()
 
-        self.set_database(combined_singles, combined_aggregates)
+        self.set_database(combined_singles, combined_aggregates, timestamp=timestamp)
 
         # ASSORT
         primes = set()
@@ -268,18 +281,14 @@ class DataFlow(object):
         # 1. self.new_aggregate
         # 2. self.filtered_singles
 
-        # Given input_contexts
+        # Given input_contextsR
         # history.
 
-        output_singles = self.context_history.calculate_output_for_singles(self.filtered_singles, input_contexts)
-        output_aggregates = {}
-        if self.propagation_mode == DataFlow.AGGREGATION_MODE:
-            if self.context_history.is_new_aggregate_and_set(self.new_aggregate):
-                # ask context history what to send to each neighbor node
-                output_aggregates = self.context_history.calculate_output_for_aggregates(self.new_aggregate, input_contexts)
-
-        self.ouput.combine_outputs(output_singles, output_aggregates)
-
+        contexts = copy(self.filtered_singles)
+        contexts.add(self.new_aggregate)
+        input_dictionary = self.input.get_dictionary()
+        self.output_dictionary = self.context_history.calculate_output(contexts, input_dictionary, timestamp=timestamp)
+        pass
 
 if __name__ == "__main__":
     import doctest

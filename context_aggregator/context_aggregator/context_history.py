@@ -358,6 +358,8 @@ class ContextHistory(object):
                         result[i] = result[i].union(context.get_cohorts_as_set())
                     else:
                         result[i] = context.get_cohorts_as_set()
+                else:
+                    result[i] = set()
 
         # Check all the previous aggregates that was sent
         try:

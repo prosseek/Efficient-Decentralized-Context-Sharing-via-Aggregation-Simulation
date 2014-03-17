@@ -35,7 +35,7 @@ class Context(object):
     RECOVERED_CONTEXT = -2
     SPECIAL_CONTEXT = -3
     
-    def __init__(self, value = None, cohorts = None, time_stamp = None, hop_count = 0):
+    def __init__(self, value = None, cohorts = None, timestamp = None, hop_count = 0):
         r"""Context constructor.
         
         All the parameters can be None or 0. 
@@ -64,7 +64,7 @@ class Context(object):
             cohorts = cohort_type_as_bytearray(cohorts)
 
         self.cohorts = cohorts
-        self.time_stamp = time_stamp
+        self.time_stamp = timestamp
         self.cohorts = cohorts
         self.hop_count = hop_count
         
@@ -479,7 +479,7 @@ class Context(object):
         if v == float('inf'): v = None
         if t == 0: t = None
 
-        return Context(value=v, hop_count=h, time_stamp=t, cohorts=c)
+        return Context(value=v, hop_count=h, timestamp=t, cohorts=c)
 
 if __name__ == "__main__": # and __package__ is None:
     import doctest

@@ -19,6 +19,9 @@ class Input(InputOutput):
     def __init__(self):
         self.dictionary = {}
 
+    def get_dictionary(self):
+        return self.dictionary
+
     def get_senders(self):
         """
 
