@@ -41,10 +41,12 @@ class DataFlow(object):
     def __init__(self, config = None):
         self.propagation_mode = DataFlow.AGGREGATION_MODE
         self.max_tau = 1
+        self.propagate_recovered_single = False
 
         if config is not None:
             if "max_tau" in config: self.max_tau = config["max_tau"]
             if "propagation_mode" in config: self.propagation_mode = config["propagation_mode"]
+            if "propagate_recovered_singles" in config: self.propagate_recovered_single = config["propagate_recovered_singles"]
 
         # inner data structure
         self.input = Input()
@@ -188,18 +190,30 @@ class DataFlow(object):
         for s in singles:
             if s.hop_count == Context.SPECIAL_CONTEXT or 0 <= s.hop_count <= self.max_tau:
                 results.add(s)
+            if self.propagate_recovered_single:
+                if s.hop_count == Context.RECOVERED_CONTEXT:
+                    context = copy(s)
+                    context.hop_count = 0
+                    results.add(context)
         return results
 
     def run(self, timestamp=0):
         """when input data has received information, it processes the data to generate the output
 
-        In this example, when [0,1,2][0][1] is given as a input, and [[2,3,4,5][5,6],[7,8]] is already stored as contexts
-        1. [0][1] -> [2] is identified
+        In this example with max_tau=1, when 1:[0,1,2], 2:[0], 3:[1] 4:[9]'(special context)
+        is given as a input, and [[2,3,4,5][5,6],[7,8]] is already stored as contexts
+
+        1. [0][1][9]' -> [2] is identified
         2. [3,4,5],[5,6],[7,8] is now a new aggregates
         3. [7,8] is a prime
         4. [3,4,5],[5,6] is non_prime
         5. [3,4,5] is selected_non_prime
-        6. new aggregates has [0,1,2,3,4,5,7,8] as elements
+        6. new aggregates has [0,1,2,3,4,5,7,8,9] as elements
+        7. From filtering, [0][1][2][9]' will be propagated with [0,1,2,3,4,5,7,8,9] as an aggregate
+
+        For output
+
+        * For 1: [0][1][9] and [1..9] is sent. [2] is not propagated
 
         >>> d = DataFlow(config={"propagation_mode": DataFlow.AGGREGATION_MODE, "max_tau": 1})
         >>> d.initialize() # Always execute initialize before newly receive data

@@ -47,5 +47,121 @@ class TestDataFlow(unittest.TestCase):
         self.assertTrue(compare_contexts_and_cohorts(d.get_singles(), [[0],[1],[2],[3]]))
         self.assertTrue(compare_contexts_and_cohorts(d.get_primes(), [[4,5]]))
 
+    def test_run2(self):
+        """Test case the same as doctest"""
+        d = DataFlow(config={"propagation_mode": DataFlow.AGGREGATION_MODE, "max_tau": 1})
+        d.initialize() # Always execute initialize before newly receive data
+        # Emulating receive data from neighbors
+        d.receive_data(1, set([Context(value=1.0, cohorts=[0,1,2])]))
+        d.receive_data(2, set([Context(value=2.0, cohorts=[0])]))
+        d.receive_data(3, set([Context(value=3.0, cohorts=[1])]))
+        d.receive_data(4, set([Context(value=7.0, cohorts=[9], hop_count=Context.SPECIAL_CONTEXT)]))
+        # Emulating accumulated contexts
+        context_db = set([Context(value=1.0, cohorts=[2,4,5,3]),Context(value=1.0, cohorts=[5,6]),Context(value=7.0, cohorts=[7,8])])
+        d.set_database(singles=set([]), aggregates=context_db, timestamp=10)
+        d.run(timestamp=10)
+        # Emulating newly found singles and aggregates from database
+        self.assertTrue(compare_contexts_and_cohorts(d.get_database_singles(), [[0],[1],[2],[9]]))
+        self.assertTrue(compare_contexts_and_cohorts(d.get_database_aggregates(),[[7,8],[3,4,5],[6,5]]))
+        # Emulating the disaggregation process
+        self.assertTrue(compare_contexts_and_cohorts(d.get_singles(), [[0],[1],[2],[9]]))
+        self.assertTrue(compare_contexts_and_cohorts(d.get_primes(), [[7,8]]))
+        self.assertTrue(compare_contexts_and_cohorts(d.get_non_primes(), [[3,4,5], [5,6]]))
+        self.assertTrue(compare_contexts_and_cohorts(d.get_selected_non_primes(), [[3,4,5]]))
+        self.assertTrue(d.get_new_aggregate().get_cohorts_as_set() == set([0,1,2,3,4,5,7,8,9]))
+        self.assertTrue(compare_contexts_and_cohorts(d.get_filtered_singles(), [[0],[1],[9]]))
+        r = d.get_output()
+        self.assertTrue(compare_contexts_and_cohorts(r[1], [[0,1,2,3,4,5,7,8,9],[0],[1],[9]]))
+        self.assertTrue(compare_contexts_and_cohorts(r[2], [[0,1,2,3,4,5,7,8,9],[1],[9]]))
+        self.assertTrue(compare_contexts_and_cohorts(r[3], [[0,1,2,3,4,5,7,8,9],[0],[9]]))
+        self.assertTrue(compare_contexts_and_cohorts(r[4], [[0,1,2,3,4,5,7,8,9],[0],[1]]))
+
+    def test_run2(self):
+        """Doctest case with propage recovered singles"""
+        d = DataFlow(config={"propagation_mode": DataFlow.AGGREGATION_MODE, "max_tau": 1, "propagate_recovered_singles": True})
+        d.initialize() # Always execute initialize before newly receive data
+        # Emulating receive data from neighbors
+        d.receive_data(1, set([Context(value=1.0, cohorts=[0,1,2])]))
+        d.receive_data(2, set([Context(value=2.0, cohorts=[0])]))
+        d.receive_data(3, set([Context(value=3.0, cohorts=[1])]))
+        d.receive_data(4, set([Context(value=7.0, cohorts=[9], hop_count=Context.SPECIAL_CONTEXT)]))
+        # Emulating accumulated contexts
+        context_db = set([Context(value=1.0, cohorts=[2,4,5,3]),Context(value=1.0, cohorts=[5,6]),Context(value=7.0, cohorts=[7,8])])
+        d.set_database(singles=set([]), aggregates=context_db, timestamp=10)
+        d.run(timestamp=10)
+        # Emulating newly found singles and aggregates from database
+        self.assertTrue(compare_contexts_and_cohorts(d.get_database_singles(), [[0],[1],[2],[9]]))
+        self.assertTrue(compare_contexts_and_cohorts(d.get_database_aggregates(),[[7,8],[3,4,5],[6,5]]))
+        # Emulating the disaggregation process
+        self.assertTrue(compare_contexts_and_cohorts(d.get_singles(), [[0],[1],[2],[9]]))
+        self.assertTrue(compare_contexts_and_cohorts(d.get_primes(), [[7,8]]))
+        self.assertTrue(compare_contexts_and_cohorts(d.get_non_primes(), [[3,4,5], [5,6]]))
+        self.assertTrue(compare_contexts_and_cohorts(d.get_selected_non_primes(), [[3,4,5]]))
+        self.assertTrue(d.get_new_aggregate().get_cohorts_as_set() == set([0,1,2,3,4,5,7,8,9]))
+        self.assertTrue(compare_contexts_and_cohorts(d.get_filtered_singles(), [[0],[1],[2],[9]]))
+        r = d.get_output()
+        self.assertTrue(compare_contexts_and_cohorts(r[1], [[0,1,2,3,4,5,7,8,9],[0],[1],[9],[2]]))
+        self.assertTrue(compare_contexts_and_cohorts(r[2], [[0,1,2,3,4,5,7,8,9],[1],[9],[2]]))
+        self.assertTrue(compare_contexts_and_cohorts(r[3], [[0,1,2,3,4,5,7,8,9],[0],[9],[2]]))
+        self.assertTrue(compare_contexts_and_cohorts(r[4], [[0,1,2,3,4,5,7,8,9],[0],[1],[2]]))
+
+    def test_run3(self):
+        """Doctest case with propage recovered singles, and propage with max_tau == 0 """
+        d = DataFlow(config={"propagation_mode": DataFlow.AGGREGATION_MODE, "max_tau": 0, "propagate_recovered_singles": True})
+        d.initialize() # Always execute initialize before newly receive data
+        # Emulating receive data from neighbors
+        d.receive_data(1, set([Context(value=1.0, cohorts=[0,1,2])]))
+        d.receive_data(2, set([Context(value=2.0, cohorts=[0])]))
+        d.receive_data(3, set([Context(value=3.0, cohorts=[1])]))
+        d.receive_data(4, set([Context(value=7.0, cohorts=[9], hop_count=Context.SPECIAL_CONTEXT)]))
+        # Emulating accumulated contexts
+        context_db = set([Context(value=1.0, cohorts=[2,4,5,3]),Context(value=1.0, cohorts=[5,6]),Context(value=7.0, cohorts=[7,8])])
+        d.set_database(singles=set([]), aggregates=context_db, timestamp=10)
+        d.run(timestamp=10)
+        # Emulating newly found singles and aggregates from database
+        self.assertTrue(compare_contexts_and_cohorts(d.get_database_singles(), [[0],[1],[2],[9]]))
+        self.assertTrue(compare_contexts_and_cohorts(d.get_database_aggregates(),[[7,8],[3,4,5],[6,5]]))
+        # Emulating the disaggregation process
+        self.assertTrue(compare_contexts_and_cohorts(d.get_singles(), [[0],[1],[2],[9]]))
+        self.assertTrue(compare_contexts_and_cohorts(d.get_primes(), [[7,8]]))
+        self.assertTrue(compare_contexts_and_cohorts(d.get_non_primes(), [[3,4,5], [5,6]]))
+        self.assertTrue(compare_contexts_and_cohorts(d.get_selected_non_primes(), [[3,4,5]]))
+        self.assertTrue(d.get_new_aggregate().get_cohorts_as_set() == set([0,1,2,3,4,5,7,8,9]))
+        self.assertTrue(compare_contexts_and_cohorts(d.get_filtered_singles(), [[2],[9]]))
+        r = d.get_output()
+        self.assertTrue(compare_contexts_and_cohorts(r[1], [[0,1,2,3,4,5,7,8,9],[9],[2]]))
+        self.assertTrue(compare_contexts_and_cohorts(r[2], [[0,1,2,3,4,5,7,8,9],[9],[2]]))
+        self.assertTrue(compare_contexts_and_cohorts(r[3], [[0,1,2,3,4,5,7,8,9],[9],[2]]))
+        self.assertTrue(compare_contexts_and_cohorts(r[4], [[0,1,2,3,4,5,7,8,9],[2]]))
+
+    def test_run4(self):
+        """Doctest case with propage recovered singles, and propage with max_tau == 0 """
+        d = DataFlow(config={"propagation_mode": DataFlow.AGGREGATION_MODE, "max_tau": 0, "propagate_recovered_singles": False})
+        d.initialize() # Always execute initialize before newly receive data
+        # Emulating receive data from neighbors
+        d.receive_data(1, set([Context(value=1.0, cohorts=[0,1,2])]))
+        d.receive_data(2, set([Context(value=2.0, cohorts=[0])]))
+        d.receive_data(3, set([Context(value=3.0, cohorts=[1])]))
+        d.receive_data(4, set([Context(value=7.0, cohorts=[9], hop_count=Context.SPECIAL_CONTEXT)]))
+        # Emulating accumulated contexts
+        context_db = set([Context(value=1.0, cohorts=[2,4,5,3]),Context(value=1.0, cohorts=[5,6]),Context(value=7.0, cohorts=[7,8])])
+        d.set_database(singles=set([]), aggregates=context_db, timestamp=10)
+        d.run(timestamp=10)
+        # Emulating newly found singles and aggregates from database
+        self.assertTrue(compare_contexts_and_cohorts(d.get_database_singles(), [[0],[1],[2],[9]]))
+        self.assertTrue(compare_contexts_and_cohorts(d.get_database_aggregates(),[[7,8],[3,4,5],[6,5]]))
+        # Emulating the disaggregation process
+        self.assertTrue(compare_contexts_and_cohorts(d.get_singles(), [[0],[1],[2],[9]]))
+        self.assertTrue(compare_contexts_and_cohorts(d.get_primes(), [[7,8]]))
+        self.assertTrue(compare_contexts_and_cohorts(d.get_non_primes(), [[3,4,5], [5,6]]))
+        self.assertTrue(compare_contexts_and_cohorts(d.get_selected_non_primes(), [[3,4,5]]))
+        self.assertTrue(d.get_new_aggregate().get_cohorts_as_set() == set([0,1,2,3,4,5,7,8,9]))
+        self.assertTrue(compare_contexts_and_cohorts(d.get_filtered_singles(), [[9]]))
+        r = d.get_output()
+        self.assertTrue(compare_contexts_and_cohorts(r[1], [[0,1,2,3,4,5,7,8,9],[9]]))
+        self.assertTrue(compare_contexts_and_cohorts(r[2], [[0,1,2,3,4,5,7,8,9],[9]]))
+        self.assertTrue(compare_contexts_and_cohorts(r[3], [[0,1,2,3,4,5,7,8,9],[9]]))
+        self.assertTrue(compare_contexts_and_cohorts(r[4], [[0,1,2,3,4,5,7,8,9]]))
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)
