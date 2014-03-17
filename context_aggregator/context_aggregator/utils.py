@@ -37,12 +37,16 @@ def same_list(list1, list2):
 
     """
 
+    # >>> map(frozenset, [1,2])
+    # Traceback (most recent call last):
+    #   File "<stdin>", line 1, in <module>
+    # TypeError: 'int' object is not iterable
     try:
         l1 = set(map(frozenset, list1))
         l2 = set(map(frozenset, list2))
     except TypeError:
-        l1 = list1
-        l2 = list2
+        l1 = sorted(list1)
+        l2 = sorted(list2)
 
     return l1 == l2
 
@@ -66,9 +70,14 @@ def same_dict(dict1, dict2):
     >>> same_dict(d1, d2)
     False
 
+    >>> d1 = {1: [2,3], 2:[1,3], 3:[1,2]}
+    >>> d2 = {2: [3, 1], 3: [2, 1], 1: [2, 3]}
+    >>> same_dict(d1, d2)
+    True
+
     """
     if dict1 == dict2: return True
-    if dict1.keys() != dict2.keys(): return False
+    if sorted(dict1.keys()) != sorted(dict2.keys()): return False
     for k in dict1.keys():
         v1 = dict1[k]
         v2 = dict2[k]

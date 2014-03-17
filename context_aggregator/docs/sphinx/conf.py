@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #
-# context documentation build configuration file, created by
-# sphinx-quickstart on Sat Mar  8 08:39:34 2014.
+# context_aggregator documentation build configuration file, created by
+# sphinx-quickstart on Mon Mar 17 12:40:19 2014.
 #
 # This file is execfile()d with the current directory set to its
 # containing dir.
@@ -19,14 +19,12 @@ import os
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 sys.path.insert(0, os.path.abspath('../..'))
-
+sys.path.insert(0, os.path.abspath('../../../context'))
 def skip(app, what, name, obj, skip, options):
     if name in ["__init__", "__ne__", "__eq__"]:
         return False
     return skip
 
-def setup(app):
-    app.connect("autodoc-skip-member", skip)
 # -- General configuration ------------------------------------------------
 
 # If your documentation needs a minimal Sphinx version, state it here.
@@ -53,7 +51,7 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = u'context'
+project = u'context_aggregator'
 copyright = u'2014, Author'
 
 # The version info for the project you're documenting, acts as replacement for
@@ -186,7 +184,7 @@ html_static_path = ['_static']
 #html_file_suffix = None
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = 'contextdoc'
+htmlhelp_basename = 'context_aggregatordoc'
 
 
 # -- Options for LaTeX output ---------------------------------------------
@@ -206,7 +204,7 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-  ('index', 'context.tex', u'context Documentation',
+  ('index', 'context_aggregator.tex', u'context\\_aggregator Documentation',
    u'Author', 'manual'),
 ]
 
@@ -236,7 +234,7 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    ('index', 'context', u'context Documentation',
+    ('index', 'context_aggregator', u'context_aggregator Documentation',
      [u'Author'], 1)
 ]
 
@@ -250,8 +248,8 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-  ('index', 'context', u'context Documentation',
-   u'Author', 'context', 'One line description of project.',
+  ('index', 'context_aggregator', u'context_aggregator Documentation',
+   u'Author', 'context_aggregator', 'One line description of project.',
    'Miscellaneous'),
 ]
 
@@ -271,13 +269,13 @@ texinfo_documents = [
 # -- Options for Epub output ----------------------------------------------
 
 # Bibliographic Dublin Core info.
-epub_title = u'context'
+epub_title = u'context_aggregator'
 epub_author = u'Author'
 epub_publisher = u'Author'
 epub_copyright = u'2014, Author'
 
 # The basename for the epub file. It defaults to the project name.
-#epub_basename = u'context'
+#epub_basename = u'context_aggregator'
 
 # The HTML theme for the epub output. Since the default themes are not optimized
 # for small screen space, using the same theme for HTML and epub output is

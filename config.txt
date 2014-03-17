@@ -1,0 +1,2 @@
+[TestDirectory]
+path=/Users/smcho/code/PycharmProjects/contextAggregator/test_files
