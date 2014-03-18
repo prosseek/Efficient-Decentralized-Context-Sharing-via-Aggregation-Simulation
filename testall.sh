@@ -7,6 +7,6 @@ cd -
 cd context_aggregator
 sh runtests.sh $param
 cd -
-cd context_simulator
+cd aggregation_simulator
 sh runtests.sh $param
 cd -

@@ -2,13 +2,15 @@
 PTHS=../context:../context_aggregator:.
 PYTHON_PATH="export PYTHONPATH=$PTHS"
 JYTHON_PATH="export JYTHONPATH=$PTHS"
-JYTHON="$JYTHON_PATH; java -jar /Users/smcho/Dropbox/smcho/bin/jar/jython/jython-standalone-2.7-b1.jar"
+JYTHON_JAR="java -jar /Users/smcho/Dropbox/smcho/bin/jar/jython/jython-standalone-2.7-b1.jar"
+JYTHON="$JYTHON_PATH; $JYTHON_JAR"
 PACKAGE_NAME=$(basename "$PWD")
 args=`getopt tj`
 
 JYTHON_TEST=0
 TIME=0
 
+PTH="context_aggregator/dataflow.py"
 PYTON_EXECUTABLE="/usr/bin/python"
 PYH="$PYTHON_PATH; $PYTON_EXECUTABLE"
 
@@ -56,3 +58,11 @@ do
         fi  
     fi
 done
+
+python rununittests.py
+
+if [ $JYTHON_TEST -eq 1 ];
+then
+    echo "JYTHON UNITTEST running ... $i"
+    $JYTHON_JAR rununittests.py
+fi

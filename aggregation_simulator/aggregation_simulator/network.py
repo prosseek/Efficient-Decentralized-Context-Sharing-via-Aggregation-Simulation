@@ -141,8 +141,8 @@ class Network(object):
 
         >>> file_path = get_configuration("config.txt", "TestDirectory", "test1")
         >>> n = Network(file_path)
-        >>> n.dot_gen()
-        'graph graphname {1--2\\n2--3\\n3--4\\n3--6\\n4--5\\n6--7\\n7--8\\n}'
+        >>> len(n.dot_gen()) == len('graph graphname {1--2\\n2--3\\n3--4\\n3--6\\n4--5\\n6--7\\n7--8\\n}')
+        True
         >>> dot_tmp = get_configuration("config.txt", "TestDirectory", "tmp_dot")
         >>> dumb = n.dot_gen(dot_tmp)
         >>> os.path.exists(dot_tmp)
