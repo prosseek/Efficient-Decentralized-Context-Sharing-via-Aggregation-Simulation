@@ -4,6 +4,7 @@ In this class, we use list as a main container class.
 """
 import copy
 from utils import *
+from context.context import Context
 
 class Disaggregator(object):
     """Disaggregator class"""
@@ -27,23 +28,23 @@ class Disaggregator(object):
     def process_singles(self, singles, aggregates):
         """process the single contexts
 
-        >>> s  = context.Context(value=0.0, cohorts=[0])
-        >>> g1 = context.Context(value=1.0, cohorts=[0,1])
-        >>> g2 = context.Context(value=2.0, cohorts=[0,2])
-        >>> g3 = context.Context(value=3.0, cohorts=[0,1,2,3,4,5])
+        >>> s  = Context(value=0.0, cohorts=[0])
+        >>> g1 = Context(value=1.0, cohorts=[0,1])
+        >>> g2 = Context(value=2.0, cohorts=[0,2])
+        >>> g3 = Context(value=3.0, cohorts=[0,1,2,3,4,5])
         >>> d = Disaggregator()
         >>> new_singles, new_aggregates, new_processed = d.process_singles(set([s]), set([g1, g2]))
         >>> len(new_singles)
         3
 
         # [1] and [2] should be in the new singles
-        >>> s1 = context.Context(value=0.0, cohorts=[1])
+        >>> s1 = Context(value=0.0, cohorts=[1])
         >>> is_in(s1, new_singles, ignore_value=True)
         True
-        >>> s1 = context.Context(value=0.0, cohorts=[2])
+        >>> s1 = Context(value=0.0, cohorts=[2])
         >>> is_in(s1, new_singles, ignore_value=True)
         True
-        >>> s1 = context.Context(value=0.0, cohorts=[3])
+        >>> s1 = Context(value=0.0, cohorts=[3])
         >>> is_in(s1, new_singles, ignore_value=True)
         False
 
@@ -100,9 +101,9 @@ class Disaggregator(object):
     def split(self, sub, super_set):
         """Given sub context, and super_set, split the super_set to generate aggregates or singles
 
-        >>> s  = context.Context(value=0.0, cohorts=[0])
-        >>> g1 = context.Context(value=0.0, cohorts=[0,1])
-        >>> g2 = context.Context(value=0.0, cohorts=[0,2])
+        >>> s  = Context(value=0.0, cohorts=[0])
+        >>> g1 = Context(value=0.0, cohorts=[0,1])
+        >>> g2 = Context(value=0.0, cohorts=[0,2])
         >>> d = Disaggregator()
         >>> new_singles, new_aggregates, processed_aggregates = d.split(s, [g1,g2])
         >>> len(new_singles)
@@ -130,18 +131,18 @@ class Disaggregator(object):
     def run(self):
         """The main code
 
-        >>> s  = context.Context(value=0.0, cohorts=[0])
-        >>> g1 = context.Context(value=0.0, cohorts=[0,1])
-        >>> g2 = context.Context(value=0.0, cohorts=[0,2])
+        >>> s  = Context(value=0.0, cohorts=[0])
+        >>> g1 = Context(value=0.0, cohorts=[0,1])
+        >>> g2 = Context(value=0.0, cohorts=[0,2])
         >>> d = Disaggregator([s, g1, g2])
         >>> singles, groups = d.run()
 
         >>> len(singles)
         3
-        >>> s1 = context.Context(value=0.0, cohorts=[1])
+        >>> s1 = Context(value=0.0, cohorts=[1])
         >>> is_in(s1, singles, ignore_value=True)
         True
-        >>> s2 = context.Context(value=0.0, cohorts=[2])
+        >>> s2 = Context(value=0.0, cohorts=[2])
         >>> is_in(s2, singles, ignore_value=True)
         True
         >>> groups

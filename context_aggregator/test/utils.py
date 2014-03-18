@@ -6,7 +6,6 @@ def avg(set_of_single_contexts):
         sum += i.value
     return sum/len(set_of_single_contexts)
 
-
 if __name__ == "__main__":
     import doctest
     doctest.testmod()

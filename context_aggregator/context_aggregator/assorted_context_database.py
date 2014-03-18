@@ -35,13 +35,13 @@ class AssortedContextDatabase(object):
         >>> np = set([Context(value=3.0, cohorts=[4,5]), Context(value=5.0, cohorts=[5,6,7])])
         >>> snp = set([Context(value=5.0, cohorts=[5,6,7])])
         >>> f.set(s, p, np, snp)
-        >>> compare_contexts_and_cohorts(f.get_singles(), [[0]])
+        >>> same(f.get_singles(), [[0],[]])
         True
-        >>> compare_contexts_and_cohorts(f.get_primes(), [[1,2,3]])
+        >>> same(f.get_primes(), [[],[1,2,3]])
         True
-        >>> compare_contexts_and_cohorts(f.get_non_primes(), [[4,5], [5,6,7]])
+        >>> same(f.get_non_primes(), [[4,5], [5,6,7]])
         True
-        >>> compare_contexts_and_cohorts(f.get_selected_non_primes(), [[5,6,7]])
+        >>> same(f.get_selected_non_primes(), [[],[5,6,7]])
         True
         """
         if timestamp not in self.timestamp:

@@ -2,7 +2,8 @@
 PTHS=../context
 PYTHON_PATH="export PYTHONPATH=$PTHS"
 JYTHON_PATH="export JYTHONPATH=$PTHS"
-JYTHON="$JYTHON_PATH; java -jar /Users/smcho/Dropbox/smcho/bin/jar/jython/jython-standalone-2.7-b1.jar"
+JYTHON_JAR="java -jar /Users/smcho/Dropbox/smcho/bin/jar/jython/jython-standalone-2.7-b1.jar"
+JYTHON="$JYTHON_PATH; $JYTHON_JAR"
 PACKAGE_NAME=$(basename "$PWD")
 args=`getopt tj`
 
@@ -57,3 +58,11 @@ do
         fi  
     fi
 done
+
+python rununittests.py
+
+if [ $JYTHON_TEST -eq 1 ];
+then
+    echo "JYTHON UNITTEST running ... $i"
+    $JYTHON_JAR rununittests.py
+fi

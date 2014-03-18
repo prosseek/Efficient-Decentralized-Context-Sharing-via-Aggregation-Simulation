@@ -12,7 +12,7 @@ from context_aggregator.maxcover import MaxCover
 from utils import *
 from context_aggregator.utils import *
 
-class TestMaxCover(unittest.TestCase):
+class TestMaxcover(unittest.TestCase):
 
     def setUp(self):
         self.X = {

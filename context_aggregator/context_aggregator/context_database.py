@@ -36,9 +36,9 @@ class ContextDatabase(object):
         >>> s = set([Context(value=1.0, cohorts=[0])])
         >>> a = set([Context(value=2.0, cohorts=[1,2])])
         >>> cd.set(s, a)
-        >>> compare_contexts_and_cohorts(cd.get_aggregates(), [[1,2]])
+        >>> same(cd.get_aggregates(), [[],[1,2]])
         True
-        >>> compare_contexts_and_cohorts(cd.get_singles(), [[0]])
+        >>> same(cd.get_singles(), [[0],[]])
         True
         """
         if timestamp not in self.timestamp:

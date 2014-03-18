@@ -131,9 +131,9 @@ class DataFlow(object):
         """Returns the received data from node_index
 
         >>> d = DataFlow()
-        >>> d.receive_data(1, set([Context(value=1.0, cohorts=[0,1,2]), Context(value=4.0, cohorts=[3], hop_count = 1)]))
-        >>> d.receive_data(2, set([Context(value=2.0, cohorts=[0], hop_count=1), Context(value=4.0, cohorts=[4], hop_count = 10)]))
-        >>> compare_contexts_and_cohorts(d.get_received_data(), [[0,1,2],[0],[3],[4]])
+        >>> d.receive_data(1, set([Context(value=1.0, cohorts=[0,1,2]), Context(value=4.0, cohorts=[3], hopcount = 1)]))
+        >>> d.receive_data(2, set([Context(value=2.0, cohorts=[0], hopcount=1), Context(value=4.0, cohorts=[4], hopcount = 10)]))
+        >>> same(d.get_received_data(), [[0,3,4], [0,1,2]])
         True
         """
         if node_index is not None:
@@ -141,19 +141,19 @@ class DataFlow(object):
 
         result = set()
         for i in self.input.get_senders():
-            result = result.union(self.input[i])
+            result |= self.input[i]
 
         return result
 
     def receive_data(self, node_index, contexts):
         """receive_data
         1. Stores the information who sent what
-        2. Increase the hop_count when the context is a single context
+        2. Increase the hopcount when the context is a single context
 
         >>> d = DataFlow()
         >>> # two contexts are received
         >>> r = d.receive_data(1, set([Context(value=1.0, cohorts=[0,1,2]), Context(value=1.0, cohorts=[0,1,3])]))
-        >>> compare_contexts_and_cohorts(d.get_received_data(1), [[0,1,2],[0,1,3]])
+        >>> same(d.get_received_data(1), [[0,1,2],[0,1,3]])
         True
         >>>
         """
@@ -221,7 +221,7 @@ class DataFlow(object):
                 elements = elements.union(c.get_cohorts_as_set())
         value = sum / len(elements)
 
-        c = Context(value=value, cohorts=elements, hop_count=Context.AGGREGATED_CONTEXT, timestamp=timestamp)
+        c = Context(value=value, cohorts=elements, hopcount=Context.AGGREGATED_CONTEXT, timestamp=timestamp)
         return c
 
     def get_output(self):
@@ -233,12 +233,12 @@ class DataFlow(object):
     def filter_singles(self, singles):
         results = set()
         for s in singles:
-            if s.hop_count == Context.SPECIAL_CONTEXT or 0 <= s.hop_count <= self.max_tau:
+            if s.hopcount == Context.SPECIAL_CONTEXT or 0 <= s.hopcount <= self.max_tau:
                 results.add(s)
             if self.propagate_recovered_single:
-                if s.hop_count == Context.RECOVERED_CONTEXT:
+                if s.hopcount == Context.RECOVERED_CONTEXT:
                     context = copy(s)
-                    context.hop_count = 0
+                    context.hopcount = 0
                     results.add(context)
         return results
 
@@ -266,38 +266,38 @@ class DataFlow(object):
         >>> d.receive_data(1, set([Context(value=1.0, cohorts=[0,1,2])]))
         >>> d.receive_data(2, set([Context(value=2.0, cohorts=[0])]))
         >>> d.receive_data(3, set([Context(value=3.0, cohorts=[1])]))
-        >>> d.receive_data(4, set([Context(value=7.0, cohorts=[9], hop_count=Context.SPECIAL_CONTEXT)]))
+        >>> d.receive_data(4, set([Context(value=7.0, cohorts=[9], hopcount=Context.SPECIAL_CONTEXT)]))
         >>> # Emulating accumulated contexts
         >>> context_db = set([Context(value=1.0, cohorts=[2,4,5,3]),Context(value=1.0, cohorts=[5,6]),Context(value=7.0, cohorts=[7,8])])
         >>> d.set_database(singles=set([]), aggregates=context_db, timestamp=10)
         >>> d.run(timestamp=10)
         >>> # Emulating newly found singles and aggregates from database
-        >>> compare_contexts_and_cohorts(d.get_database_singles(timestamp=10), [[0],[1],[2],[9]])
+        >>> same(d.get_database_singles(timestamp=10), [[0,1,2,9],[]])
         True
-        >>> compare_contexts_and_cohorts(d.get_database_aggregates(timestamp=10),[[7,8],[3,4,5],[6,5]])
+        >>> same(d.get_database_aggregates(timestamp=10),[[7,8],[3,4,5],[6,5]])
         True
         >>> # Emulating the disaggregation process
-        >>> compare_contexts_and_cohorts(d.get_singles(timestamp=10), [[0],[1],[2],[9]])
+        >>> same(d.get_singles(timestamp=10), [[0,1,2,9],[]])
         True
-        >>> compare_contexts_and_cohorts(d.get_primes(timestamp=10), [[7,8]])
+        >>> same(d.get_primes(timestamp=10), [[],[7,8]])
         True
-        >>> compare_contexts_and_cohorts(d.get_non_primes(timestamp=10), [[3,4,5], [5,6]])
+        >>> same(d.get_non_primes(timestamp=10), [[3,4,5], [5,6]])
         True
-        >>> compare_contexts_and_cohorts(d.get_selected_non_primes(timestamp=10), [[3,4,5]])
+        >>> same(d.get_selected_non_primes(timestamp=10), [[],[3,4,5]])
         True
         >>> ### Check the new aggregate has correct elements
         >>> d.get_new_aggregate().get_cohorts_as_set() == set([0,1,2,3,4,5,7,8,9])
         True
-        >>> compare_contexts_and_cohorts(d.get_filtered_singles(), [[0],[1],[9]])
+        >>> same(d.get_filtered_singles(), [[0,1,9],[]])
         True
         >>> r = d.get_output()
-        >>> compare_contexts_and_cohorts(r[1], [[0,1,2,3,4,5,7,8,9],[0],[1],[9]])
+        >>> same(r[1], [[0,1,9],[0,1,2,3,4,5,7,8,9]])
         True
-        >>> compare_contexts_and_cohorts(r[2], [[0,1,2,3,4,5,7,8,9],[1],[9]])
+        >>> same(r[2], [[1,9],[0,1,2,3,4,5,7,8,9]])
         True
-        >>> compare_contexts_and_cohorts(r[3], [[0,1,2,3,4,5,7,8,9],[0],[9]])
+        >>> same(r[3], [[0,9],[0,1,2,3,4,5,7,8,9]])
         True
-        >>> compare_contexts_and_cohorts(r[4], [[0,1,2,3,4,5,7,8,9],[0],[1]])
+        >>> same(r[4], [[0,1],[0,1,2,3,4,5,7,8,9]])
         True
         """
 

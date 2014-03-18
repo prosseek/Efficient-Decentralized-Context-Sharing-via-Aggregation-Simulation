@@ -13,9 +13,9 @@ import zlib
 from utils import *
 
 class Context(object):
-    r"""Context is a tuple of (value, cohorts, timestamp, hop_count (Tau))
+    r"""Context is a tuple of (value, cohorts, timestamp, hopcount (Tau))
     
-    hop_count ::
+    hopcount ::
     
         positive integer: the number of hops from the source
         SENSED_CONTEXT : the single context newly generated from host
@@ -35,7 +35,7 @@ class Context(object):
     RECOVERED_CONTEXT = -2
     SPECIAL_CONTEXT = -3
     
-    def __init__(self, value = None, cohorts = None, timestamp = None, hop_count = 0):
+    def __init__(self, value = None, cohorts = None, timestamp = None, hopcount = 0):
         r"""Context constructor.
         
         All the parameters can be None or 0. 
@@ -66,23 +66,23 @@ class Context(object):
         self.cohorts = cohorts
         self.timestamp = timestamp
         self.cohorts = cohorts
-        self.hop_count = hop_count
+        self.hopcount = hopcount
         
     def __eq__(self, other):
         """Checks if two contexts are the same
 
-        >>> c1 = Context(1, cohorts=set([0,3,4]), timestamp=1, hop_count=4)
-        >>> c2 = Context(1, cohorts=set([0,3,4]), timestamp=1, hop_count=4)
+        >>> c1 = Context(1, cohorts=set([0,3,4]), timestamp=1, hopcount=4)
+        >>> c2 = Context(1, cohorts=set([0,3,4]), timestamp=1, hopcount=4)
         >>> c1 == c2
         True
 
-        >>> c1 = Context(1, cohorts=set([0,3]), timestamp=1, hop_count=4)
-        >>> c2 = Context(1, cohorts=set([0,3,4]), timestamp=1, hop_count=4)
+        >>> c1 = Context(1, cohorts=set([0,3]), timestamp=1, hopcount=4)
+        >>> c2 = Context(1, cohorts=set([0,3,4]), timestamp=1, hopcount=4)
         >>> c1 == c2
         False
 
-        >>> c1 = Context(1, cohorts=set([0,3,4]), timestamp=1, hop_count=3)
-        >>> c2 = Context(1, cohorts=set([0,3,4]), timestamp=1, hop_count=4)
+        >>> c1 = Context(1, cohorts=set([0,3,4]), timestamp=1, hopcount=3)
+        >>> c2 = Context(1, cohorts=set([0,3,4]), timestamp=1, hopcount=4)
         >>> c1 == c2
         False
         """
@@ -91,7 +91,7 @@ class Context(object):
         if self.value == other.value and \
            self.cohorts == other.cohorts and \
            self.timestamp == other.timestamp and \
-           self.hop_count == other.hop_count: 
+           self.hopcount == other.hopcount: 
             return True
         return False
 
@@ -99,14 +99,14 @@ class Context(object):
         """Check if this context is equivalent to the other context
         Equivalence means the same value and same cohorts
 
-        >>> c1 = Context(1, cohorts=set([0,3,4]), timestamp=1, hop_count=3)
-        >>> c2 = Context(1, cohorts=set([0,3,4]), timestamp=1, hop_count=4)
+        >>> c1 = Context(1, cohorts=set([0,3,4]), timestamp=1, hopcount=3)
+        >>> c2 = Context(1, cohorts=set([0,3,4]), timestamp=1, hopcount=4)
         >>> c1.equiv(c2)
         True
 
         When ignore_value is True, compare only the cohorts
-        >>> c1 = Context(4, cohorts=set([0,3,4]), timestamp=1, hop_count=3)
-        >>> c2 = Context(1, cohorts=set([0,3,4]), timestamp=1, hop_count=4)
+        >>> c1 = Context(4, cohorts=set([0,3,4]), timestamp=1, hopcount=3)
+        >>> c2 = Context(1, cohorts=set([0,3,4]), timestamp=1, hopcount=4)
         >>> c1.equiv(c2, ignore_value=True)
         True
         """
@@ -145,7 +145,7 @@ class Context(object):
         else:
             cohorts = ""
 
-        result = "v(%4.2f):c(%s):h(%d)" % (self.value, cohorts, self.hop_count) # , self.value())
+        result = "v(%4.2f):c(%s):h(%d)" % (self.value, cohorts, self.hopcount) # , self.value())
         return result
 
     def __add__(self, other):
@@ -166,8 +166,8 @@ class Context(object):
         n2 = get_number_of_one_from_bytearray(other.cohorts)
             
         value = float(n1*self.value + n2*other.value)/(n1 + n2)
-        hop_count = Context.AGGREGATED_CONTEXT
-        return Context(value=value, cohorts=r, hop_count=hop_count)
+        hopcount = Context.AGGREGATED_CONTEXT
+        return Context(value=value, cohorts=r, hopcount=hopcount)
 
     def __sub__(self, other):
         """context subtraction: it works only when a > b
@@ -217,10 +217,10 @@ class Context(object):
         value = float(n1*self.value - n2*other.value)/number_of_elements
 
         if number_of_elements == 1:
-            hop_count = Context.RECOVERED_CONTEXT
+            hopcount = Context.RECOVERED_CONTEXT
         else:
-            hop_count = Context.AGGREGATED_CONTEXT
-        return Context(value=value, cohorts=r, hop_count=hop_count)
+            hopcount = Context.AGGREGATED_CONTEXT
+        return Context(value=value, cohorts=r, hopcount=hopcount)
 
     def __len__(self):
         """
@@ -310,6 +310,22 @@ class Context(object):
         """
         return bytearray2set(self.cohorts)
 
+    def get_cohort_as_tuple(self):
+        """
+        Works only with single context
+
+        >>> c = Context(value=1.0, cohorts=set([1]), hopcount=-3)
+        >>> c.get_cohort_as_tuple() == (1,-3)
+        True
+        >>> c = Context(value=1.0, cohorts=set([1,3,4]), hopcount=-1)
+        >>> c.get_cohort_as_tuple() is None
+        True
+        """
+        if not self.is_single(): return None
+        else:
+            single = bytearray2set(self.cohorts)
+            return (list(single)[0], self.hopcount)
+
     def get_cohorts_size_in_bytes(self):
         """Returns the number of bit widths of cohorts
 
@@ -358,21 +374,21 @@ class Context(object):
     def increase_hop_count(context):
         """
 
-        >>> c = Context(value=1.0, cohorts=[1,2,3], hop_count = -1)
-        >>> # Increase hop_count has a meaning with single context
+        >>> c = Context(value=1.0, cohorts=[1,2,3], hopcount = -1)
+        >>> # Increase hopcount has a meaning with single context
         >>> c2 = Context.increase_hop_count(c)
-        >>> c2.hop_count == c.hop_count == -1
+        >>> c2.hopcount == c.hopcount == -1
         True
-        >>> c = Context(value=1.0, cohorts=[1], hop_count=5)
-        >>> # Increase hop_count has a meaning with single context
+        >>> c = Context(value=1.0, cohorts=[1], hopcount=5)
+        >>> # Increase hopcount has a meaning with single context
         >>> c = Context.increase_hop_count(c)
-        >>> c.hop_count == 5+1
+        >>> c.hopcount == 5+1
         True
-        >>> c = [Context(value=1.0, cohorts=[1], hop_count=0), Context(value=1.0, cohorts=[1], hop_count=1), \
-            Context(value=1.0, cohorts=[1], hop_count=2), Context(value=1.0, cohorts=[9], hop_count=Context.SPECIAL_CONTEXT)]
-        >>> # Increase hop_count has a meaning with single context
+        >>> c = [Context(value=1.0, cohorts=[1], hopcount=0), Context(value=1.0, cohorts=[1], hopcount=1), \
+            Context(value=1.0, cohorts=[1], hopcount=2), Context(value=1.0, cohorts=[9], hopcount=Context.SPECIAL_CONTEXT)]
+        >>> # Increase hopcount has a meaning with single context
         >>> c = Context.increase_hop_count(c)
-        >>> c[0].hop_count == 1 and c[1].hop_count == 2 and c[2].hop_count == 3 and c[3].hop_count == Context.SPECIAL_CONTEXT
+        >>> c[0].hopcount == 1 and c[1].hopcount == 2 and c[2].hopcount == 3 and c[3].hopcount == Context.SPECIAL_CONTEXT
         True
         """
         if type(context) is set:
@@ -388,9 +404,9 @@ class Context(object):
             return result
 
         elif type(context) is Context:
-            if len(context) == 1 and context.hop_count >= 0:
+            if len(context) == 1 and context.hopcount >= 0:
                 c = copy.deepcopy(context)
-                c.hop_count = context.hop_count + 1
+                c.hopcount = context.hopcount + 1
             else:
                 c = context
             return c
@@ -405,7 +421,7 @@ class Context(object):
         """
 
         value is stored in double (d) : 8 bytes
-        hop_count is stored in signed short (h) : 2 bytes
+        hopcount is stored in signed short (h) : 2 bytes
 
         timestamp is stored in unsigned short (H) : 2 bytes
         The rest of the data is serialized cohorts
@@ -427,7 +443,7 @@ class Context(object):
             timestamp = self.timestamp
 
         v = struct.pack('d', value)
-        h = struct.pack('h', self.hop_count)
+        h = struct.pack('h', self.hopcount)
         t = struct.pack('H', timestamp)
 
         result = v + h + t
@@ -479,7 +495,7 @@ class Context(object):
         if v == float('inf'): v = None
         if t == 0: t = None
 
-        return Context(value=v, hop_count=h, timestamp=t, cohorts=c)
+        return Context(value=v, hopcount=h, timestamp=t, cohorts=c)
 
 if __name__ == "__main__": # and __package__ is None:
     import doctest

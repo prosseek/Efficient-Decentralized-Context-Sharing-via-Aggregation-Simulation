@@ -319,7 +319,7 @@ class ContextHistory(object):
         >>> single_set = set([1,2])
         >>> context_set = set([Context(value=1.0, cohorts=[1])])
         >>> r = ContextHistory.filter_not_sent_singles(single_set, context_set)
-        >>> compare_contexts_and_cohorts(r, [[1]])
+        >>> same(r, [[1],[]])
         True
         """
         result = set()
@@ -338,7 +338,7 @@ class ContextHistory(object):
         >>> 2 not in r
         True
         >>> # From single contexts 1 and 2, only 2 is the new information
-        >>> compare_contexts_and_cohorts(r[1], [[2]])
+        >>> same(r[1], [[2],[]])
         True
         """
         # check new inputs first
@@ -391,7 +391,7 @@ class ContextHistory(object):
         >>> contexts =set([Context(value=1.0, cohorts=[1]), Context(value=2.0, cohorts=[2]), Context(value=3.0, cohorts=[3,4,5,6])])
         >>> inputs={1:set([Context(value=1.0, cohorts=[1])])}
         >>> r = h.calculate_output(contexts=contexts, inputs=inputs)
-        >>> compare_contexts_and_cohorts(r[1], [[2],[3,4,5,6]])
+        >>> same(r[1], [[2],[3,4,5,6]])
         True
         """
         singles = set()

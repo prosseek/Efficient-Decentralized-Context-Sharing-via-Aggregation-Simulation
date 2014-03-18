@@ -29,7 +29,7 @@ g01 = Context(value=avg([c0, c1]), cohorts=[0,1])
 g34 = Context(value=avg([c3, c4]), cohorts=[3,4])
 g3478 = Context(value=avg([c3, c4, c7, c8]), cohorts=[3,4,7,8])
 
-class TestDisaggregation(unittest.TestCase):
+class TestDisaggregator(unittest.TestCase):
     def setUp(self):
         # The input parameter should be host
         pass

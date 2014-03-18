@@ -63,8 +63,8 @@ class TestContextHistory(unittest.TestCase):
         h.set_sent_singles(1, [1,2])
         h.set_sent_singles(2, [1,2])
         r = h.calculate_output_for_singles(new_singles, {})
-        self.assertTrue(compare_contexts_and_cohorts(r[1], [[3],[4]]))
-        self.assertTrue(compare_contexts_and_cohorts(r[2], [[3],[4]]))
+        self.assertTrue(same(r[1], [[3,4],[]]))
+        self.assertTrue(same(r[2], [[3,4],[]]))
 
     def test_calculate_output_for_singles2(self):
         """
@@ -77,8 +77,8 @@ class TestContextHistory(unittest.TestCase):
         h.set_sent_singles(2, [1,2])
         # 3 is already received, so only send the 4
         r = h.calculate_output_for_singles(new_singles, {1:set([Context(value=1.0, cohorts=[3])]), 2:set([Context(value=1.0, cohorts=[3])])})
-        self.assertTrue(compare_contexts_and_cohorts(r[1], [[4]]))
-        self.assertTrue(compare_contexts_and_cohorts(r[2], [[4]]))
+        self.assertTrue(same(r[1], [[4],[]]))
+        self.assertTrue(same(r[2], [[4],[]]))
 
     def test_calculate_output_for_singles2(self):
         """
@@ -102,7 +102,7 @@ class TestContextHistory(unittest.TestCase):
                        Context(value=3.0, cohorts=[5,6,7,8])])
         inputs={1:set([Context(value=1.0, cohorts=[3])])}
         r = h.calculate_output(contexts=contexts, inputs=inputs)
-        self.assertTrue(compare_contexts_and_cohorts(r[1], [[4],[5,6,7,8]]))
+        self.assertTrue(same(r[1], [[4],[5,6,7,8]]))
 
     def test_calculate_output2(self):
         h = ContextHistory()
@@ -111,8 +111,8 @@ class TestContextHistory(unittest.TestCase):
                        Context(value=3.0, cohorts=[5,6,7,8])])
         inputs={2:set([Context(value=1.0, cohorts=[2])])}
         r = h.calculate_output(contexts=contexts, inputs=inputs)
-        self.assertTrue(compare_contexts_and_cohorts(r[1], [[3], [4],[5,6,7,8]]))
-        self.assertTrue(compare_contexts_and_cohorts(r[2], [[1],[3],[4],[5,6,7,8]]))
+        self.assertTrue(same(r[1], [[3,4],[5,6,7,8]]))
+        self.assertTrue(same(r[2], [[1,3,4],[5,6,7,8]]))
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)
