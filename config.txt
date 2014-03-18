@@ -1,2 +1,6 @@
 [TestDirectory]
 path=/Users/smcho/code/PycharmProjects/contextAggregator/test_files
+test1=/Users/smcho/code/PycharmProjects/contextAggregator/test_files/network1.txt
+tmp_dot=/Users/smcho/code/PycharmProjects/contextAggregator/test_files/tmp/network1.dot
+tmp_dot2=/Users/smcho/code/PycharmProjects/contextAggregator/test_files/tmp/network2.dot
+tmp_dot3=/Users/smcho/code/PycharmProjects/contextAggregator/test_files/tmp/network3.dot
