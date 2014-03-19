@@ -33,7 +33,6 @@ def get_configuration(config_file_name, section, key):
         f.read(config_file_path)
         return f.get(section, key)
 
-
 if __name__ == "__main__":
     import doctest
     doctest.testmod()

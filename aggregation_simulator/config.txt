@@ -1,0 +1,4 @@
+# TEST VALUE FOR CONFIGURATION DOCTEST
+# Don't remove the items below this, if you do this it will cause an error when you run tests
+test.value = 15
+test.float_value = 15.0
