@@ -1,4 +1,9 @@
 r"""Module Context -- the representation of contexts in Grapevine middleware
+
+Standard string format
+-> v(1.00):c([1,2,3]):h(1):t(0)
+Standard string format (simplified version)
+-> (1.00,[1,2,3],1,0)
 """
 
 import sys
@@ -7,9 +12,6 @@ import copy
 import zlib
 #import platform
 
-#sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-#print sys.path
-#print os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 from utils import *
 
 class Context(object):
@@ -35,7 +37,7 @@ class Context(object):
     RECOVERED_CONTEXT = -2
     SPECIAL_CONTEXT = -3
     
-    def __init__(self, value = None, cohorts = None, timestamp = None, hopcount = 0):
+    def __init__(self, value = None, cohorts = None, timestamp = 0, hopcount = 0):
         r"""Context constructor.
         
         All the parameters can be None or 0. 
@@ -95,6 +97,35 @@ class Context(object):
             return True
         return False
 
+    def __str__(self):
+        return self.to_string()
+
+    def to_string(self, simple=False):
+        """
+
+        A context is represented as a tuple
+        (value, [cohorts], timestamp, hopcount)
+
+        >>> c = Context(value=1.0, cohorts=[1,2,3], timestamp=0, hopcount=1)
+        >>> print c.to_string()
+        v(1.00):c([1,2,3]):h(1):t(0)
+        >>> print c.to_string(simple=True)
+        (1.00,[1,2,3],1,0)
+        """
+        if self.cohorts is None:
+            cohorts = set([])
+        else:
+            cohorts = self.get_cohorts_as_set()
+
+        cohorts_string = ",".join(sorted([str(cohort) for cohort in cohorts]))
+
+        if simple:
+            result = "(%4.2f,[%s],%d,%d)" % (self.value, cohorts_string, self.hopcount, self.timestamp)
+        else:
+            result = "v(%4.2f):c([%s]):h(%d):t(%d)" % (self.value, cohorts_string, self.hopcount, self.timestamp) # , self.value())
+        return result
+
+
     def equiv(self, other, ignore_value=False):
         """Check if this context is equivalent to the other context
         Equivalence means the same value and same cohorts
@@ -133,20 +164,9 @@ class Context(object):
         """returns the string format of a string
 
         >>> print Context(value=1, cohorts=7)
-        v(1.00):c([0, 1, 2]):h(0)
+        v(1.00):c([0,1,2]):h(0):t(0)
         """
-        if self.cohorts is not None:
-            if type(self.cohorts) is bytearray:
-                cohorts = bytearray2set(self.cohorts)
-            elif type(self.cohorts) in [long, int]:
-                cohorts = long2set(self.cohorts)
-
-            cohorts = sorted(list(cohorts))
-        else:
-            cohorts = ""
-
-        result = "v(%4.2f):c(%s):h(%d)" % (self.value, cohorts, self.hopcount) # , self.value())
-        return result
+        return self.to_string(simple=False)
 
     def __add__(self, other):
         """context addition: it works only when the two contexts have no shared cohorts.
@@ -156,7 +176,7 @@ class Context(object):
         >>> b = Context(value=2.0, cohorts=set([1]))
         >>> c = a + b
         >>> print(c)
-        v(1.50):c([0, 1]):h(-1)
+        v(1.50):c([0,1]):h(-1):t(0)
         """
         r = add(self.cohorts, other.cohorts)
         # when cohorts share element, return will be returned
@@ -177,7 +197,7 @@ class Context(object):
         >>> b = Context(value=2.0, cohorts=set([0]))
         >>> c = a - b
         >>> print(c)
-        v(0.67):c([1, 2, 3]):h(-1)
+        v(0.67):c([1,2,3]):h(-1):t(0)
         >>> c.is_single()
         False
 
@@ -185,7 +205,7 @@ class Context(object):
         >>> b = Context(value=2.0, cohorts=set([0]))
         >>> c = a - b
         >>> print(c)
-        v(0.00):c([1]):h(-2)
+        v(0.00):c([1]):h(-2):t(0)
         >>> c.is_single()
         True
 
@@ -493,7 +513,7 @@ class Context(object):
             c = None
 
         if v == float('inf'): v = None
-        if t == 0: t = None
+        #if t == 0: t = None
 
         return Context(value=v, hopcount=h, timestamp=t, cohorts=c)
 

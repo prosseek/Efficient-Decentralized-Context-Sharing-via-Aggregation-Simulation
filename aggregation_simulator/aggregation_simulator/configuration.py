@@ -22,6 +22,8 @@ import os
 import re
 from utils import *
 
+test_config_file = "test_config.txt"
+
 class Configuration(object):
     def __init__(self):
         self.file_path = None
@@ -57,8 +59,8 @@ class Configuration(object):
         ...
         IOError: No dumb exists
         >>> c = Configuration()
-        >>> c.read("config.txt")
-        >>> c.file_path.endswith("config.txt")
+        >>> c.read(test_config_file)
+        >>> c.file_path.endswith(test_config_file)
         True
         """
         # if the configuration is given as an absolute path, and it exists
@@ -77,17 +79,19 @@ class Configuration(object):
         with open(configuration_path, "r") as f:
             for l in f:
                 if l.startswith('#'): continue
-                variable, value = self.parse_assignment(l)
-                self.configuration[variable] = value
-
+                try:
+                    variable, value = self.parse_assignment(l)
+                    self.configuration[variable] = value
+                except AttributeError, e:
+                    raise AttributeError(str(e) + "in file %s" % configuration_path)
     def get(self, namespace, key):
         """Return the value from namespace.key in string (raw format)
 
         >>> c = Configuration()
-        >>> c.read("config.txt")
+        >>> c.read(test_config_file)
         >>> c.get("test", "value")
         '15'
-        >>> c.get("test", "value")
+        >>> c.get("test", "float_value")
         '15.0'
         """
         key = namespace + "." + key
@@ -100,7 +104,7 @@ class Configuration(object):
         """
 
         >>> c = Configuration()
-        >>> c.read("config.txt")
+        >>> c.read(test_config_file)
         >>> c.get_int("test", "value")
         15
         >>> c.get_int("test", "value2")

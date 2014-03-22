@@ -23,6 +23,7 @@ from context_aggregator.utils import *
 from utils import *
 from ConfigParser import *
 
+CONFIGURATION_FILE_FOR_TEST = "config.cfg"
 class Network(object):
     def __init__(self, network_file=None):
         self.network = {}
@@ -33,7 +34,7 @@ class Network(object):
     def load_file(self, network_file):
         """
 
-        >>> file_path = get_configuration("config.txt", "TestDirectory", "test1")
+        >>> file_path = get_configuration("config.cfg", "TestDirectory", "test1")
         >>> n = Network()
         >>> p = n.load_file(file_path)
         >>> same({1: [2], 2: [1, 3], 3: [2, 4, 6], 4: [3, 5], 5: [4], 6: [3, 7], 7: [8, 6], 8: [7]}, n.get_network())
@@ -55,7 +56,7 @@ class Network(object):
     def __getitem__(self, index):
         """
 
-        >>> file_path = get_configuration("config.txt", "TestDirectory", "test1")
+        >>> file_path = get_configuration(CONFIGURATION_FILE_FOR_TEST, "TestDirectory", "test1")
         >>> n = Network(file_path)
         >>> same(n[3], [2,4,6])
         True
@@ -65,7 +66,7 @@ class Network(object):
     def get_neighbors(self, index):
         """
 
-        >>> file_path = get_configuration("config.txt", "TestDirectory", "test1")
+        >>> file_path = get_configuration(CONFIGURATION_FILE_FOR_TEST, "TestDirectory", "test1")
         >>> n = Network(file_path)
         >>> same(n.get_neighbors(3), [2,4,6])
         True
@@ -119,7 +120,7 @@ class Network(object):
     def network_file_parse_into_dictionary(self, network_file):
         """
 
-        >>> file_path = get_configuration("config.txt", "TestDirectory", "test1")
+        >>> file_path = get_configuration(CONFIGURATION_FILE_FOR_TEST, "TestDirectory", "test1")
         >>> n = Network()
         >>> d = n.network_file_parse_into_dictionary(file_path)
         >>> same(d, {1: [2], 2: [1, 3], 3: [2, 4, 6], 4: [3, 5], 5: [4], 6: [3, 7], 7: [6, 8], 8: [7]})
@@ -139,11 +140,11 @@ class Network(object):
     def dot_gen(self, dot_file_path = None):
         """
 
-        >>> file_path = get_configuration("config.txt", "TestDirectory", "test1")
+        >>> file_path = get_configuration(CONFIGURATION_FILE_FOR_TEST, "TestDirectory", "test1")
         >>> n = Network(file_path)
         >>> len(n.dot_gen()) == len('graph graphname {1--2\\n2--3\\n3--4\\n3--6\\n4--5\\n6--7\\n7--8\\n}')
         True
-        >>> dot_tmp = get_configuration("config.txt", "TestDirectory", "tmp_dot")
+        >>> dot_tmp = get_configuration(CONFIGURATION_FILE_FOR_TEST, "TestDirectory", "tmp_dot")
         >>> dumb = n.dot_gen(dot_tmp)
         >>> os.path.exists(dot_tmp)
         True
@@ -196,7 +197,7 @@ class Network(object):
 
     def remove_neighbor(self, index, neighbor):
         """
-        >>> file_path = get_configuration("config.txt", "TestDirectory", "test1")
+        >>> file_path = get_configuration(CONFIGURATION_FILE_FOR_TEST, "TestDirectory", "test1")
         >>> n = Network(file_path)
         >>> same({2: [3], 3: [2, 4, 6], 4: [3, 5], 5: [4], 6: [3, 7], 7: [8, 6], 8: [7]}, n.remove_neighbor(1, 2))
         True
@@ -217,18 +218,18 @@ class Network(object):
 
     def add_neighbor(self, index, neighbor):
         """
-        >>> file_path = get_configuration("config.txt", "TestDirectory", "test1")
+        >>> file_path = get_configuration(CONFIGURATION_FILE_FOR_TEST, "TestDirectory", "test1")
         >>> n = Network(file_path)
         >>> same(n.add_neighbor(7, 9), {1: [2], 2: [1, 3], 3: [2, 4, 6], 4: [3, 5], 5: [4], 6: [3, 7], 7: [8, 9, 6], 8: [7], 9: [7]})
         True
         >>> same(n.get_network(), {1: [2], 2: [1, 3], 3: [2, 4, 6], 4: [3, 5], 5: [4], 6: [3, 7], 7: [8, 9, 6], 8: [7], 9: [7]})
         True
-        >>> dot_file = get_configuration("config.txt", "TestDirectory", "tmp_dot2")
+        >>> dot_file = get_configuration(CONFIGURATION_FILE_FOR_TEST, "TestDirectory", "tmp_dot2")
         >>> dumb = n.dot_gen(dot_file)
         >>> n = Network(file_path)
         >>> same(n.add_neighbor(10, 11), {1: [2], 2: [1, 3], 3: [2, 4, 6], 4: [3, 5], 5: [4], 6: [3, 7], 7: [8, 6], 8: [7], 10: [11], 11: [10]})
         True
-        >>> dot_file = get_configuration("config.txt", "TestDirectory", "tmp_dot3")
+        >>> dot_file = get_configuration(CONFIGURATION_FILE_FOR_TEST, "TestDirectory", "tmp_dot3")
         >>> dumb = n.dot_gen(dot_file)
         """
 

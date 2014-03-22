@@ -14,6 +14,8 @@ PTH="context_aggregator/dataflow.py"
 PYTON_EXECUTABLE="/usr/bin/python"
 PYH="$PYTHON_PATH; $PYTON_EXECUTABLE"
 
+SKIPLIST="simulator.py __init__.py"
+
 # parameter setup
 for i 
 do
@@ -31,7 +33,18 @@ result=$(ls $PACKAGE_NAME/*.py)
 
 for i in $result
 do
-    if [ "$i" == "$PACKAGE_NAME/__init__.py" ];
+    skipit=0
+    for skip in $SKIPLIST;
+    do
+        #echo $skip
+        if [ "$i" == "$PACKAGE_NAME/$skip" ];
+        then
+            skipit=1
+            break
+        fi
+    done
+    
+    if [ $skipit == 1 ];
     then
         continue
     fi

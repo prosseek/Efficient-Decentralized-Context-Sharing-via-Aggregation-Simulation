@@ -8,7 +8,7 @@ import os
 from world import World
 from configuration import *
 
-DEFAULT_CONFIG_NAME="config.txt"
+DEFAULT_CONFIG_NAME="test_config.txt"
 
 class Simulator(object):
     def __init__(self, world, configuration):

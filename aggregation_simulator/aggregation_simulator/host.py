@@ -14,13 +14,14 @@ class Host(object):
     >>> h1 = Host(1)
     >>> h1.id != h3.id
     True
-    >>> h1.world is h3.world
+
+    h1.world is h3.world
     True
     """
     def __init__(self, id):
         self.id = id
         self.dataflow = DataFlow()
-        self.world = World.instance()
+        #self.world = World.instance()
 
     def send(self, timestamp=0):
         output_dictionary = self.dataflow.get_output()

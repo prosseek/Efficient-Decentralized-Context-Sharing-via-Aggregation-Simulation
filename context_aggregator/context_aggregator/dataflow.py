@@ -61,7 +61,6 @@ from context.context import Context
 from input import Input
 from context_database import ContextDatabase
 from assorted_context_database import AssortedContextDatabase
-from output import Output
 from context_history import ContextHistory
 from copy import copy
 
