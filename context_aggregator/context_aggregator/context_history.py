@@ -1,7 +1,7 @@
 """context history
 
 Takes care of anything related to context history sent and received
-
+Assume all the data is in standard format
 """
 
 from context.context import Context
@@ -18,8 +18,8 @@ class ContextHistory(object):
         HOST_INDEX means the aggregation and single contexts so far
 
         example)
-        node -1 -> [set([1,3,4]), set([6,7,8,9,10])
-        node 1 -> [set([1,2,3]), set([5,7,8])]
+        node -1 -> [[1,3,4],[6,7,8,9,10])
+        node 1 -> [[1,2,3],[5,7,8]]
         ...
 
         """
@@ -66,16 +66,16 @@ class ContextHistory(object):
     def to_string(self, display_mode=0, timestamp=None):
         """
         >>> h = ContextHistory()
-        >>> h.set_history(ContextHistory.HOST_INDEX, [set([0,1,10]), set([2,3,5,6])], timestamp=100)
-        >>> h.set_history(1, [set([1,2,3]), set([4,5,6,7])], timestamp=100)
-        >>> h.set_history(2, [set([1,2,3,5]), set([4,5,7,9])], timestamp=100)
+        >>> h.set_history(ContextHistory.HOST_INDEX, [[0,1,10],[2,3,5,6]], timestamp=100)
+        >>> h.set_history(1, [[1,2,3],[4,5,6,7]], timestamp=100)
+        >>> h.set_history(2, [[1,2,3,5],[4,5,7,9]], timestamp=100)
         >>> print h.to_string(timestamp=100)
         100:*:[[0,1,10][2,3,5,6]]
         100:1:[[1,2,3][4,5,6,7]]
         100:2:[[1,2,3,5][4,5,7,9]]
-        >>> h.set_history(ContextHistory.HOST_INDEX, [set([0,1,10]), set([2,3,5,6])], timestamp=10)
-        >>> h.set_history(1, [set([1,2,3]), set([4,5,6,7])], timestamp=10)
-        >>> h.set_history(2, [set([1,2,3,5]), set([4,5,7,9])], timestamp=10)
+        >>> h.set_history(ContextHistory.HOST_INDEX, [[0,1,10],[2,3,5,6]], timestamp=10)
+        >>> h.set_history(1, [[1,2,3],[4,5,6,7]], timestamp=10)
+        >>> h.set_history(2, [[1,2,3,5],[4,5,7,9]], timestamp=10)
         >>> print h.to_string()
         10:*:[[0,1,10][2,3,5,6]]
         10:1:[[1,2,3][4,5,6,7]]
@@ -110,16 +110,47 @@ class ContextHistory(object):
         set the history with value
         """
         assert type(value) is list
-        assert type(value[0]) is set and type(value[1]) is set
+        assert type(value[0]) is list and type(value[1]) is list
 
         container = self.check_and_get_container(timestamp)
         container.set(index, value)
+
+    def get(self, timestamp=0):
+        """Returns the dictionary in standard format
+        ex: {1:[[...],[...]], ...}
+
+        >>> h = ContextHistory()
+        >>> input = [[0,1,2],[3,4,5,6,7]]
+        >>> h.set_history(ContextHistory.HOST_INDEX, input)
+        >>> r = h.get()
+        >>> same(r, {ContextHistory.HOST_INDEX:input})
+        True
+        """
+        container = self.get_container(timestamp=timestamp)
+        if container is not None:
+            return container.dictionary
+        return None
+
+    def set(self, dictionary, timestamp=0):
+        """
+
+        >>> h = ContextHistory()
+        >>> input = {0:[[0,1,2],[3,4,5,6,7]]}
+        >>> h.set(input, 5)
+        >>> r = h.get(timestamp=5)
+        >>> same(r, input)
+        True
+        """
+        assert type(dictionary) is dict
+        if timestamp not in self.context_history:
+            self.context_history[timestamp] = ContextHistory.Container()
+        self.get_container(timestamp).dictionary = dictionary
 
     def get_history(self, index, timestamp=0):
         """
 
         >>> h = ContextHistory()
-        >>> input = [set([0,1,2]),set([3,4,5,6,7])]
+        >>> input = [[0,1,2],[3,4,5,6,7]]
         >>> h.set_history(ContextHistory.HOST_INDEX, input)
         >>> r = h.get_history(ContextHistory.HOST_INDEX)
         >>> same(r, input)
@@ -127,7 +158,7 @@ class ContextHistory(object):
         >>> h.get_history(3, timestamp=5)
         >>> h.get_history(3)
         """
-        container = self.get_container(timestamp)
+        container = self.get_container(timestamp=timestamp)
         if container is not None:
             return container.get(index)
         return None

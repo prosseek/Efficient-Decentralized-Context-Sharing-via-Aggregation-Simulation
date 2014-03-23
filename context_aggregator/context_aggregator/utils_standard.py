@@ -32,7 +32,6 @@ We define contexts as
 import sys
 #print sys.path
 from context.context import Context
-from collections import OrderedDict
 
 def contexts_to_standard2(context_set, remove_duplication=True):
     """
@@ -55,7 +54,7 @@ def contexts_to_standard2(context_set, remove_duplication=True):
     True
     """
 
-    assert type(context_set) is set
+    assert type(context_set) in [set, list]
     singles = []
     aggregate = []
     for c in context_set:
@@ -90,10 +89,14 @@ def contexts_to_standard(context_set, remove_duplication=True):
     >>> y = [[1],[3,4]]
     >>> contexts_to_standard(x) == y
     True
+
+    >>> x = list([Context(value=1.0, cohorts=[1]), Context(value=1.0, cohorts=[1]), Context(value=1.0, cohorts=[3,4])])
+    >>> y = [[1],[3,4]]
+    >>> contexts_to_standard(x) == y
+    True
     """
     result = contexts_to_standard2(context_set, remove_duplication)
     return [map(lambda m: m[0], result[0]), result[1]]
-
 
 def is_standard2(input):
     """
@@ -161,6 +164,19 @@ def is_standard(input):
     if len(set(input[0])) != len(input[0]) or len(set(input[1])) != len(input[1]): return False
     return True
 
+def add_standards(in1, in2):
+    """
+
+    >>> in1 = [[1,2,3],[4,5,6]]
+    >>> in2 = [[2,3,4],[6,7,8]]
+    >>> r = add_standards(in1, in2)
+    >>> r == [[1,2,3,4],[4,5,6,7,8]]
+    True
+    """
+    assert is_standard(in1) and is_standard(in2)
+    singles = sorted(list(set(in1[0]) | set(in2[0])))
+    aggrs = sorted(list(set(in1[1]) | set(in2[1])))
+    return [singles, aggrs]
 
 if __name__ == "__main__":
     import doctest

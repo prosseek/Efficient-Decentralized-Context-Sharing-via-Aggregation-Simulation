@@ -88,6 +88,11 @@ def same(v1, v2):
     This is abstract method that just compares everything.
 
     >>> x = [[1,2],[3,4]]
+    >>> y = [set([1,2]), set([3,4])]
+    >>> same(x,y)
+    False
+
+    >>> x = [[1,2],[3,4]]
     >>> y = set([Context(value=1.0, cohorts=[1]), Context(value=1.0, cohorts=[2]), Context(value=1.0, cohorts=[3,4])])
     >>> same(x,y)
     True
@@ -162,6 +167,11 @@ def same(v1, v2):
 def same_list(list1, list2):
     """Determine if list c1 and c2 are the same
 
+    >>> s1 = [[1,2]]
+    >>> s2 = [set([1,2])]
+    >>> same_list(s1, s2)
+    False
+
     >>> set2 = [[1,2], [1,2,3], [2,3,4]]
     >>> set2p = [[2,1], [2,3,4], [2,1,3]]
     >>> same_list(set2, set2p)
@@ -178,6 +188,13 @@ def same_list(list1, list2):
     True
 
     """
+    if len(list1) != len(list2): return False
+    if len(list1) == 0: return True
+
+    t1 = type(list1[0])
+    t2 = type(list2[0])
+
+    if t1 != t2: return False
 
     # >>> map(frozenset, [1,2])
     # Traceback (most recent call last):
