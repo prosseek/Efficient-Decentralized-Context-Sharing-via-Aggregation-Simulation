@@ -106,7 +106,7 @@ class ContextAggregator(object):
         self.filtered_singles = None
         self.current_sample = None
         # This cannot be None, as we need to use this dictionary when there is no input (first stage)
-        self.inputs_in_standard_form = {}
+        # inputs_in_standard_form = {}
 
     def __reset(self):
         self.input.reset()
@@ -341,16 +341,13 @@ class ContextAggregator(object):
 
         # OutputSelector requires all the data format as standard
         singles = contexts_to_standard(self.filtered_singles)
-        #aggregates = contexts_to_standard({self.new_aggregate})
         new_info = add_standards(singles, aggregates)
-        #new_info = [self.filtered_singles, self.new_aggregate]
-        self.inputs_in_standard_form = {}
+        inputs_in_standard_form = {}
         for key, value in self.input.get_dictionary().items():
-            self.inputs_in_standard_form[key] = contexts_to_standard(value)
-        #inputs = self.input.get_dictionary()
+            inputs_in_standard_form[key] = contexts_to_standard(value)
         history = self.context_history.get(timestamp)
 
-        selector = OutputSelector(inputs=self.inputs_in_standard_form, context_history=history, new_info=new_info, neighbors=neighbors)
+        selector = OutputSelector(inputs=inputs_in_standard_form, context_history=history, new_info=new_info, neighbors=neighbors)
         result = selector.run()
         return result
 
@@ -485,10 +482,10 @@ class ContextAggregator(object):
             for o in self.output_dictionary:
                 result[o] = self.generate_contexts_from_output_dictionary(o, timestamp)
                 self.context_history.add_to_history(node_number=o, value=self.output_dictionary[o], timestamp=timestamp)
-                if o in self.inputs_in_standard_form:
-                    # o has input, so we should keep that o knows about single info
-                    received_info = self.inputs_in_standard_form[o]
-                    self.context_history.add_to_history(node_number=o, value=received_info, timestamp=timestamp)
+                # if o in inputs_in_standard_form:
+                #     # o has input, so we should keep that o knows about single info
+                #     received_info = inputs_in_standard_form[o]
+                #     self.context_history.add_to_history(node_number=o, value=received_info, timestamp=timestamp)
                 
         else:
             assert type(neighbor) in [int, long]
@@ -498,10 +495,10 @@ class ContextAggregator(object):
             o = neighbor
             result[o] = self.generate_contexts_from_output_dictionary(o, timestamp)
             self.context_history.add_to_history(node_number=o, value=self.output_dictionary[o], timestamp=timestamp)
-            if o in self.inputs_in_standard_form:
-                # o has input, so we should keep that o knows about single info
-                received_info = self.inputs_in_standard_form[o]
-                self.context_history.add_to_history(node_number=o, value=received_info, timestamp=timestamp)
+            # if o in inputs_in_standard_form:
+            #     # o has input, so we should keep that o knows about single info
+            #     received_info = inputs_in_standard_form[o]
+            #     self.context_history.add_to_history(node_number=o, value=received_info, timestamp=timestamp)
         return result
 
     def receive(self, from_node, contexts, timestamp=0):
@@ -518,6 +515,9 @@ class ContextAggregator(object):
         """
         contexts = Context.increase_hop_count(contexts)
         self.input[from_node] = contexts
+
+        received_info = contexts_to_standard(contexts)
+        self.context_history.add_to_history(node_number=from_node, value=received_info, timestamp=timestamp)
 
     def process_to_set_output(self, neighbors=None, timestamp=0):
         """Process method is a generalized code for propagating contexts.

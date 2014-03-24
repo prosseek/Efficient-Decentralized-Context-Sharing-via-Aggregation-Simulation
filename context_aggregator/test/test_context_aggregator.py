@@ -254,13 +254,9 @@ class TestContextAggregator(unittest.TestCase):
         self.assertTrue(contexts_to_standard(c1.get_singles(timestamp=0)) == [[0,1,2],[]])
         self.assertTrue(contexts_to_standard(c2.get_singles(timestamp=0)) == [[0,1,2],[]])
 
-        # It still tries to send single context of its own
-        print o0
-        print o1
-        print o2
-        #self.assertTrue(o0 == {1: [[], []]})
-        #self.assertTrue(o1 == {0: [[], []], 2:[[], []]})
-        #self.assertTrue(o2 == {1: [[], []]})
+        self.assertTrue(o0 == {1: [[], []]})
+        self.assertTrue(o1 == {0: [[], []], 2:[[], []]})
+        self.assertTrue(o2 == {1: [[], []]})
 
         self.assertTrue(c0.is_nothing_to_send())
         self.assertTrue(c1.is_nothing_to_send())
