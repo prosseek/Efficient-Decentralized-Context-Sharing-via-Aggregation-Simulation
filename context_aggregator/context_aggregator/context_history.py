@@ -6,6 +6,7 @@ Assume all the data is in standard format
 
 from context.context import Context
 from utils_same import *
+from copy import copy
 
 class ContextHistory(object):
     """database class"""
@@ -98,13 +99,35 @@ class ContextHistory(object):
             container = self.context_history[timestamp]
             return container.to_string(timestamp=timestamp, display_mode=display_mode)
 
-
-
     #
     # Set/Get method
     #
 
-    def set_history(self, index, value, timestamp=0):
+    def add_to_history(self, node_number, value, timestamp=0):
+        """
+        appends the value of timestamp:node_number
+
+        >>> h = ContextHistory()
+        >>> input = [[0,1,2],[3,4,5,6,7]]
+        >>> h.add_to_history(1, input, timestamp=10)
+        >>> input = [[3,4,5],[3,4,5,6,7,8,9]]
+        >>> h.add_to_history(1, input, timestamp=10)
+        >>> h.get_history(node_number=1, timestamp=10)
+        """
+        container = self.check_and_get_container(timestamp)
+        result = copy(container.get(node_number))
+
+        # Well, is it a good idea to have a None as a return value or specific data structure([[],[]])?
+        # I guess, the most important thing is consistency. For this project, I chose to return None, so be careful
+        # about the return value and do the proper conversion
+        if result is None:
+            result = [[],[]]
+        singles = sorted(list(set(result[0]) | set(value[0])))
+        aggregate = sorted(list(set(result[1]) | set(value[1])))
+        self.set_history(node_number, [singles, aggregate])
+
+
+    def set_history(self, node_number, value, timestamp=0):
         """
 
         set the history with value
@@ -113,7 +136,7 @@ class ContextHistory(object):
         assert type(value[0]) is list and type(value[1]) is list
 
         container = self.check_and_get_container(timestamp)
-        container.set(index, value)
+        container.set(node_number, value)
 
     def get(self, timestamp=0):
         """Returns the dictionary in standard format
@@ -146,7 +169,7 @@ class ContextHistory(object):
             self.context_history[timestamp] = ContextHistory.Container()
         self.get_container(timestamp).dictionary = dictionary
 
-    def get_history(self, index, timestamp=0):
+    def get_history(self, node_number, timestamp=0):
         """
 
         >>> h = ContextHistory()
@@ -160,7 +183,7 @@ class ContextHistory(object):
         """
         container = self.get_container(timestamp=timestamp)
         if container is not None:
-            return container.get(index)
+            return container.get(node_number)
         return None
 
     def get_container(self, timestamp=0):

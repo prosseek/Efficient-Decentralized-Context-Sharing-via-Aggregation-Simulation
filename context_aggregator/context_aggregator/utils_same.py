@@ -82,6 +82,7 @@ def same(v1, v2):
     #    set([Context([1,2,3])]) == [[], [1,2,3]] <-- this is standard type checking
 
     if id(v1) == id(v2): return True
+    if len(v1) != len(v2): return False
 
     if is_set_of_aggregates(v1) and is_list_list(v2):
         return same_contexts_and_list(v1, v2)
@@ -108,8 +109,8 @@ def same(v1, v2):
             c1 = contexts_to_standard2(v1)
             c2 = contexts_to_standard2(v2)
             return c1 == c2
-    else:
-        return v1 == v2
+
+    return v1 == v2
 
 
 def same_list(list1, list2):

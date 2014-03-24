@@ -79,8 +79,13 @@ class ContextAggregator(object):
 
     MAX_TAU = "max_tau"
     PM = "propagation_mode"
-    defaults = {MAX_TAU:1, PM:AGGREGATION_MODE}
+    defaults = {MAX_TAU:0, PM:AGGREGATION_MODE}
 
+    def is_single_only_mode(self):
+        return self.configuration(ContextAggregator.PM) == ContextAggregator.SINGLE_ONLY_MODE
+
+    def is_aggregation_mode(self):
+        return self.configuration(ContextAggregator.PM) == ContextAggregator.AGGREGATION_MODE
     #
     # Initialization and Reset
     #
@@ -100,6 +105,8 @@ class ContextAggregator(object):
         self.new_aggregate = None
         self.filtered_singles = None
         self.current_sample = None
+        # This cannot be None, as we need to use this dictionary when there is no input (first stage)
+        self.inputs_in_standard_form = {}
 
     def __reset(self):
         self.input.reset()
@@ -114,6 +121,13 @@ class ContextAggregator(object):
         """
         self.__reset()
         gc.collect()
+
+    #
+    # Input
+    #
+
+    def get_input(self):
+        return self.input.dictionary
 
     def clear_input(self):
         """initialization is needed for starting execution of dataflow
@@ -133,6 +147,12 @@ class ContextAggregator(object):
 
     def get_current_sample(self):
         return self.current_sample
+
+    def configuration(self, key):
+        if key in self.config:
+            return self.config[key]
+        else:
+            return None
 
     #
     # Database
@@ -206,14 +226,20 @@ class ContextAggregator(object):
     #
     def filter_singles(self, singles):
         results = set()
-        for s in singles:
-            if s.hopcount == Context.SPECIAL_CONTEXT or 0 <= s.hopcount <= self.configuration(ContextAggregator.MAX_TAU):
+
+        if self.is_aggregation_mode():
+            for s in singles:
+                if s.hopcount == Context.SPECIAL_CONTEXT or 0 <= s.hopcount <= self.configuration(ContextAggregator.MAX_TAU):
+                    results.add(s)
+                if self.configuration("propagate_recovered_singles"):
+                    if s.hopcount == Context.RECOVERED_CONTEXT:
+                        context = copy(s)
+                        context.hopcount = 0
+                        results.add(context)
+        elif self.is_single_only_mode():
+            for s in singles:
                 results.add(s)
-            if self.configuration("propagate_recovered_singles"):
-                if s.hopcount == Context.RECOVERED_CONTEXT:
-                    context = copy(s)
-                    context.hopcount = 0
-                    results.add(context)
+
         return results
 
     def run_dataflow(self, neighbors=None, timestamp=0):
@@ -282,7 +308,7 @@ class ContextAggregator(object):
         db_singles = self.get_database_singles(timestamp)
         union_contexts = input_contexts.union(db_singles)
 
-        if self.configuration(ContextAggregator.PM) == ContextAggregator.AGGREGATION_MODE:
+        if self.is_aggregation_mode(): # self.configuration(ContextAggregator.PM) == ContextAggregator.AGGREGATION_MODE:
             db_aggregates = self.get_database_aggregates(timestamp)
             union_contexts = union_contexts.union(db_aggregates)
 
@@ -298,24 +324,33 @@ class ContextAggregator(object):
         primes = set()
         non_primes = set()
         selected_non_primes = set()
-        if self.configuration(ContextAggregator.PM) == ContextAggregator.AGGREGATION_MODE:
+        if self.is_aggregation_mode(): # if self.configuration(ContextAggregator.PM) == ContextAggregator.AGGREGATION_MODE:
             if combined_aggregates:
                 primes, non_primes = get_prime(combined_aggregates)
                 if non_primes:
                     m = MaxCover()
                     selected_non_primes = m.run(non_primes)
-                self.new_aggregate = self.create_current_aggregate([combined_singles, primes, selected_non_primes])
-
+            self.new_aggregate = self.create_current_aggregate([combined_singles, primes, selected_non_primes])
+            aggregates = contexts_to_standard({self.new_aggregate})
+        else:
+            aggregates = [[],[]]
         self.assorted_context_database.set(combined_singles, primes, non_primes, selected_non_primes, timestamp)
 
         # Only filtered singles are the candidates
         self.filtered_singles = self.filter_singles(combined_singles)
 
-        new_info = [self.filtered_singles, self.new_aggregate]
-        inputs = self.input.get_dictionary()
+        # OutputSelector requires all the data format as standard
+        singles = contexts_to_standard(self.filtered_singles)
+        #aggregates = contexts_to_standard({self.new_aggregate})
+        new_info = add_standards(singles, aggregates)
+        #new_info = [self.filtered_singles, self.new_aggregate]
+        self.inputs_in_standard_form = {}
+        for key, value in self.input.get_dictionary().items():
+            self.inputs_in_standard_form[key] = contexts_to_standard(value)
+        #inputs = self.input.get_dictionary()
         history = self.context_history.get(timestamp)
 
-        selector = OutputSelector(inputs=inputs, context_history=history, new_info=new_info, neighbors=neighbors)
+        selector = OutputSelector(inputs=self.inputs_in_standard_form, context_history=history, new_info=new_info, neighbors=neighbors)
         result = selector.run()
         return result
 
@@ -327,16 +362,18 @@ class ContextAggregator(object):
         True
         """
 
-        # What makes the new timestamp?
-        # 1. there is nothing in history at timestamp
-        history = self.context_history.get(timestamp)
-        if history is None: return True
+        if timestamp not in self.context_database.timestamp: return True
         else:
-            # 2. There is no dictionary in history
-            #    There should be at least one element in the history
-            #    ContextHistory.HOST_INDEX
-            if history == {}: return True
-            else: return False
+            return self.context_database.timestamp[timestamp] == {}
+
+        # history = self.context_history.get(timestamp)
+        # if history is None: return True
+        # else:
+        #     # 2. There is no dictionary in history
+        #     #    There should be at least one element in the history
+        #     #    ContextHistory.HOST_INDEX
+        #     if history == {}: return True
+        #     else: return False
 
     def sample(self, timestamp=0):
         """Sampling means read (acuquire) data at timestamp, and create a single context out of the data
@@ -374,13 +411,59 @@ class ContextAggregator(object):
         self.current_sample = sampled_value
         return sampled_value
 
+    def generate_contexts_from_output_dictionary(self, o, timestamp=0):
+        """This is a sub method only for process_to_set_output.
+
+        We needed this method as process_to_set_output can have neighbor parameter as inter or None.
+        When None is given, contexts for all the neighbors in the dictionary are created
+        """
+        singles = self.output_dictionary[o][0]
+        aggregate = self.output_dictionary[o][1]
+
+        # from [1,2,3...] -> Context(...)
+        # The new aggregate is in self.new_aggregte
+        if aggregate:
+            # aggregate should be turned into set(), so you need to convert it into list first
+            aggregate = [self.new_aggregate]
+        single_contexts = get_matching_single_contexts(self.get_database_singles(timestamp), singles)
+        result = single_contexts | set(aggregate)
+        return result
+
+    def get_received_data(self, from_node = None):
+        """Returns the received data from node_index
+
+        >>> d = ContextAggregator()
+        >>> d.receive(1, {Context(value=1.0, cohorts=[0,1,2]), Context(value=4.0, cohorts=[3], hopcount = 1)})
+        >>> d.receive(2, {Context(value=2.0, cohorts=[0], hopcount=1), Context(value=4.0, cohorts=[4], hopcount = 10)})
+        >>> r = d.get_received_data()
+        >>> r = contexts_to_standard(r)
+        >>> same(r, [[0,3,4], [0,1,2]])
+        True
+        """
+        if from_node is not None:
+            return self.input[from_node]
+
+        result = set()
+        for i in self.input.get_senders():
+            result |= self.input[i]
+
+        return result
 
     #######################################################
     # API
     #######################################################
 
-    def send(self, timestamp=0):
+    def is_nothing_to_send(self):
+        for o, v in self.output_dictionary.items():
+            if v != [[],[]]: return False
+        return True
+
+    def send(self, neighbor = None, timestamp=0):
         """
+
+        1. update the history
+        2. returns contexts in Context object
+
         >>> c0 = ContextAggregator(0)
         >>> r = c0.process_to_set_output(neighbors=[1], timestamp = 0)
         >>> same(r, {1: [[0], []]})
@@ -392,21 +475,49 @@ class ContextAggregator(object):
         >>> r0 = c0.send(timestamp=0)
         >>> same(contexts_to_standard(r0[1]), [[0], []])
         True
+        >>> r1 = c1.send(neighbor=0, timestamp=0)
+        >>> same(contexts_to_standard(r1[0]), [[1], []])
+        True
         """
+
         result = {}
-        for o in self.output_dictionary:
-            # get contexts
-            singles = self.output_dictionary[o][0]
-            aggregate = self.output_dictionary[o][1]
-
-            # from [1,2,3...] -> Context(...)
-            # The new aggregate is in self.new_aggregte
-            if aggregate:
-                aggregate = self.new_aggregate
-            single_contexts = get_matching_single_contexts(self.get_database_singles(timestamp), singles)
-            result[o] = single_contexts | set(aggregate)
-
+        if neighbor is None:
+            for o in self.output_dictionary:
+                result[o] = self.generate_contexts_from_output_dictionary(o, timestamp)
+                self.context_history.add_to_history(node_number=o, value=self.output_dictionary[o], timestamp=timestamp)
+                if o in self.inputs_in_standard_form:
+                    # o has input, so we should keep that o knows about single info
+                    received_info = self.inputs_in_standard_form[o]
+                    self.context_history.add_to_history(node_number=o, value=received_info, timestamp=timestamp)
+                
+        else:
+            assert type(neighbor) in [int, long]
+            assert neighbor in self.output_dictionary
+            # TODO
+            # Duplication of code
+            o = neighbor
+            result[o] = self.generate_contexts_from_output_dictionary(o, timestamp)
+            self.context_history.add_to_history(node_number=o, value=self.output_dictionary[o], timestamp=timestamp)
+            if o in self.inputs_in_standard_form:
+                # o has input, so we should keep that o knows about single info
+                received_info = self.inputs_in_standard_form[o]
+                self.context_history.add_to_history(node_number=o, value=received_info, timestamp=timestamp)
         return result
+
+    def receive(self, from_node, contexts, timestamp=0):
+        """receive_data
+        1. Stores the information who sent what
+        2. Increase the hopcount when the context is a single context
+
+        >>> d = ContextAggregator()
+        >>> # two contexts are received
+        >>> r = d.receive(1, {Context(value=1.0, cohorts=[0,1,2]), Context(value=1.0, cohorts=[0,1,3])})
+        >>> same(d.get_received_data(1), [[0,1,2],[0,1,3]])
+        True
+        >>>
+        """
+        contexts = Context.increase_hop_count(contexts)
+        self.input[from_node] = contexts
 
     def process_to_set_output(self, neighbors=None, timestamp=0):
         """Process method is a generalized code for propagating contexts.
@@ -430,6 +541,8 @@ class ContextAggregator(object):
         True
         >>> a.get_current_sample() == 100
         True
+        >>> a.get_input() == {}
+        True
         """
         if self.is_this_new_timestamp(timestamp):
             sampled_data = self.sample(timestamp)
@@ -440,11 +553,13 @@ class ContextAggregator(object):
             result = {}
             for h in neighbors:
                 result[h] = [[self.id],[]]
-
-            self.output_dictionary = result
         else:
             result = self.run_dataflow(neighbors=neighbors, timestamp=timestamp)
 
+        self.output_dictionary = result
+
+        # WARNING! Don't forget the input is cleared after the process_to_set_output() call
+        self.clear_input()
         return result
 
 if __name__ == "__main__":

@@ -50,7 +50,14 @@ def contexts_to_standard2(context_set, remove_duplication=True):
     >>> y = [[(1,0),(1,0)],[3,4]]
     >>> contexts_to_standard2(x, remove_duplication=False) == y
     True
+    >>> contexts_to_standard2(None, remove_duplication=False) == [[],[]]
+    True
     """
+
+    # None processing is necessary, as sometimes aggregated contexts can be None and be requested
+    # to convert using this method.
+    if context_set is None:
+        return [[],[]]
 
     assert type(context_set) in [set, list]
     singles = []

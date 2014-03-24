@@ -69,18 +69,20 @@ class OutputSelector(object):
         result = {}
         for d in dictionary:
             singles = dictionary[d][0]
-            doubles = dictionary[d][1]
+            aggregate = dictionary[d][1]
 
             # we need to find only the singles that we didn't send
             singles_new_info = sorted(list(set(new_info[0]) - set(singles)))
             # when new info in not new, we have nothing to send, otherwise we have all to send
-            doubles_new_info = new_info[1] if set(new_info[1]) > set(doubles) else []
+            new_aggregate_info = set(new_info[1])
+            old_aggregate_info = set(aggregate) | set(singles)
+            aggregate_new_info = new_info[1] if new_aggregate_info > old_aggregate_info else []
 
-            result[d] = [singles_new_info, doubles_new_info]
+            result[d] = [singles_new_info, aggregate_new_info]
 
         return result
 
-    def run(self, timestamp=0):
+    def run(self):
         """
 
         ## selection example:
@@ -111,9 +113,7 @@ class OutputSelector(object):
 
         >>> inputs = {0:[[1,2,3],[3,4,5]], 1:[[1,2],[3,4,5,6]]}
         >>> input = [[4,5],[3,4,5,6,7]]
-        >>> h =ContextHistory()
-        >>> h.set_history(1, input)
-        >>> h.set_history(3, input)
+        >>> h = {1:input, 3:input}
         >>> new_info = [[1,2,3,4,5],[3,4,5,6,7,8]]
         >>> neighbors = [0,3,4]
         >>> o = OutputSelector(inputs=inputs, context_history=h, new_info=new_info, neighbors=neighbors)
@@ -132,8 +132,8 @@ class OutputSelector(object):
         output = {}
 
         # add inputs and history
-        history_at_timestamp = self.context_history.get(timestamp)
-        combined = OutputSelector.add_standards_in_dictionary(self.inputs, history_at_timestamp)
+        #history_at_timestamp = self.context_history.get(timestamp)
+        combined = OutputSelector.add_standards_in_dictionary(self.inputs, self.context_history)
         selection = OutputSelector.select_hosts_to_send_contexts(dictionary=combined, new_info = self.new_info)
 
         if self.neighbors is not None:
