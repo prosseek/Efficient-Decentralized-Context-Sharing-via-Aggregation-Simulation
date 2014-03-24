@@ -3,7 +3,7 @@
 In this class, we use list as a main container class.
 """
 import copy
-from utils import *
+from utils_same import *
 from context.context import Context
 
 class Disaggregator(object):

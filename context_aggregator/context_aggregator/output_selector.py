@@ -1,15 +1,14 @@
 """
 The algorithm is based on - http://wiki.rubichev/contextAggregation/research/think/context_history/
 
-Assume:
+Assumptions:
 
-1. In this module, we only assume all the contexts are representd in standard format.
+* In this module, we only assume all the contexts are representd in standard format.
 
 """
 from context_history import ContextHistory
-from copy import copy
 from utils_standard import add_standards
-from utils import same
+from utils_same import same
 
 class OutputSelector(object):
     def __init__(self, inputs=None, context_history=None, new_info=None, neighbors=None):
@@ -83,25 +82,70 @@ class OutputSelector(object):
 
     def run(self, timestamp=0):
         """
+
+        ## selection example:
+        new info -> [[1,2,3,4,5],[3,4,5,6,7,8]]
+
+        node 0:
+        input only -> [[1,2,3],[3,4,5]]
+        selection -> [[4,5],[3,4,5,6,7,8]]
+
+        node 1:
+        new input -> [[1,2],[3,4,5,6]]
+        history -> [[4,5],[3,4,5,6,7]]
+        combined -> [[1,2,4,5],[3,4,5,6,7]]
+        selection -> [[3],[3,4,5,6,7,8]]
+
+        node 3:
+        only history -> [[4,5],[3,4,5,6,7]]
+        selection -> [[1,2,3],[3,4,5,6,7,8]]
+
+        ## final example
+        neighbors = [0,3,4]
+
+        From the result, 1 should be missed out, and 4 should be added
+        0: [[4, 5], [3, 4, 5, 6, 7, 8]]
+        <- 1 is missed out
+        3: [[1, 2, 3], [3, 4, 5, 6, 7, 8]]
+        4: [[1, 2, 3, 4, 5], [3, 4, 5, 6, 7, 8]] <-- all the neew info
+
         >>> inputs = {0:[[1,2,3],[3,4,5]], 1:[[1,2],[3,4,5,6]]}
         >>> input = [[4,5],[3,4,5,6,7]]
         >>> h =ContextHistory()
         >>> h.set_history(1, input)
         >>> h.set_history(3, input)
         >>> new_info = [[1,2,3,4,5],[3,4,5,6,7,8]]
-        >>> o = OutputSelector(inputs=inputs, context_history=h, new_info=new_info)
+        >>> neighbors = [0,3,4]
+        >>> o = OutputSelector(inputs=inputs, context_history=h, new_info=new_info, neighbors=neighbors)
         >>> r = o.run()
-        >>> #same(r, {0:[[1,2,3],[3,4,5]], 1:[[1,2,4,5],[3,4,5,6,7]], 3:[[4,5],[3,4,5,6,7]]}) # combined
-        >>> r
+        >>> # combined
+        >>> #same(r, {0:[[1,2,3],[3,4,5]], 1:[[1,2,4,5],[3,4,5,6,7]], 3:[[4,5],[3,4,5,6,7]]})
+        >>> # after selection
+        >>> # same(r, {0: [[4, 5], [3, 4, 5, 6, 7, 8]], 1: [[3], [3, 4, 5, 6, 7, 8]], 3: [[1, 2, 3], [3, 4, 5, 6, 7, 8]]})
+        >>> same(r, {0: [[4, 5], [3, 4, 5, 6, 7, 8]], 3: [[1, 2, 3], [3, 4, 5, 6, 7, 8]], 4: [[1, 2, 3, 4, 5], [3, 4, 5, 6, 7, 8]]})
         True
         """
+        assert self.inputs is not None
+        assert self.context_history is not None
+        assert self.new_info is not None
+        #assert self.neighbors is not None
         output = {}
 
         # add inputs and history
         history_at_timestamp = self.context_history.get(timestamp)
         combined = OutputSelector.add_standards_in_dictionary(self.inputs, history_at_timestamp)
         selection = OutputSelector.select_hosts_to_send_contexts(dictionary=combined, new_info = self.new_info)
-        return selection
+
+        if self.neighbors is not None:
+            for n in self.neighbors:
+                if n in selection:
+                    output[n] = selection[n]
+                else:
+                    output[n] = self.new_info
+        else:
+            output = selection
+
+        return output
 
 if __name__ == "__main__":
     import doctest

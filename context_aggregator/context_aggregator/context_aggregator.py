@@ -33,7 +33,7 @@ After the run() is executed, we can get the results that is timestamp dependent 
     Returns the non-prime and selected-non-primes
 
 After the run() is executed, we get the temporary (timestamp independent) with the API.
-They are time indepdent, as they can be recovered anytime from the timestamp depdendent data structure.
+They are time independent, as they can be recovered anytime from the timestamp dependent data structure.
 
 1. get_filtered_singles()
     Returns a set of filtered single contexts based on configurations
@@ -53,8 +53,8 @@ Refrence
 --------
 `Context Aggregation <http://wiki.rubichev/contextAggregation/design/>`_
 """
-
 from utils import *
+from utils_same import *
 
 from context.context import Context
 
@@ -66,42 +66,40 @@ from copy import copy
 
 from disaggregator import Disaggregator
 from maxcover import MaxCover
+from output_selector import OutputSelector
+from utils_configuration import  process_default_values
 
 import gc
 
 
-class DataFlow(object):
+class ContextAggregator(object):
     """database class"""
     AGGREGATION_MODE = 0
     SINGLE_ONLY_MODE = 1
+
+    MAX_TAU = "max_tau"
+    PM = "propagation_mode"
+    defaults = {MAX_TAU:1, PM:AGGREGATION_MODE}
+
     #
     # Initialization and Reset
     #
-    def __init__(self, config = None):
-        self.propagation_mode = DataFlow.AGGREGATION_MODE
-        self.max_tau = 1
-        self.propagate_recovered_single = False
 
-        if config is not None:
-            if "max_tau" in config: self.max_tau = config["max_tau"]
-            if "propagation_mode" in config: self.propagation_mode = config["propagation_mode"]
-            if "propagate_recovered_singles" in config: self.propagate_recovered_single = config["propagate_recovered_singles"]
+    def __init__(self, id = -1, config = None):
+        self.id = id
+        self.set_config(config)
 
         # inner data structure
         self.input = Input()
         self.context_database = ContextDatabase()
         self.assorted_context_database = AssortedContextDatabase()
         self.output_dictionary = None
-        #self.output = Output()
         self.context_history = ContextHistory()
+        #self.output_selector = OutputSelector()
 
         self.new_aggregate = None
         self.filtered_singles = None
-
-    def get_configuration(self):
-        return {"max_tau": self.max_tau,
-                "propagation_mode": self.propagation_mode,
-                "propagate_recovered_singles": self.propagate_recovered_singles}
+        self.current_sample = None
 
     def __reset(self):
         self.input.reset()
@@ -117,47 +115,24 @@ class DataFlow(object):
         self.__reset()
         gc.collect()
 
-    def initialize(self):
+    def clear_input(self):
         """initialization is needed for starting execution of dataflow
         """
         self.input.reset()
-        #self.output.reset()
 
     #
-    # Input
+    # Configuration methods
     #
-    def get_received_data(self, node_index = None):
-        """Returns the received data from node_index
 
-        >>> d = DataFlow()
-        >>> d.receive_data(1, set([Context(value=1.0, cohorts=[0,1,2]), Context(value=4.0, cohorts=[3], hopcount = 1)]))
-        >>> d.receive_data(2, set([Context(value=2.0, cohorts=[0], hopcount=1), Context(value=4.0, cohorts=[4], hopcount = 10)]))
-        >>> same(d.get_received_data(), [[0,3,4], [0,1,2]])
-        True
-        """
-        if node_index is not None:
-            return self.input[node_index]
+    def get_config(self):
+        return self.config
 
-        result = set()
-        for i in self.input.get_senders():
-            result |= self.input[i]
+    def set_config(self, config):
+        self.config = process_default_values(config, ContextAggregator.defaults)
+        return self.config
 
-        return result
-
-    def receive_data(self, node_index, contexts):
-        """receive_data
-        1. Stores the information who sent what
-        2. Increase the hopcount when the context is a single context
-
-        >>> d = DataFlow()
-        >>> # two contexts are received
-        >>> r = d.receive_data(1, set([Context(value=1.0, cohorts=[0,1,2]), Context(value=1.0, cohorts=[0,1,3])]))
-        >>> same(d.get_received_data(1), [[0,1,2],[0,1,3]])
-        True
-        >>>
-        """
-        contexts = Context.increase_hop_count(contexts)
-        self.input[node_index] = contexts
+    def get_current_sample(self):
+        return self.current_sample
 
     #
     # Database
@@ -203,7 +178,7 @@ class DataFlow(object):
         1. We can recover the aggregate without the x, whenever x is available.
         2. We can cover larger aggregate even when x is lost (or unavailable with any reason).
 
-        >>> d = DataFlow()
+        >>> d = ContextAggregator()
         >>> s1 = set([Context(value=1.0, cohorts=[0])])
         >>> c1 = set([Context(value=1.0, cohorts=[1,2])])
         >>> c = d.create_current_aggregate([c1,s1])
@@ -232,16 +207,16 @@ class DataFlow(object):
     def filter_singles(self, singles):
         results = set()
         for s in singles:
-            if s.hopcount == Context.SPECIAL_CONTEXT or 0 <= s.hopcount <= self.max_tau:
+            if s.hopcount == Context.SPECIAL_CONTEXT or 0 <= s.hopcount <= self.configuration(ContextAggregator.MAX_TAU):
                 results.add(s)
-            if self.propagate_recovered_single:
+            if self.configuration("propagate_recovered_singles"):
                 if s.hopcount == Context.RECOVERED_CONTEXT:
                     context = copy(s)
                     context.hopcount = 0
                     results.add(context)
         return results
 
-    def run(self, timestamp=0):
+    def run_dataflow(self, neighbors=None, timestamp=0):
         """when input data has received information, it processes the data to generate the output
 
         In this example with max_tau=1, when 1:[0,1,2], 2:[0], 3:[1] 4:[9]'(special context)
@@ -259,7 +234,7 @@ class DataFlow(object):
 
         * For 1: [0][1][9] and [1..9] is sent. [2] is not propagated
 
-        >>> d = DataFlow(config={"propagation_mode": DataFlow.AGGREGATION_MODE, "max_tau": 1})
+        >>> d = ContextAggregator(config={ContextAggregator.PM: ContextAggregator.AGGREGATION_MODE, ContextAggregator.MAX_TAU: 1})
         >>> d.initialize() # Always execute initialize before newly receive data
         >>> # Emulating receive data from neighbors
         >>> d.receive_data(1, set([Context(value=1.0, cohorts=[0,1,2])]))
@@ -269,7 +244,7 @@ class DataFlow(object):
         >>> # Emulating accumulated contexts
         >>> context_db = set([Context(value=1.0, cohorts=[2,4,5,3]),Context(value=1.0, cohorts=[5,6]),Context(value=7.0, cohorts=[7,8])])
         >>> d.set_database(singles=set([]), aggregates=context_db, timestamp=10)
-        >>> d.run(timestamp=10)
+        >>> d.run_dataflow(timestamp=10)
         >>> # Emulating newly found singles and aggregates from database
         >>> same(d.get_database_singles(timestamp=10), [[0,1,2,9],[]])
         True
@@ -290,6 +265,7 @@ class DataFlow(object):
         >>> same(d.get_filtered_singles(), [[0,1,9],[]])
         True
         >>> r = d.get_output()
+        >>> r
         >>> same(r[1], [[0,1,9],[0,1,2,3,4,5,7,8,9]])
         True
         >>> same(r[2], [[1,9],[0,1,2,3,4,5,7,8,9]])
@@ -306,7 +282,7 @@ class DataFlow(object):
         db_singles = self.get_database_singles(timestamp)
         union_contexts = input_contexts.union(db_singles)
 
-        if self.propagation_mode == DataFlow.AGGREGATION_MODE:
+        if self.configuration(ContextAggregator.PM) == ContextAggregator.AGGREGATION_MODE:
             db_aggregates = self.get_database_aggregates(timestamp)
             union_contexts = union_contexts.union(db_aggregates)
 
@@ -322,7 +298,7 @@ class DataFlow(object):
         primes = set()
         non_primes = set()
         selected_non_primes = set()
-        if self.propagation_mode == DataFlow.AGGREGATION_MODE:
+        if self.configuration(ContextAggregator.PM) == ContextAggregator.AGGREGATION_MODE:
             if combined_aggregates:
                 primes, non_primes = get_prime(combined_aggregates)
                 if non_primes:
@@ -335,10 +311,141 @@ class DataFlow(object):
         # Only filtered singles are the candidates
         self.filtered_singles = self.filter_singles(combined_singles)
 
-        contexts = copy(self.filtered_singles)
-        contexts.add(self.new_aggregate)
-        input_dictionary = self.input.get_dictionary()
-        self.output_dictionary = self.context_history.calculate_output(contexts, input_dictionary, timestamp=timestamp)
+        new_info = [self.filtered_singles, self.new_aggregate]
+        inputs = self.input.get_dictionary()
+        history = self.context_history.get(timestamp)
+
+        selector = OutputSelector(inputs=inputs, context_history=history, new_info=new_info, neighbors=neighbors)
+        result = selector.run()
+        return result
+
+    def is_this_new_timestamp(self, timestamp=0):
+        """Checks if this is the start of timestamp
+
+        >>> c = ContextAggregator()
+        >>> c.is_this_new_timestamp()
+        True
+        """
+
+        # What makes the new timestamp?
+        # 1. there is nothing in history at timestamp
+        history = self.context_history.get(timestamp)
+        if history is None: return True
+        else:
+            # 2. There is no dictionary in history
+            #    There should be at least one element in the history
+            #    ContextHistory.HOST_INDEX
+            if history == {}: return True
+            else: return False
+
+    def sample(self, timestamp=0):
+        """Sampling means read (acuquire) data at timestamp, and create a single context out of the data
+
+        >>> config = {"sampled_data":[10,20,30]}
+        >>> c = ContextAggregator(config=config)
+        >>> c.sample()
+        10
+        >>> c.get_current_sample()
+        10
+        >>> config = {"sampled_data":[10,20,30]}
+        >>> c = ContextAggregator()
+        >>> r = c.set_config(config)
+        >>> c.sample() == 10 and c.sample(1) == 20 and c.sample(2) == 30
+        True
+        >>> c.sample(4) == -1
+        True
+        >>> c = ContextAggregator()
+        >>> c.sample()
+        -2
+        >>> c.get_current_sample()
+        -2
+        """
+
+        if "sampled_data" not in self.config:
+            sampled_value = -2 # default value is -1
+        else:
+            samples = self.config["sampled_data"]
+            length = len(samples)
+            if length > timestamp:
+                sampled_value = samples[timestamp]
+            else:
+                sampled_value = -1
+
+        self.current_sample = sampled_value
+        return sampled_value
+
+
+    #######################################################
+    # API
+    #######################################################
+
+    def send(self, timestamp=0):
+        """
+        >>> c0 = ContextAggregator(0)
+        >>> r = c0.process_to_set_output(neighbors=[1], timestamp = 0)
+        >>> same(r, {1: [[0], []]})
+        True
+        >>> c1 = ContextAggregator(1)
+        >>> r = c1.process_to_set_output(neighbors=[0], timestamp = 0)
+        >>> same(r, {0: [[1], []]})
+        True
+        >>> r0 = c0.send(timestamp=0)
+        >>> same(contexts_to_standard(r0[1]), [[0], []])
+        True
+        """
+        result = {}
+        for o in self.output_dictionary:
+            # get contexts
+            singles = self.output_dictionary[o][0]
+            aggregate = self.output_dictionary[o][1]
+
+            # from [1,2,3...] -> Context(...)
+            # The new aggregate is in self.new_aggregte
+            if aggregate:
+                aggregate = self.new_aggregate
+            single_contexts = get_matching_single_contexts(self.get_database_singles(timestamp), singles)
+            result[o] = single_contexts | set(aggregate)
+
+        return result
+
+    def process_to_set_output(self, neighbors=None, timestamp=0):
+        """Process method is a generalized code for propagating contexts.
+
+        Input:
+            * neighbors : a dictionary that maps id -> standard contexts
+            * timestamp : currrent timestamp
+
+        Output:
+            * output dictionary: a dictionary that maps id -> standard contexts
+
+        1. When it is the first time of the propagation at timestamp, it samples the data
+        2. When it is not the first, it invokes the run() method
+
+        >>> a = ContextAggregator(1, config={"sampled_data":[100]}) # id == 1
+        >>> same(a.process_to_set_output(neighbors=[10,20,30]), {10: [[1], []], 20: [[1], []], 30: [[1], []]})
+        True
+        >>> same(contexts_to_standard(a.get_database_singles()), [[1],[]])
+        True
+        >>> same(a.get_database_aggregates(), [])
+        True
+        >>> a.get_current_sample() == 100
+        True
+        """
+        if self.is_this_new_timestamp(timestamp):
+            sampled_data = self.sample(timestamp)
+            context = Context(value=sampled_data, cohorts=[self.id], hopcount=0, timestamp=timestamp)
+            self.set_database(singles=[context], aggregates=[], timestamp=timestamp)
+
+            # store the context in the history and process
+            result = {}
+            for h in neighbors:
+                result[h] = [[self.id],[]]
+
+            self.output_dictionary = result
+        else:
+            result = self.run_dataflow(neighbors=neighbors, timestamp=timestamp)
+
+        return result
 
 if __name__ == "__main__":
     import doctest

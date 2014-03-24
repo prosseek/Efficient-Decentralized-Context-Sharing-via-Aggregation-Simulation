@@ -1,6 +1,5 @@
 """maximum cover algorithm"""
 
-import sys
 from copy import *
 from collections import OrderedDict
 from utils import *

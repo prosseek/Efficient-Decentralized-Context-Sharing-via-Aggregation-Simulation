@@ -11,7 +11,7 @@ sys.path.insert(0, source_location)
 from context_aggregator.context_history import ContextHistory
 from context.context import Context
 from utils import *
-from context_aggregator.utils import *
+from context_aggregator.utils_same import *
 
 class TestContextHistory(unittest.TestCase):
 

@@ -10,7 +10,7 @@ sys.path.insert(0, source_location)
 
 from context_aggregator.maxcover import MaxCover
 from utils import *
-from context_aggregator.utils import *
+from context_aggregator.utils_same import *
 
 class TestMaxcover(unittest.TestCase):
 

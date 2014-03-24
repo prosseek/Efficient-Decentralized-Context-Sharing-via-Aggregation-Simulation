@@ -56,7 +56,7 @@ class Context(object):
         >>> bytearray2long(a.cohorts)
         65794
         """
-
+        self.id = None
         self.value = value
         if value is not None:
             assert cohorts is not None, "value %4.2f, cohorts %s" % (value, cohorts)
@@ -69,6 +69,25 @@ class Context(object):
         self.timestamp = timestamp
         self.cohorts = cohorts
         self.hopcount = hopcount
+
+    def get_id(self):
+        """This method uses cache to retrieve the id.
+        The id for aggregated context is Context.AGGREGATED_CONTEXT
+
+        >>> a = Context(value=0.0, cohorts=[4])
+        >>> a.get_id() == 4
+        True
+        """
+        if self.id is not None:
+            return self.id
+
+        if self.is_single():
+            id = list(self.get_cohorts_as_set())[0]
+        else:
+            id = Context.AGGREGATED_CONTEXT
+        self.id = id
+        return self.id
+
         
     def __eq__(self, other):
         """Checks if two contexts are the same

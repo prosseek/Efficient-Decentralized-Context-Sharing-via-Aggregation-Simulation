@@ -19,7 +19,7 @@ import sys
 import re
 import copy
 
-from context_aggregator.utils import *
+from context_aggregator.utils_same import *
 from utils import *
 from ConfigParser import *
 

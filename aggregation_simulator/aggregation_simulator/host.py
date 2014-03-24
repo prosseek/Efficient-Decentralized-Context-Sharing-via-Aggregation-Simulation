@@ -2,7 +2,7 @@
 
 Hosts for simulation of the node
 """
-from context_aggregator.dataflow import DataFlow
+from context_aggregator.context_aggregator import ContextAggregator
 from aggregation_simulator.world import World
 
 class Host(object):
@@ -20,7 +20,7 @@ class Host(object):
     """
     def __init__(self, id):
         self.id = id
-        self.dataflow = DataFlow()
+        self.dataflow = ContextAggregator()
         #self.world = World.instance()
 
     def send(self, timestamp=0):
@@ -36,7 +36,7 @@ class Host(object):
         self.dataflow.receive_data(index, contexts)
 
     def process(self, timestamp=0):
-        self.dataflow.run(timestamp)
+        self.dataflow.run_dataflow(timestamp)
 
 if __name__ == "__main__":
     import doctest

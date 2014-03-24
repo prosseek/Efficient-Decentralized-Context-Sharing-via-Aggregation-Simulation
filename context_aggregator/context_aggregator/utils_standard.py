@@ -29,8 +29,6 @@ We define contexts as
 3. There can be zero or multiple single contexts
 
 """
-import sys
-#print sys.path
 from context.context import Context
 
 def contexts_to_standard2(context_set, remove_duplication=True):
