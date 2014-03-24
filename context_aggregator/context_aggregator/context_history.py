@@ -124,7 +124,7 @@ class ContextHistory(object):
             result = [[],[]]
         singles = sorted(list(set(result[0]) | set(value[0])))
         aggregate = sorted(list(set(result[1]) | set(value[1])))
-        self.set_history(node_number, [singles, aggregate])
+        self.set_history(node_number, [singles, aggregate], timestamp=timestamp)
 
 
     def set_history(self, node_number, value, timestamp=0):

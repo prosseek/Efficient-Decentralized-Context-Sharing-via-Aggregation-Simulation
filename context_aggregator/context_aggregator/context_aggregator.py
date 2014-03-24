@@ -482,11 +482,6 @@ class ContextAggregator(object):
             for o in self.output_dictionary:
                 result[o] = self.generate_contexts_from_output_dictionary(o, timestamp)
                 self.context_history.add_to_history(node_number=o, value=self.output_dictionary[o], timestamp=timestamp)
-                # if o in inputs_in_standard_form:
-                #     # o has input, so we should keep that o knows about single info
-                #     received_info = inputs_in_standard_form[o]
-                #     self.context_history.add_to_history(node_number=o, value=received_info, timestamp=timestamp)
-                
         else:
             assert type(neighbor) in [int, long]
             assert neighbor in self.output_dictionary
@@ -495,10 +490,6 @@ class ContextAggregator(object):
             o = neighbor
             result[o] = self.generate_contexts_from_output_dictionary(o, timestamp)
             self.context_history.add_to_history(node_number=o, value=self.output_dictionary[o], timestamp=timestamp)
-            # if o in inputs_in_standard_form:
-            #     # o has input, so we should keep that o knows about single info
-            #     received_info = inputs_in_standard_form[o]
-            #     self.context_history.add_to_history(node_number=o, value=received_info, timestamp=timestamp)
         return result
 
     def receive(self, from_node, contexts, timestamp=0):
