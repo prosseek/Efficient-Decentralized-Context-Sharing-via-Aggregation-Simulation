@@ -305,7 +305,6 @@ class TestContextAggregator(unittest.TestCase):
             for h in hosts:
                 n = neighbors[h.id]
                 r = h.context_aggregator.process_to_set_output(neighbors=n, timestamp = timestamp)
-                print r
 
             ## communication
             ### Check if there is anything to send

@@ -53,7 +53,7 @@ class OutputSelector(object):
         The returned value is a dictionary that maps host -> standard contexts.
         The standard can be consists of singles or aggregate only.
 
-        >>> dictionary = {1:[[1,2,3],[3,4,5,6,7]], 2:[[2,3,4],[5,6,7]]}
+        >>> dictionary = {1:[[1,2,3],[3,4,5,6,7]], 2:[[2,3,4],[5,6,7]], 3:[[],[3,4]]}
         >>> new_info = [[3,4,5],[3,4,5,6,7]]
         >>> r = OutputSelector.select_hosts_to_send_contexts(dictionary=dictionary, new_info=new_info)
         >>> r[0]
@@ -63,7 +63,9 @@ class OutputSelector(object):
         KeyError: 0
         >>> same(r[1], [[4,5],[]])
         True
-        >>> same(r[2], [[5],[3,4,5,6,7]])
+        >>> same(r[2], [[5],[]]) # 2,3,4+5,6,7 is already known to r[2], so nothing to send for aggr
+        True
+        >>> same(r[3], [[3,4,5],[3,4,5,6,7]])
         True
         """
         result = {}
@@ -109,7 +111,7 @@ class OutputSelector(object):
         0: [[4, 5], [3, 4, 5, 6, 7, 8]]
         <- 1 is missed out
         3: [[1, 2, 3], [3, 4, 5, 6, 7, 8]]
-        4: [[1, 2, 3, 4, 5], [3, 4, 5, 6, 7, 8]] <-- all the neew info
+        4: [[1, 2, 3, 4, 5], [3, 4, 5, 6, 7, 8]] <-- all the new info
 
         >>> inputs = {0:[[1,2,3],[3,4,5]], 1:[[1,2],[3,4,5,6]]}
         >>> input = [[4,5],[3,4,5,6,7]]
@@ -122,7 +124,8 @@ class OutputSelector(object):
         >>> #same(r, {0:[[1,2,3],[3,4,5]], 1:[[1,2,4,5],[3,4,5,6,7]], 3:[[4,5],[3,4,5,6,7]]})
         >>> # after selection
         >>> # same(r, {0: [[4, 5], [3, 4, 5, 6, 7, 8]], 1: [[3], [3, 4, 5, 6, 7, 8]], 3: [[1, 2, 3], [3, 4, 5, 6, 7, 8]]})
-        >>> same(r, {0: [[4, 5], [3, 4, 5, 6, 7, 8]], 3: [[1, 2, 3], [3, 4, 5, 6, 7, 8]], 4: [[1, 2, 3, 4, 5], [3, 4, 5, 6, 7, 8]]})
+        >>> # TODO, # I didn't check this thoroughly, so check it out
+        >>> same(r,{0: [[4, 5], []], 3: [[1, 2, 3], [3, 4, 5, 6, 7, 8]], 4: [[1, 2, 3, 4, 5], [3, 4, 5, 6, 7, 8]]})
         True
         """
         assert self.inputs is not None

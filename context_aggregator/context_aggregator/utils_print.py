@@ -74,7 +74,7 @@ def context_set_to_string(set_of_contexts, display_mode=0):
         if single_mode:
             c_string = "[" + ",".join(str(list(c.get_cohorts_as_set())[0]) for c in set_of_contexts) + "]"
         else:
-            c_string = "".join(str(list(c.get_cohorts_as_set())).replace(" ","") for c in set_of_contexts)
+            c_string = "".join(str(sorted(list(c.get_cohorts_as_set()))).replace(" ","") for c in set_of_contexts)
         return c_string
     elif display_mode == 1:
         if single_mode:

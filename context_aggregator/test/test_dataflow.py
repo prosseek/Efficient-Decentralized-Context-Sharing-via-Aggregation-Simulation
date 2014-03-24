@@ -40,8 +40,8 @@ class TestDataflow(unittest.TestCase):
         All the others are singles
         """
         d = ContextAggregator()
-        d.receive_data(1, set([Context(value=1.0, cohorts=[0,1,2])]))
-        d.receive_data(2, set([Context(value=2.0, cohorts=[0])]))
+        d.receive(1, set([Context(value=1.0, cohorts=[0,1,2])]))
+        d.receive(2, set([Context(value=2.0, cohorts=[0])]))
         d.set_database(set([Context(value=1.0, cohorts=[0,1,2,3,4,5]), Context(value=2.0, cohorts=[1])]), set([Context(value=1.0, cohorts=[2,3])]))
         d.run_dataflow()
         self.assertTrue(same(d.get_singles(), [[0,1,2,3],[]]))
@@ -50,12 +50,12 @@ class TestDataflow(unittest.TestCase):
     def test_run2(self):
         """Test case the same as doctest"""
         d = ContextAggregator(config={"propagation_mode": ContextAggregator.AGGREGATION_MODE, "max_tau": 1})
-        d.initialize() # Always execute initialize before newly receive data
+        #.initialize() # Always execute initialize before newly receive data
         # Emulating receive data from neighbors
-        d.receive_data(1, set([Context(value=1.0, cohorts=[0,1,2])]))
-        d.receive_data(2, set([Context(value=2.0, cohorts=[0])]))
-        d.receive_data(3, set([Context(value=3.0, cohorts=[1])]))
-        d.receive_data(4, set([Context(value=7.0, cohorts=[9], hopcount=Context.SPECIAL_CONTEXT)]))
+        d.receive(1, set([Context(value=1.0, cohorts=[0,1,2])]))
+        d.receive(2, set([Context(value=2.0, cohorts=[0])]))
+        d.receive(3, set([Context(value=3.0, cohorts=[1])]))
+        d.receive(4, set([Context(value=7.0, cohorts=[9], hopcount=Context.SPECIAL_CONTEXT)]))
         # Emulating accumulated contexts
         context_db = set([Context(value=1.0, cohorts=[2,4,5,3]),Context(value=1.0, cohorts=[5,6]),Context(value=7.0, cohorts=[7,8])])
         d.set_database(singles=set([]), aggregates=context_db, timestamp=10)
@@ -79,12 +79,12 @@ class TestDataflow(unittest.TestCase):
     def test_run2(self):
         """Doctest case with propage recovered singles"""
         d = ContextAggregator(config={"propagation_mode": ContextAggregator.AGGREGATION_MODE, "max_tau": 1, "propagate_recovered_singles": True})
-        d.initialize() # Always execute initialize before newly receive data
+        #d.initialize() # Always execute initialize before newly receive data
         # Emulating receive data from neighbors
-        d.receive_data(1, set([Context(value=1.0, cohorts=[0,1,2])]))
-        d.receive_data(2, set([Context(value=2.0, cohorts=[0])]))
-        d.receive_data(3, set([Context(value=3.0, cohorts=[1])]))
-        d.receive_data(4, set([Context(value=7.0, cohorts=[9], hopcount=Context.SPECIAL_CONTEXT)]))
+        d.receive(1, set([Context(value=1.0, cohorts=[0,1,2])]))
+        d.receive(2, set([Context(value=2.0, cohorts=[0])]))
+        d.receive(3, set([Context(value=3.0, cohorts=[1])]))
+        d.receive(4, set([Context(value=7.0, cohorts=[9], hopcount=Context.SPECIAL_CONTEXT)]))
         # Emulating accumulated contexts
         context_db = set([Context(value=1.0, cohorts=[2,4,5,3]),Context(value=1.0, cohorts=[5,6]),Context(value=7.0, cohorts=[7,8])])
         d.set_database(singles=set([]), aggregates=context_db, timestamp=10)
@@ -100,21 +100,15 @@ class TestDataflow(unittest.TestCase):
         self.assertTrue(d.get_new_aggregate().get_cohorts_as_set() == set([0,1,2,3,4,5,7,8,9]))
         self.assertTrue(same(d.get_filtered_singles(), [[0,1,2,9],[]]))
 
-        r = d.get_output()
-        self.assertTrue(same(r[1], [[0,1,2,9],[0,1,2,3,4,5,7,8,9]]))
-        self.assertTrue(same(r[2], [[1,2,9],  [0,1,2,3,4,5,7,8,9]]))
-        self.assertTrue(same(r[3], [[0,2,9],    [0,1,2,3,4,5,7,8,9]]))
-        self.assertTrue(same(r[4], [[0,1,2],    [0,1,2,3,4,5,7,8,9]]))
-
     def test_run3(self):
         """Doctest case with propage recovered singles, and propage with max_tau == 0 """
         d = ContextAggregator(config={"propagation_mode": ContextAggregator.AGGREGATION_MODE, "max_tau": 0, "propagate_recovered_singles": True})
-        d.initialize() # Always execute initialize before newly receive data
+        #d.initialize() # Always execute initialize before newly receive data
         # Emulating receive data from neighbors
-        d.receive_data(1, set([Context(value=1.0, cohorts=[0,1,2])]))
-        d.receive_data(2, set([Context(value=2.0, cohorts=[0])]))
-        d.receive_data(3, set([Context(value=3.0, cohorts=[1])]))
-        d.receive_data(4, set([Context(value=7.0, cohorts=[9], hopcount=Context.SPECIAL_CONTEXT)]))
+        d.receive(1, set([Context(value=1.0, cohorts=[0,1,2])]))
+        d.receive(2, set([Context(value=2.0, cohorts=[0])]))
+        d.receive(3, set([Context(value=3.0, cohorts=[1])]))
+        d.receive(4, set([Context(value=7.0, cohorts=[9], hopcount=Context.SPECIAL_CONTEXT)]))
         # Emulating accumulated contexts
         context_db = set([Context(value=1.0, cohorts=[2,4,5,3]),Context(value=1.0, cohorts=[5,6]),Context(value=7.0, cohorts=[7,8])])
         d.set_database(singles=set([]), aggregates=context_db, timestamp=10)
@@ -129,21 +123,16 @@ class TestDataflow(unittest.TestCase):
         self.assertTrue(same(d.get_selected_non_primes(timestamp=10), [[],[3,4,5]]))
         self.assertTrue(d.get_new_aggregate().get_cohorts_as_set() == set([0,1,2,3,4,5,7,8,9]))
         self.assertTrue(same(d.get_filtered_singles(), [[2,9],[]]))
-        r = d.get_output()
-        self.assertTrue(same(r[1], [[2,9],[0,1,2,3,4,5,7,8,9]]))
-        self.assertTrue(same(r[2], [[2,9],[0,1,2,3,4,5,7,8,9]]))
-        self.assertTrue(same(r[3], [[2,9],[0,1,2,3,4,5,7,8,9]]))
-        self.assertTrue(same(r[4], [[2],  [0,1,2,3,4,5,7,8,9]]))
 
     def test_run4(self):
         """Doctest case with propage recovered singles, and propage with max_tau == 0 """
         d = ContextAggregator(config={"propagation_mode": ContextAggregator.AGGREGATION_MODE, "max_tau": 0, "propagate_recovered_singles": False})
-        d.initialize() # Always execute initialize before newly receive data
+        #d.initialize() # Always execute initialize before newly receive data
         # Emulating receive data from neighbors
-        d.receive_data(1, set([Context(value=1.0, cohorts=[0,1,2])]))
-        d.receive_data(2, set([Context(value=2.0, cohorts=[0])]))
-        d.receive_data(3, set([Context(value=3.0, cohorts=[1])]))
-        d.receive_data(4, set([Context(value=7.0, cohorts=[9], hopcount=Context.SPECIAL_CONTEXT)]))
+        d.receive(1, set([Context(value=1.0, cohorts=[0,1,2])]))
+        d.receive(2, set([Context(value=2.0, cohorts=[0])]))
+        d.receive(3, set([Context(value=3.0, cohorts=[1])]))
+        d.receive(4, set([Context(value=7.0, cohorts=[9], hopcount=Context.SPECIAL_CONTEXT)]))
         # Emulating accumulated contexts
         context_db = set([Context(value=1.0, cohorts=[2,4,5,3]),Context(value=1.0, cohorts=[5,6]),Context(value=7.0, cohorts=[7,8])])
         d.set_database(singles=set([]), aggregates=context_db, timestamp=10)
@@ -158,11 +147,6 @@ class TestDataflow(unittest.TestCase):
         self.assertTrue(same(d.get_selected_non_primes(timestamp=10), [[],[3,4,5]]))
         self.assertTrue(d.get_new_aggregate().get_cohorts_as_set() == set([0,1,2,3,4,5,7,8,9]))
         self.assertTrue(same(d.get_filtered_singles(), [[9],[]]))
-        r = d.get_output()
-        self.assertTrue(same(r[1], [[9],[0,1,2,3,4,5,7,8,9]]))
-        self.assertTrue(same(r[2], [[9],[0,1,2,3,4,5,7,8,9]]))
-        self.assertTrue(same(r[3], [[9],[0,1,2,3,4,5,7,8,9]]))
-        self.assertTrue(same(r[4], [[], [0,1,2,3,4,5,7,8,9]]))
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)

@@ -67,6 +67,7 @@ do
         then
             time eval $JYTHON $i
         else
+            echo $JYTHON $i
             eval $JYTHON $i
         fi  
     fi

@@ -30,20 +30,6 @@ class ContextDatabase(object):
         >>> s = set([Context(value=1.0, cohorts=[1], hopcount=-2, timestamp=1)])
         >>> a = set([Context(value=2.0, cohorts=[1,3,4], timestamp=1)])
         >>> cd.set(s, a, timestamp=1)
-        >>> print cd.to_string(timestamp=-1)
-        1s:[(1.00,[1],-2,1)]
-        1a:[(2.00,[1,3,4],0,1)]
-        >>> print cd.to_string(timestamp=0)
-        0s:[(1.00,[0],0,0)]
-        0a:[(2.00,[1,2,5],0,0)]
-        >>> print cd.to_string()
-        0s:[(1.00,[0],0,0)]
-        0a:[(2.00,[1,2,5],0,0)]
-        1s:[(1.00,[1],-2,1)]
-        1a:[(2.00,[1,3,4],0,1)]
-        >>> print cd.to_string(timestamp=-1, display_mode=1)
-        1s:[1:]
-        1a:[1,3,4:2]
         >>> print cd.to_string(timestamp=0, display_mode=-1)
         0s:[0]
         0a:[1,2,5]

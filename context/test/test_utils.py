@@ -7,8 +7,6 @@ import os.path
 source_location = os.path.dirname(os.path.abspath(__file__)) + "/../context"
 sys.path.insert(0, source_location)
 
-from utils_same import *
-
 class TestUtils(unittest.TestCase):
     def test_get_number_of_one(self):
         pass

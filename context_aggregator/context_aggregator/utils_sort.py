@@ -13,7 +13,8 @@ def sort_singles(contexts):
     >>> list(r[0].get_cohorts_as_set())[0] == 1 and list(r[1].get_cohorts_as_set())[0] == 2 and list(r[2].get_cohorts_as_set())[0] == 3
     True
     """
-    return sorted(list(contexts), key=lambda c: list(c.get_cohorts_as_set())[0])
+    #return sorted(list(contexts), key=lambda c: list(c.get_cohorts_as_set())[0])
+    return sorted(list(contexts), key=lambda c: c.get_id())
 
 def sort_aggregates(contexts):
     """
@@ -21,7 +22,7 @@ def sort_aggregates(contexts):
 
     >>> i = {Context(value=10,cohorts=[1,3],timestamp=5,hopcount=4),Context(value=10,cohorts=[1,2,3],timestamp=5),Context(value=10,cohorts=[1,3,2,6,7],timestamp=5)}
     >>> r =sort_aggregates(i)
-    >>> list(r[0].get_cohorts_as_set()) == [1, 2, 3, 6, 7] and list(r[1].get_cohorts_as_set()) == [1, 2, 3]
+    >>> sorted(list(r[0].get_cohorts_as_set())) == [1, 2, 3, 6, 7] and sorted(list(r[1].get_cohorts_as_set())) == [1, 2, 3]
     True
     >>> print r[0],r[1],r[2]
     v(10.00):c([1,2,3,6,7]):h(0):t(5) v(10.00):c([1,2,3]):h(0):t(5) v(10.00):c([1,3]):h(4):t(5)

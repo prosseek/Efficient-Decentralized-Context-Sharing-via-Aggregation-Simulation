@@ -12,7 +12,7 @@ def process_default_values(config, defaults):
     >>> defaults={"b":200}
     >>> r = process_default_values(config, defaults)
     >>> same(r, {'a': 100, 'b': 200})
-    return True
+    True
     """
     assert defaults is not None
 

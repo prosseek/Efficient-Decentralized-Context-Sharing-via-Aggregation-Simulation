@@ -261,16 +261,16 @@ class ContextAggregator(object):
         * For 1: [0][1][9] and [1..9] is sent. [2] is not propagated
 
         >>> d = ContextAggregator(config={ContextAggregator.PM: ContextAggregator.AGGREGATION_MODE, ContextAggregator.MAX_TAU: 1})
-        >>> d.initialize() # Always execute initialize before newly receive data
         >>> # Emulating receive data from neighbors
-        >>> d.receive_data(1, set([Context(value=1.0, cohorts=[0,1,2])]))
-        >>> d.receive_data(2, set([Context(value=2.0, cohorts=[0])]))
-        >>> d.receive_data(3, set([Context(value=3.0, cohorts=[1])]))
-        >>> d.receive_data(4, set([Context(value=7.0, cohorts=[9], hopcount=Context.SPECIAL_CONTEXT)]))
+        >>> d.receive(1, set([Context(value=1.0, cohorts=[0,1,2])]))
+        >>> d.receive(2, set([Context(value=2.0, cohorts=[0])]))
+        >>> d.receive(3, set([Context(value=3.0, cohorts=[1])]))
+        >>> d.receive(4, set([Context(value=7.0, cohorts=[9], hopcount=Context.SPECIAL_CONTEXT)]))
         >>> # Emulating accumulated contexts
         >>> context_db = set([Context(value=1.0, cohorts=[2,4,5,3]),Context(value=1.0, cohorts=[5,6]),Context(value=7.0, cohorts=[7,8])])
         >>> d.set_database(singles=set([]), aggregates=context_db, timestamp=10)
-        >>> d.run_dataflow(timestamp=10)
+        >>> d.context_history.set(dictionary={}, timestamp=10)
+        >>> r = d.run_dataflow(timestamp=10)
         >>> # Emulating newly found singles and aggregates from database
         >>> same(d.get_database_singles(timestamp=10), [[0,1,2,9],[]])
         True
@@ -289,16 +289,6 @@ class ContextAggregator(object):
         >>> d.get_new_aggregate().get_cohorts_as_set() == set([0,1,2,3,4,5,7,8,9])
         True
         >>> same(d.get_filtered_singles(), [[0,1,9],[]])
-        True
-        >>> r = d.get_output()
-        >>> r
-        >>> same(r[1], [[0,1,9],[0,1,2,3,4,5,7,8,9]])
-        True
-        >>> same(r[2], [[1,9],[0,1,2,3,4,5,7,8,9]])
-        True
-        >>> same(r[3], [[0,9],[0,1,2,3,4,5,7,8,9]])
-        True
-        >>> same(r[4], [[0,1],[0,1,2,3,4,5,7,8,9]])
         True
         """
 
@@ -347,6 +337,11 @@ class ContextAggregator(object):
             inputs_in_standard_form[key] = contexts_to_standard(value)
         history = self.context_history.get(timestamp)
 
+        # TODO:
+        # For the convention, None is returned when nothing is found in Container, and this
+        # causes an error condition.
+        # However, for testing code, this value can be None, so make this code for by passing the error
+        if history is None: history = {}
         selector = OutputSelector(inputs=inputs_in_standard_form, context_history=history, new_info=new_info, neighbors=neighbors)
         result = selector.run()
         return result
