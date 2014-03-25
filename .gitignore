@@ -14,3 +14,5 @@ dist/
 */docs/sphinx/_static
 */docs/sphinx/_template
 
+# Test temp
+aggregation_simulator/test/tmp/test1/aggregation/*

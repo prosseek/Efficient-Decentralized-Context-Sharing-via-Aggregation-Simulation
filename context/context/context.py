@@ -259,7 +259,9 @@ class Context(object):
             hopcount = Context.RECOVERED_CONTEXT
         else:
             hopcount = Context.AGGREGATED_CONTEXT
-        return Context(value=value, cohorts=r, hopcount=hopcount)
+
+        assert self.timestamp == other.timestamp, "%s/timestamp self(%d) vs other(%d)" % (self, self.timestamp, other.timestamp)
+        return Context(value=value, cohorts=r, hopcount=hopcount, timestamp=self.timestamp)
 
     def __len__(self):
         """

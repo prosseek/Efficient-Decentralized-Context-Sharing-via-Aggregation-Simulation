@@ -2,6 +2,8 @@ import unittest
 import sys
 import os
 import re
+import shutil
+
 
 source_location = os.path.dirname(os.path.abspath(__file__)) + "/../context"
 sys.path.insert(0, source_location)
@@ -13,7 +15,6 @@ from context_aggregator.context_aggregator import ContextAggregator
 from context_aggregator.sender_receiver import SenderReceiver
 
 from context_aggregator.utils_same import *
-
 
 def encode_key(from_id, to_id):
     return "%d_%d" % (from_id, to_id)
@@ -283,16 +284,12 @@ class TestContextAggregator(unittest.TestCase):
 
         hosts = [h0, h1, h2]
         neighbors = {0:[1], 1:[0,2], 2:[1]}
-        # The directory where the results are stored in file
-        output_file = os.path.dirname(os.path.abspath(__file__)) + "/tmp/test1.txt"
-        if os.path.exists(output_file):
-            os.unlink(output_file)
 
         #config = {ContextAggregator.PM:ContextAggregator.SINGLE_ONLY_MODE}
         # configurations
-        h0.context_aggregator.set_config({"sampled_data":[0,1,2,3,4], "output_file":output_file})
-        h1.context_aggregator.set_config({"sampled_data":[1,2,3,4,5], "output_file":output_file})
-        h2.context_aggregator.set_config({"sampled_data":[2,3,4,5,6], "output_file":output_file})
+        h0.context_aggregator.set_config({"sampled_data":[0,1,2,3,4]})
+        h1.context_aggregator.set_config({"sampled_data":[1,2,3,4,5]})
+        h2.context_aggregator.set_config({"sampled_data":[2,3,4,5,6]})
 
         #sr = SenderReceiver()
 

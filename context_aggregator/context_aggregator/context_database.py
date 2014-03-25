@@ -54,7 +54,7 @@ class ContextDatabase(object):
                 return str(timestamp) + "s:" + result[0] + "\n" + str(timestamp) + "a:" + result[1]
 
             except IndexError:
-                return "()"
+                return "(ERRROR)"
 
     def reset(self):
 

@@ -68,9 +68,10 @@ from disaggregator import Disaggregator
 from maxcover import MaxCover
 from output_selector import OutputSelector
 from utils_configuration import  process_default_values
+from statistical_report import StatisticalReport
 
 import gc
-
+import os
 
 class ContextAggregator(object):
     """database class"""
@@ -105,8 +106,6 @@ class ContextAggregator(object):
         self.new_aggregate = None
         self.filtered_singles = None
         self.current_sample = None
-        # This cannot be None, as we need to use this dictionary when there is no input (first stage)
-        # inputs_in_standard_form = {}
 
     def __reset(self):
         self.input.reset()
@@ -129,7 +128,7 @@ class ContextAggregator(object):
     def get_input(self):
         return self.input.dictionary
 
-    def clear_input(self):
+    def initalize_before_iteration(self):
         """initialization is needed for starting execution of dataflow
         """
         self.input.reset()
@@ -320,7 +319,7 @@ class ContextAggregator(object):
                 if non_primes:
                     m = MaxCover()
                     selected_non_primes = m.run(non_primes)
-            self.new_aggregate = self.create_current_aggregate([combined_singles, primes, selected_non_primes])
+            self.new_aggregate = self.create_current_aggregate(contexts=[combined_singles, primes, selected_non_primes], timestamp=timestamp)
             aggregates = contexts_to_standard({self.new_aggregate})
         else:
             aggregates = [[],[]]
@@ -485,6 +484,7 @@ class ContextAggregator(object):
             o = neighbor
             result[o] = self.generate_contexts_from_output_dictionary(o, timestamp)
             self.context_history.add_to_history(node_number=o, value=self.output_dictionary[o], timestamp=timestamp)
+
         return result
 
     def receive(self, from_node, contexts, timestamp=0):
@@ -545,8 +545,48 @@ class ContextAggregator(object):
         self.output_dictionary = result
 
         # WARNING! Don't forget the input is cleared after the process_to_set_output() call
-        self.clear_input()
+        self.initalize_before_iteration()
         return result
+
+    #
+    # Statistics report
+    #
+    def report(self, timestamp, iteration):
+        report = StatisticalReport(self, timestamp, iteration)
+        return report.run()
+
+    #
+    # FILE related
+    #
+    def write(self, timestamp, iteration):
+        hostname = "host%d" % self.id
+        base_directory = self.configuration("test_directory")
+        filepath = base_directory + os.sep + "%s" % hostname + os.sep + "%04d" % timestamp + os.sep + "%04d.txt" % iteration
+        dir_name = os.path.dirname(filepath)
+        if not os.path.exists(dir_name):
+            os.makedirs(dir_name)
+
+        with open(filepath,"w") as f:
+            f.write("## INPUT\n")
+            f.write(str(self.input.to_string()) + "\n")
+            f.write("## DB\n")
+            f.write(self.context_database.to_string(timestamp) + "\n")
+            f.write("## ASSORTED CONTEXTS\n")
+            f.write(self.assorted_context_database.to_string(timestamp) + "\n")
+            f.write("## FILTERED SINGLES\n")
+            r = contexts_to_standard(self.filtered_singles)
+            f.write("%s\n" % r[0])
+            f.write("## NEW AGGREGATES\n")
+            aggr_string = "*" if self.new_aggregate is None else self.new_aggregate
+            f.write("%s\n" % aggr_string)
+            f.write("## CONTEXT HISTORY\n")
+            f.write(str(self.context_history.get(timestamp)) + "\n")
+            f.write("## OUTPUT\n")
+            f.write(str(self.output_dictionary))
+
+            f.write("\n\n-------------------\n")
+            f.write("## STATISTICS\n")
+            f.write("%s" % self.report(timestamp=timestamp, iteration=iteration))
 
 if __name__ == "__main__":
     import doctest

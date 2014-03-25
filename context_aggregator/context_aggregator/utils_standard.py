@@ -59,7 +59,7 @@ def contexts_to_standard2(context_set, remove_duplication=True):
     if context_set is None:
         return [[],[]]
 
-    assert type(context_set) in [set, list]
+    assert type(context_set) in [set, list], "%s" % context_set
     singles = []
     aggregate = []
     for c in context_set:
@@ -101,7 +101,12 @@ def contexts_to_standard(context_set, remove_duplication=True):
     True
     """
     result = contexts_to_standard2(context_set, remove_duplication)
-    return [map(lambda m: m[0], result[0]), result[1]]
+
+    # When  result is [[],[]] with input of None, it shouldn't go through this routine
+    if context_set is not None:
+        return [map(lambda m: m[0], result[0]), result[1]]
+    else:
+        return result
 
 def is_standard2(input):
     """

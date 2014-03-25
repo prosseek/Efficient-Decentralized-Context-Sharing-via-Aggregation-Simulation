@@ -57,6 +57,9 @@ def context_set_to_string(set_of_contexts, display_mode=0):
     >>> print context_set_to_string(aggregates,display_mode=1)
     [1,3,4:2][2,3:]
     """
+    if not set_of_contexts:
+        return "[]"
+
     if list(set_of_contexts)[0].is_single():
         single_mode = True
     else:

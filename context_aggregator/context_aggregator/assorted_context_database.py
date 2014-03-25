@@ -26,6 +26,17 @@ class AssortedContextDatabase(object):
     def reset(self):
         self.timestamp = {}
 
+    def to_string(self, timestamp):
+        #assert timestamp in self.timestamp
+        if timestamp not in self.timestamp:
+            return "P:[], NP:[], SNP:[] (before initialization)"
+        assorted = self.timestamp[timestamp]
+        primes = contexts_to_standard(assorted.primes)
+        non_primes = contexts_to_standard(assorted.non_primes)
+        selected_non_primes = contexts_to_standard(assorted.selected_non_primes)
+        return "P:%s, NP:%s, SNP:%s" % (primes[1], non_primes[1], selected_non_primes[1])
+
+
     def set(self, singles, primes, non_primes, selected_non_primes, timestamp=0):
         """
 
