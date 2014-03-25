@@ -15,7 +15,7 @@ from context_aggregator.context_aggregator import ContextAggregator
 from context_aggregator.sender_receiver import SenderReceiver
 
 from context_aggregator.utils_same import *
-from aggregation_simulator.sampled_data import SampledData
+from aggregation_simulator.sample_data import SampleData
 
 def encode_key(from_id, to_id):
     return "%d_%d" % (from_id, to_id)
@@ -51,8 +51,8 @@ class TestContextAggregator(unittest.TestCase):
         sample_file = os.path.join(base_directory, "sample.txt")
         network_file = os.path.join(base_directory, "network.txt")
 
-        sampled_data = SampledData()
-        sampled_data.read(sample_file)
+        sample = SampleData()
+        sample.read(sample_file)
 
         h0 = Host(0)
         h1 = Host(1)
@@ -68,9 +68,9 @@ class TestContextAggregator(unittest.TestCase):
 
         #config = {ContextAggregator.PM:ContextAggregator.SINGLE_ONLY_MODE}
         # configurations
-        h0.context_aggregator.set_config({"sampled_data":sampled_data[h0.id], "test_directory":test_directory})
-        h1.context_aggregator.set_config({"sampled_data":sampled_data[h1.id], "test_directory":test_directory})
-        h2.context_aggregator.set_config({"sampled_data":sampled_data[h2.id], "test_directory":test_directory})
+        h0.context_aggregator.set_config({"sample":sample, "test_directory":test_directory})
+        h1.context_aggregator.set_config({"sample":sample, "test_directory":test_directory})
+        h2.context_aggregator.set_config({"sample":sample, "test_directory":test_directory})
 
         #sr = SenderReceiver()
 

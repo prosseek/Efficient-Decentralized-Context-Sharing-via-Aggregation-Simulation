@@ -368,31 +368,12 @@ class ContextAggregator(object):
 
     def sample(self, timestamp=0):
         """Sampling means read (acuquire) data at timestamp, and create a single context out of the data
-
-        >>> config = {"sampled_data":[10,20,30]}
-        >>> c = ContextAggregator(config=config)
-        >>> c.sample()
-        10
-        >>> c.get_current_sample()
-        10
-        >>> config = {"sampled_data":[10,20,30]}
-        >>> c = ContextAggregator()
-        >>> r = c.set_config(config)
-        >>> c.sample() == 10 and c.sample(1) == 20 and c.sample(2) == 30
-        True
-        >>> c.sample(4) == -1
-        True
-        >>> c = ContextAggregator()
-        >>> c.sample()
-        -2
-        >>> c.get_current_sample()
-        -2
         """
 
-        if "sampled_data" not in self.config:
+        if "sample" not in self.config:
             sampled_value = -2 # default value is -1
         else:
-            samples = self.config["sampled_data"]
+            samples = self.config["sample"][self.id]
             length = len(samples)
             if length > timestamp:
                 sampled_value = samples[timestamp]
@@ -518,14 +499,12 @@ class ContextAggregator(object):
         1. When it is the first time of the propagation at timestamp, it samples the data
         2. When it is not the first, it invokes the run() method
 
-        >>> a = ContextAggregator(1, config={"sampled_data":[100]}) # id == 1
+        >>> a = ContextAggregator(1) # id == 1
         >>> same(a.process_to_set_output(neighbors=[10,20,30]), {10: [[1], []], 20: [[1], []], 30: [[1], []]})
         True
         >>> same(contexts_to_standard(a.get_database_singles()), [[1],[]])
         True
         >>> same(a.get_database_aggregates(), [])
-        True
-        >>> a.get_current_sample() == 100
         True
         >>> a.get_input() == {}
         True

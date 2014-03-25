@@ -1,6 +1,6 @@
 import os.path
 
-class SampledData(object):
+class SampleData(object):
     def __init__(self):
         self.sample = {}
 
@@ -9,7 +9,7 @@ class SampledData(object):
         >>> root_directory = os.path.dirname(os.path.abspath(__file__)) + "/../test/tmp/"
         >>> base_directory = os.path.join(root_directory, "test1/aggregation/")
 
-        >>> s = SampledData()
+        >>> s = SampleData()
         >>> file = os.path.abspath(base_directory + ".." + os.sep + "sample.txt")
         >>> s.read(file)
         >>> s[0]
@@ -17,12 +17,15 @@ class SampledData(object):
         """
         return self.sample[i]
 
+    def __setitem__(self, key, value):
+        self.sample[key] = value
+
     def read(self, file_path):
         """
         >>> root_directory = os.path.dirname(os.path.abspath(__file__)) + "/../test/tmp/"
         >>> base_directory = os.path.join(root_directory, "test1/aggregation/")
 
-        >>> s = SampledData()
+        >>> s = SampleData()
         >>> file = os.path.abspath(base_directory + ".." + os.sep + "sample.txt")
         >>> s.read(file)
         >>> s.sample
@@ -44,7 +47,7 @@ class SampledData(object):
         >>> root_directory = os.path.dirname(os.path.abspath(__file__)) + "/../test/tmp/"
         >>> base_directory = os.path.join(root_directory, "test1/aggregation/")
 
-        >>> s = SampledData()
+        >>> s = SampleData()
         >>> file = os.path.abspath(base_directory + ".." + os.sep + "sample.txt")
         >>> s.read(file)
         >>> s.get_average(0) == 1.0
@@ -62,7 +65,7 @@ class SampledData(object):
         >>> root_directory = os.path.dirname(os.path.abspath(__file__)) + "/../test/tmp/"
         >>> base_directory = os.path.join(root_directory, "test1/aggregation/")
 
-        >>> s = SampledData()
+        >>> s = SampleData()
         >>> file = os.path.abspath(base_directory + ".." + os.sep + "sample.txt")
         >>> s.read(file)
         >>> s.get_values(0)
