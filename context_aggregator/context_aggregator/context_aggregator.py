@@ -177,7 +177,11 @@ class ContextAggregator(object):
         return self.context_database.get_aggregates(timestamp)
 
     def get_singles(self, timestamp=0):
-        return self.assorted_context_database.get_singles(timestamp)
+        return self.context_database.get_singles(timestamp)
+        #return self.assorted_context_database.get_singles(timestamp)
+
+    def get_aggregates(self, timestamp=0):
+        return self.context_database.get_aggregates(timestamp)
 
     def get_primes(self, timestamp=0):
         return self.assorted_context_database.get_primes(timestamp)

@@ -1,6 +1,12 @@
 import os.path
 
 class SampleData(object):
+    def __len__(self):
+        return self.get_host_size()
+
+    def get_host_size(self):
+        return len(self.sample)
+
     def __init__(self):
         self.sample = {}
 

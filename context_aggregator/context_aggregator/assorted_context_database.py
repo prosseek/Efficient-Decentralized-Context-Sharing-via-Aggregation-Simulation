@@ -62,21 +62,29 @@ class AssortedContextDatabase(object):
         self.timestamp[timestamp].non_primes = non_primes
         self.timestamp[timestamp].selected_non_primes = selected_non_primes
 
-    def get_singles(self, timestamp=0):
-        c = self.timestamp[timestamp]
-        return c.singles
+    def get_singles_in_assorted_context_database(self, timestamp=0):
+        if timestamp in self.timestamp:
+            c = self.timestamp[timestamp]
+            return c.singles
+        return set()
 
     def get_primes(self, timestamp=0):
-        c = self.timestamp[timestamp]
-        return c.primes
+        if timestamp in self.timestamp:
+            c = self.timestamp[timestamp]
+            return c.primes
+        return set()
 
     def get_non_primes(self, timestamp=0):
-        c = self.timestamp[timestamp]
-        return c.non_primes
+        if timestamp in self.timestamp:
+            c = self.timestamp[timestamp]
+            return c.non_primes
+        return set()
 
     def get_selected_non_primes(self, timestamp=0):
-        c = self.timestamp[timestamp]
-        return c.selected_non_primes
+        if timestamp in self.timestamp:
+            c = self.timestamp[timestamp]
+            return c.selected_non_primes
+        return set()
 
 if __name__ == "__main__":
     import doctest
