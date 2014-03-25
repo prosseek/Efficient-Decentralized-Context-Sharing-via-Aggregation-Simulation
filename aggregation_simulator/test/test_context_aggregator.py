@@ -12,10 +12,8 @@ source_location = os.path.dirname(os.path.abspath(__file__)) + "/.."
 sys.path.insert(0, source_location)
 
 from context_aggregator.context_aggregator import ContextAggregator
-from context_aggregator.sender_receiver import SenderReceiver
-
-from context_aggregator.utils_same import *
 from aggregation_simulator.sample_data import SampleData
+from context_aggregator.utils_report import report_generate
 
 def encode_key(from_id, to_id):
     return "%d_%d" % (from_id, to_id)
@@ -107,7 +105,7 @@ class TestContextAggregator(unittest.TestCase):
                     h.context_aggregator.receive(from_node=from_node,contexts=value,timestamp=timestamp)
 
             for h in hosts:
-                h.context_aggregator.write(timestamp, count)
+                report_generate(h.context_aggregator, timestamp, count)
 
             if stop_simulation(hosts):
                 break

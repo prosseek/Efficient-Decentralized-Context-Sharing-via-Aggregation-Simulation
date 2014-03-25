@@ -101,14 +101,10 @@ class ContextAggregator(object):
         self.context_database = ContextDatabase()
         self.assorted_context_database = AssortedContextDatabase()
         self.output = Output()
-        #self.output_dictionary = None
         self.context_history = ContextHistory()
-        #self.output_selector = OutputSelector()
 
         self.new_aggregate = None
         self.filtered_singles = None
-        # Stores the value that I use for current sample
-        #self.current_sample = None
 
     def __reset(self):
         self.input.reset()
@@ -125,10 +121,17 @@ class ContextAggregator(object):
         gc.collect()
 
     #
+    # Sample
+    #
+    def get_sample(self):
+        if "sample" not in self.config:
+            return None # sampled_value = -2 # default value is -1
+        return self.config["sample"][self.id]
+
+    #
     # Input
     #
-
-    def get_input(self):
+    def get_input_dictionary(self):
         return self.input.dictionary
 
     def initalize_before_iteration(self):
@@ -192,7 +195,7 @@ class ContextAggregator(object):
     def get_filtered_singles(self):
         return self.filtered_singles
 
-    def create_current_aggregate(self, contexts, timestamp=0):
+    def create_new_aggregate(self, contexts, timestamp=0):
         """Given contexts (a list of a set of contexts, create a context that collects all
         the information in them)
 
@@ -203,7 +206,7 @@ class ContextAggregator(object):
         >>> d = ContextAggregator()
         >>> s1 = set([Context(value=1.0, cohorts=[0])])
         >>> c1 = set([Context(value=1.0, cohorts=[1,2])])
-        >>> c = d.create_current_aggregate([c1,s1])
+        >>> c = d.create_new_aggregate([c1,s1])
         >>> c.value
         1.0
         >>> c.get_cohorts_as_set() == set([0,1,2])
@@ -224,6 +227,10 @@ class ContextAggregator(object):
     # Filter
     #
     def filter_singles(self, singles):
+        """Out of many input/stored singles, filter out the singles to send
+        based on configuration.
+
+        """
         results = set()
 
         if self.is_aggregation_mode():
@@ -319,7 +326,7 @@ class ContextAggregator(object):
                 if non_primes:
                     m = MaxCover()
                     selected_non_primes = m.run(non_primes)
-            self.new_aggregate = self.create_current_aggregate(contexts=[combined_singles, primes, selected_non_primes], timestamp=timestamp)
+            self.new_aggregate = self.create_new_aggregate(contexts=[combined_singles, primes, selected_non_primes], timestamp=timestamp)
             aggregates = contexts_to_standard({self.new_aggregate})
         else:
             aggregates = [[],[]]
@@ -357,23 +364,15 @@ class ContextAggregator(object):
         else:
             return self.context_database.timestamp[timestamp] == {}
 
-        # history = self.context_history.get(timestamp)
-        # if history is None: return True
-        # else:
-        #     # 2. There is no dictionary in history
-        #     #    There should be at least one element in the history
-        #     #    ContextHistory.HOST_INDEX
-        #     if history == {}: return True
-        #     else: return False
-
     def sample(self, timestamp=0):
         """Sampling means read (acuquire) data at timestamp, and create a single context out of the data
         """
+        samples = self.get_sample()
 
-        if "sample" not in self.config:
-            sampled_value = -2 # default value is -1
+        if samples is None:
+            return -1
         else:
-            samples = self.config["sample"][self.id]
+            #samples = self.config["sample"][self.id]
             length = len(samples)
             if length > timestamp:
                 sampled_value = samples[timestamp]
@@ -494,7 +493,7 @@ class ContextAggregator(object):
         True
         >>> same(a.get_database_aggregates(), [])
         True
-        >>> a.get_input() == {}
+        >>> a.get_input_dictionary() == {}
         True
         """
         if self.is_this_new_timestamp(timestamp):
@@ -514,40 +513,6 @@ class ContextAggregator(object):
         # WARNING! Don't forget the input is cleared after the process_to_set_output() call
         self.initalize_before_iteration()
         return result
-
-    #
-    # FILE write for analysis and report
-    #
-    def write(self, timestamp, iteration):
-        report = StatisticalReport(self, timestamp, iteration)
-        hostname = "host%d" % self.id
-        base_directory = self.configuration("test_directory")
-        filepath = base_directory + os.sep + "%s" % hostname + os.sep + "%04d" % timestamp + os.sep + "%04d.txt" % iteration
-        dir_name = os.path.dirname(filepath)
-        if not os.path.exists(dir_name):
-            os.makedirs(dir_name)
-
-        with open(filepath,"w") as f:
-            f.write("## INPUT\n")
-            f.write(str(self.input.to_string()) + "\n")
-            f.write("## DB\n")
-            f.write(self.context_database.to_string(timestamp) + "\n")
-            f.write("## ASSORTED CONTEXTS\n")
-            f.write(self.assorted_context_database.to_string(timestamp) + "\n")
-            f.write("## FILTERED SINGLES\n")
-            r = contexts_to_standard(self.filtered_singles)
-            f.write("%s\n" % r[0])
-            f.write("## NEW AGGREGATES\n")
-            aggr_string = "*" if self.new_aggregate is None else self.new_aggregate
-            f.write("%s\n" % aggr_string)
-            f.write("## CONTEXT HISTORY\n")
-            f.write(str(self.context_history.get(timestamp)) + "\n")
-            f.write("## OUTPUT\n")
-            f.write(str(self.output.to_string()))
-
-            f.write("\n\n-------------------\n")
-            f.write("## STATISTICS\n")
-            f.write("%s" % report.run())
 
 if __name__ == "__main__":
     import doctest
