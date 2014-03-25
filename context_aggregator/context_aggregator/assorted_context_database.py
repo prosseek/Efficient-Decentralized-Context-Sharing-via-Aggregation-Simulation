@@ -62,7 +62,7 @@ class AssortedContextDatabase(object):
         self.timestamp[timestamp].non_primes = non_primes
         self.timestamp[timestamp].selected_non_primes = selected_non_primes
 
-    def get_singles_in_assorted_context_database(self, timestamp=0):
+    def get_singles(self, timestamp=0):
         if timestamp in self.timestamp:
             c = self.timestamp[timestamp]
             return c.singles
