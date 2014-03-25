@@ -69,10 +69,8 @@ from disaggregator import Disaggregator
 from maxcover import MaxCover
 from output_selector import OutputSelector
 from utils_configuration import  process_default_values
-from statistical_report import StatisticalReport
 
 import gc
-import os
 
 class ContextAggregator(object):
     """database class"""
@@ -124,9 +122,13 @@ class ContextAggregator(object):
     # Sample
     #
     def get_sample(self):
-        if "sample" not in self.config:
+        return self.configuration("sample")
+
+    def get_sample_data(self):
+        sample = self.get_sample()
+        if sample is None:
             return None # sampled_value = -2 # default value is -1
-        return self.config["sample"][self.id]
+        return sample[self.id]
 
     #
     # Input
@@ -185,9 +187,6 @@ class ContextAggregator(object):
 
     def get_selected_non_primes(self, timestamp=0):
         return self.assorted_context_database.get_selected_non_primes(timestamp)
-
-    # def get_output(self):
-    #     return self.output
 
     def get_new_aggregate(self):
         return self.new_aggregate
@@ -262,7 +261,7 @@ class ContextAggregator(object):
         6. new aggregates has [0,1,2,3,4,5,7,8,9] as elements
         7. From filtering, [0][1][2][9]' will be propagated with [0,1,2,3,4,5,7,8,9] as an aggregate
 
-        For output
+        Return value: dictionary that stores the standard form
 
         * For 1: [0][1][9] and [1..9] is sent. [2] is not propagated
 
@@ -350,6 +349,8 @@ class ContextAggregator(object):
         if history is None: history = {}
         selector = OutputSelector(inputs=inputs_in_standard_form, context_history=history, new_info=new_info, neighbors=neighbors)
         result = selector.run()
+
+        # result is a {} in standard form
         return result
 
     def is_this_new_timestamp(self, timestamp=0):
@@ -367,7 +368,7 @@ class ContextAggregator(object):
     def sample(self, timestamp=0):
         """Sampling means read (acuquire) data at timestamp, and create a single context out of the data
         """
-        samples = self.get_sample()
+        samples = self.get_sample_data()
 
         if samples is None:
             return -1

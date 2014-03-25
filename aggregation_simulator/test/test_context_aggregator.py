@@ -13,7 +13,7 @@ sys.path.insert(0, source_location)
 
 from context_aggregator.context_aggregator import ContextAggregator
 from aggregation_simulator.sample_data import SampleData
-from context_aggregator.utils_report import report_generate
+from aggregation_simulator.utils_report import report_generate
 
 def encode_key(from_id, to_id):
     return "%d_%d" % (from_id, to_id)

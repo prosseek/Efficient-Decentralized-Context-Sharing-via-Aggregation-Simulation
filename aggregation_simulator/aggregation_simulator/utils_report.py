@@ -1,6 +1,6 @@
 import os
 
-from utils_standard import contexts_to_standard
+from context_aggregator.utils_standard import contexts_to_standard
 from statistical_report import StatisticalReport
 
 #

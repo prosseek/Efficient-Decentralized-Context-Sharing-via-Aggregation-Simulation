@@ -131,7 +131,6 @@ class OutputSelector(object):
         assert self.inputs is not None
         assert self.context_history is not None
         assert self.new_info is not None
-        #assert self.neighbors is not None
         output = {}
 
         # add inputs and history

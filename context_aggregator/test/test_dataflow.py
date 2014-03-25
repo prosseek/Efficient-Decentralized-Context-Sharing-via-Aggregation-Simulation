@@ -70,13 +70,8 @@ class TestDataflow(unittest.TestCase):
         self.assertTrue(same(d.get_selected_non_primes(timestamp=10), [[],[3,4,5]]))
         self.assertTrue(d.get_new_aggregate().get_cohorts_as_set() == set([0,1,2,3,4,5,7,8,9]))
         self.assertTrue(same(d.get_filtered_singles(), [[0,1,9],[]]))
-        r = d.get_output()
-        self.assertTrue(same(r[1], [[0,1,9],[0,1,2,3,4,5,7,8,9]]))
-        self.assertTrue(same(r[2], [[1,9],[0,1,2,3,4,5,7,8,9]]))
-        self.assertTrue(same(r[3], [[0,9],[0,1,2,3,4,5,7,8,9]]))
-        self.assertTrue(same(r[4], [[0,1],[0,1,2,3,4,5,7,8,9]]))
 
-    def test_run2(self):
+    def test_run3(self):
         """Doctest case with propage recovered singles"""
         d = ContextAggregator(config={"propagation_mode": ContextAggregator.AGGREGATION_MODE, "max_tau": 1, "propagate_recovered_singles": True})
         #d.initialize() # Always execute initialize before newly receive data
@@ -100,7 +95,7 @@ class TestDataflow(unittest.TestCase):
         self.assertTrue(d.get_new_aggregate().get_cohorts_as_set() == set([0,1,2,3,4,5,7,8,9]))
         self.assertTrue(same(d.get_filtered_singles(), [[0,1,2,9],[]]))
 
-    def test_run3(self):
+    def test_run4(self):
         """Doctest case with propage recovered singles, and propage with max_tau == 0 """
         d = ContextAggregator(config={"propagation_mode": ContextAggregator.AGGREGATION_MODE, "max_tau": 0, "propagate_recovered_singles": True})
         #d.initialize() # Always execute initialize before newly receive data
@@ -124,7 +119,7 @@ class TestDataflow(unittest.TestCase):
         self.assertTrue(d.get_new_aggregate().get_cohorts_as_set() == set([0,1,2,3,4,5,7,8,9]))
         self.assertTrue(same(d.get_filtered_singles(), [[2,9],[]]))
 
-    def test_run4(self):
+    def test_run5(self):
         """Doctest case with propage recovered singles, and propage with max_tau == 0 """
         d = ContextAggregator(config={"propagation_mode": ContextAggregator.AGGREGATION_MODE, "max_tau": 0, "propagate_recovered_singles": False})
         #d.initialize() # Always execute initialize before newly receive data
