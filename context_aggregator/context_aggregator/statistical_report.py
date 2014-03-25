@@ -14,14 +14,7 @@ class StatisticalReport(object):
         result += "Received: %d (%d-%d)\n" % (s+a, s, a)
 
         # 2. get the number of sent packets
-        s = 0
-        a = 0
-        sd = self.report_object.output_dictionary
-        if sd is not None:
-            for key, values in sd.items():
-                s += len(values[0])
-                a += 1 if len(values[1]) > 1 else 0
-
+        s,a = self.report_object.output.get_number_of_contexts()
         result += "Sent: %d (%d-%d)\n\n" % (s+a, s, a)
 
         # 3. calculate the accuracy

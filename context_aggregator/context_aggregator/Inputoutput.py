@@ -14,6 +14,9 @@ class InputOutput(object):
     def get_dictionary(self):
         return self.dictionary
 
+    def set_dictionary(self, dictionary):
+        self.dictionary = dictionary
+
     def reset(self):
         self.dictionary = {}
 

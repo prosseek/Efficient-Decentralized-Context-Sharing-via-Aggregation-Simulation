@@ -59,6 +59,7 @@ from utils_same import *
 from context.context import Context
 
 from input import Input
+from output import Output
 from context_database import ContextDatabase
 from assorted_context_database import AssortedContextDatabase
 from context_history import ContextHistory
@@ -99,13 +100,15 @@ class ContextAggregator(object):
         self.input = Input()
         self.context_database = ContextDatabase()
         self.assorted_context_database = AssortedContextDatabase()
-        self.output_dictionary = None
+        self.output = Output()
+        #self.output_dictionary = None
         self.context_history = ContextHistory()
         #self.output_selector = OutputSelector()
 
         self.new_aggregate = None
         self.filtered_singles = None
-        self.current_sample = None
+        # Stores the value that I use for current sample
+        #self.current_sample = None
 
     def __reset(self):
         self.input.reset()
@@ -216,9 +219,6 @@ class ContextAggregator(object):
 
         c = Context(value=value, cohorts=elements, hopcount=Context.AGGREGATED_CONTEXT, timestamp=timestamp)
         return c
-
-    def get_output(self):
-        return self.output_dictionary
 
     #
     # Filter
@@ -383,24 +383,6 @@ class ContextAggregator(object):
         self.current_sample = sampled_value
         return sampled_value
 
-    def generate_contexts_from_output_dictionary(self, o, timestamp=0):
-        """This is a sub method only for process_to_set_output.
-
-        We needed this method as process_to_set_output can have neighbor parameter as inter or None.
-        When None is given, contexts for all the neighbors in the dictionary are created
-        """
-        singles = self.output_dictionary[o][0]
-        aggregate = self.output_dictionary[o][1]
-
-        # from [1,2,3...] -> Context(...)
-        # The new aggregate is in self.new_aggregte
-        if aggregate:
-            # aggregate should be turned into set(), so you need to convert it into list first
-            aggregate = [self.new_aggregate]
-        single_contexts = get_matching_single_contexts(self.get_database_singles(timestamp), singles)
-        result = single_contexts | set(aggregate)
-        return result
-
     def get_received_data(self, from_node = None):
         """Returns the received data from node_index
 
@@ -426,7 +408,8 @@ class ContextAggregator(object):
     #######################################################
 
     def is_nothing_to_send(self):
-        for o, v in self.output_dictionary.items():
+        output_dictionary = self.output.dictionary
+        for o, v in output_dictionary.items():
             if v != [[],[]]: return False
         return True
 
@@ -453,18 +436,23 @@ class ContextAggregator(object):
         """
 
         result = {}
+        output_dictionary = self.output.dictionary
         if neighbor is None:
-            for o in self.output_dictionary:
-                result[o] = self.generate_contexts_from_output_dictionary(o, timestamp)
-                self.context_history.add_to_history(node_number=o, value=self.output_dictionary[o], timestamp=timestamp)
+            for o in output_dictionary:
+                single_contexts = self.output.generate_single_contexts(o=o, single_contexts=self.get_database_singles(timestamp))
+                aggregate_context = self.output.generate_aggregate_contexts(o=o, aggregate_contexts=self.new_aggregate)
+                result[o] = single_contexts | aggregate_context
+                self.context_history.add_to_history(node_number=o, value=output_dictionary[o], timestamp=timestamp)
         else:
             assert type(neighbor) in [int, long]
-            assert neighbor in self.output_dictionary
+            assert neighbor in output_dictionary
             # TODO
             # Duplication of code
             o = neighbor
-            result[o] = self.generate_contexts_from_output_dictionary(o, timestamp)
-            self.context_history.add_to_history(node_number=o, value=self.output_dictionary[o], timestamp=timestamp)
+            single_contexts = self.output.generate_single_contexts(o=o, single_contexts=self.get_database_singles(timestamp))
+            aggregate_context = self.output.generate_aggregate_contexts(o=o, aggregate_contexts=self.new_aggregate)
+            result[o] = single_contexts | aggregate_context
+            self.context_history.add_to_history(node_number=o, value=output_dictionary[o], timestamp=timestamp)
 
         return result
 
@@ -521,23 +509,17 @@ class ContextAggregator(object):
         else:
             result = self.run_dataflow(neighbors=neighbors, timestamp=timestamp)
 
-        self.output_dictionary = result
+        self.output.set_dictionary(result)
 
         # WARNING! Don't forget the input is cleared after the process_to_set_output() call
         self.initalize_before_iteration()
         return result
 
     #
-    # Statistics report
-    #
-    def report(self, timestamp, iteration):
-        report = StatisticalReport(self, timestamp, iteration)
-        return report.run()
-
-    #
-    # FILE related
+    # FILE write for analysis and report
     #
     def write(self, timestamp, iteration):
+        report = StatisticalReport(self, timestamp, iteration)
         hostname = "host%d" % self.id
         base_directory = self.configuration("test_directory")
         filepath = base_directory + os.sep + "%s" % hostname + os.sep + "%04d" % timestamp + os.sep + "%04d.txt" % iteration
@@ -561,11 +543,11 @@ class ContextAggregator(object):
             f.write("## CONTEXT HISTORY\n")
             f.write(str(self.context_history.get(timestamp)) + "\n")
             f.write("## OUTPUT\n")
-            f.write(str(self.output_dictionary))
+            f.write(str(self.output.to_string()))
 
             f.write("\n\n-------------------\n")
             f.write("## STATISTICS\n")
-            f.write("%s" % self.report(timestamp=timestamp, iteration=iteration))
+            f.write("%s" % report.run())
 
 if __name__ == "__main__":
     import doctest
