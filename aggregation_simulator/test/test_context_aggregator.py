@@ -35,23 +35,29 @@ def stop_simulation(hosts):
     else:
         return False
 
+root_directory = os.path.dirname(os.path.abspath(__file__)) + "/tmp/"
+test_name = "test1"
+base_directory = os.path.join(root_directory, test_name)
+sample = SampleData()
+sample_file = os.path.join(base_directory, "sample.txt")
+sample.read(sample_file)
+
 class TestContextAggregator(unittest.TestCase):
     def setUp(self):
         pass
 
-    def test_with_file_output(self):
+    def test_with_aggregation(self):
+        config = {"sample":sample}
+        self.execution_file_output(method="aggregation", config=config)
+
+    def test_with_singles_only(self):
+        config = {"sample":sample, ContextAggregator.PM:ContextAggregator.SINGLE_ONLY_MODE}
+        self.execution_file_output(method="singles_only", config=config)
+
+    def execution_file_output(self, method, config):
         """
         Tests if the algorithm works fine
         """
-        root_directory = os.path.dirname(os.path.abspath(__file__)) + "/tmp/"
-        test_name = "test1"
-        base_directory = os.path.join(root_directory, test_name)
-        sample_file = os.path.join(base_directory, "sample.txt")
-        network_file = os.path.join(base_directory, "network.txt")
-
-        sample = SampleData()
-        sample.read(sample_file)
-
         h0 = Host(0)
         h1 = Host(1)
         h2 = Host(2)
@@ -59,16 +65,18 @@ class TestContextAggregator(unittest.TestCase):
         neighbors = {0:[1], 1:[0,2], 2:[1]}
 
         # The directory where the results are stored in file
-        test_kind = "aggregation"
+        test_kind = method
         test_directory = os.path.join(base_directory, test_kind)
+
+        config["test_directory"] = test_directory
         if os.path.exists(test_directory):
             shutil.rmtree(test_directory)
 
         #config = {ContextAggregator.PM:ContextAggregator.SINGLE_ONLY_MODE}
         # configurations
-        h0.context_aggregator.set_config({"sample":sample, "test_directory":test_directory})
-        h1.context_aggregator.set_config({"sample":sample, "test_directory":test_directory})
-        h2.context_aggregator.set_config({"sample":sample, "test_directory":test_directory})
+        h0.context_aggregator.set_config(config)
+        h1.context_aggregator.set_config(config)
+        h2.context_aggregator.set_config(config)
 
         #sr = SenderReceiver()
 

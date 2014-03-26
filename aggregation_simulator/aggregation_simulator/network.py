@@ -16,29 +16,22 @@ Dictionary is used for representing network: network[1] = [2].
 
 import os
 import sys
-import re
 import copy
+import re
 
 from context_aggregator.utils_same import *
 from utils import *
-from ConfigParser import *
 
-CONFIGURATION_FILE_FOR_TEST = "config.cfg"
 class Network(object):
     def __init__(self, network_file=None):
         self.network = {}
         self.network_file = None
         if network_file is not None:
-            self.network = self.load_file(network_file)
+            self.network = self.read(network_file)
 
-    def load_file(self, network_file):
+    def read(self, network_file):
         """
 
-        >>> file_path = get_configuration("config.cfg", "TestDirectory", "test1")
-        >>> n = Network()
-        >>> p = n.load_file(file_path)
-        >>> same({1: [2], 2: [1, 3], 3: [2, 4, 6], 4: [3, 5], 5: [4], 6: [3, 7], 7: [8, 6], 8: [7]}, n.get_network())
-        True
         """
         self.network_file = os.path.abspath(network_file)
         if not os.path.exists(self.network_file):
