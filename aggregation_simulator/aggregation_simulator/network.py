@@ -31,7 +31,6 @@ class Network(object):
 
     def read(self, network_file):
         """
-
         """
         self.network_file = os.path.abspath(network_file)
         if not os.path.exists(self.network_file):
@@ -42,6 +41,9 @@ class Network(object):
             self.network = self.make_symmetric_network(self.network)
 
         return self.network
+
+    def get_host_ids(self):
+        return self.network.keys()
 
     def get_network(self):
         return self.network

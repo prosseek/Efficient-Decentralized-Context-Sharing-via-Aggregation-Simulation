@@ -17,3 +17,5 @@ dist/
 # Test temp
 aggregation_simulator/test/tmp/test1/aggregation/*
 aggregation_simulator/test/tmp/test1/singles_only/*
+aggregation_simulator/test/tmp/test_network1/aggregation/*
+aggregation_simulator/test/tmp/test_network1/singles_only/*

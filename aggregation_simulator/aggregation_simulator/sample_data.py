@@ -43,6 +43,7 @@ class SampleData(object):
         with open(file_path, "r") as f:
             lines = f.readlines()
             for l in lines:
+                if len(l.strip()) == 0: continue
                 id = int(l.split(":")[0])
                 values = [int(i) for i in l.split(":")[1].split(',')]
                 self.sample[id] = values

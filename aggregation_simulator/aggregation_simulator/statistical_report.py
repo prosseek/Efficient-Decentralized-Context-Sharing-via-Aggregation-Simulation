@@ -12,7 +12,14 @@ def calculate_error(val1, val2):
             diff += calculate_error(v1, v2) # abs(100.0(v1 - v2)/v1)
         return diff/len(val1) # return the average of % error
     else:
-        return abs(100.0*(val1 - val2)/val1)
+        # TODO: Check this error measure is correct
+        # http://answers.yahoo.com/question/index?qid=20090616072756AAFSuaG
+        if val1 != 0:
+            return abs(100.0*(val1 - val2)/val1)
+        else:
+            if val2 == 0: return 0
+            return abs(100.0*(val1 - val2)/val2)
+
 
 def dict_to_list(dictionary, host_size, default_value='?'):
     """
@@ -53,7 +60,59 @@ def estimate_average(singles, aggregates):
 
     return 1.0*values/count
 
+def get_identified_values(singles, aggregate, size):
+    """Given singles/aggregates, returns a list
+    >>> s = {Context(value=3.0, cohorts={1})}
+    >>> a = {Context(value=1.0, cohorts={3,5}), Context(value=2.0, cohorts={4,7})}
+    >>> get_identified_values(s,a,10)
+    ['?', 3.0, '?', '1.00(*)', '2.00(*)', '1.00(*)', '?', '2.00(*)', '?', '?']
+    """
+    result = ['?']*size
+    for s in singles:
+        v = s.value
+        i = s.get_id()
+        result[i] = v
+    for a in aggregate:
+        items = a.get_cohorts_as_set()
+        value = a.value
+        for i in items:
+            result[i] = "%4.2f(*)" % value
+    return result
 
+def get_estimated_values(identified_values, average):
+    """
+
+    >>> a = ['?', 3.0, '?', '1.00(*)', '2.00(*)', '1.00(*)', '?', '2.00(*)', '?', '?']
+    >>> get_estimated_values(a, 1.6)
+    [1.6, 3.0, 1.6, 1.0, 2.0, 1.0, 1.6, 2.0, 1.6, 1.6]
+    """
+
+    result = [0]*len(identified_values)
+    for i, v in enumerate(identified_values):
+        if v == '?':
+            result[i] = average
+        elif type(v) in [float, int,long]:
+            result[i] = v
+        else:
+            #print v
+            result[i] = float(v.split('(')[0])
+    return result
+
+
+def get_cohorts_statistics(identified_aggregates):
+    """Given aggregates, returns the number of cohorts (groups), and the number of elements in it
+
+    >>> a = {Context(value=1.0, cohorts={1,2,3}), Context(value=2.0, cohorts={4,5,6,7})}
+    >>> no_of_cohorts, no_of_ids = get_cohorts_statistics(a)
+    >>> no_of_cohorts == 2 and no_of_ids == 7
+    True
+    """
+    number_of_ids_from_cohorts = 0
+    number_of_cohorts = 0
+    for s in identified_aggregates:
+        number_of_ids_from_cohorts += len(s)
+        number_of_cohorts += 1
+    return number_of_cohorts, number_of_ids_from_cohorts
 
 class StatisticalReport(object):
     def __init__(self, report_object, timestamp, iteration):
@@ -81,35 +140,28 @@ class StatisticalReport(object):
             correct_average = sample.get_average(self.timestamp)
             result += "Correct average: %4.2f\n" % correct_average
 
-            d = {}
             identified_singles = self.obj.get_singles(self.timestamp)
             identified_aggregates = list(self.obj.get_primes()) + list(self.obj.get_selected_non_primes())
 
             number_of_id_singles = len(identified_singles)
-            for s in identified_singles:
-                v = s.value
-                i = s.id
-                d[i] = v
-
-            number_of_ids_from_cohorts = 0
-            number_of_cohorts = 0
-            for s in identified_aggregates:
-                number_of_ids_from_cohorts += len(s)
-                number_of_cohorts += 1
+            number_of_cohorts, number_of_ids_from_cohorts = get_cohorts_statistics(identified_aggregates)
+            identified_values = get_identified_values(identified_singles, identified_aggregates, host_size)
 
             average_number_per_cohort = 0 if number_of_cohorts == 0 else 1.0*number_of_ids_from_cohorts/number_of_cohorts
             number_of_id_aggregate = number_of_ids_from_cohorts + number_of_id_singles
 
-            result += "Identified values: %s\n" % dict_to_list(d, host_size)
             estimated_average = estimate_average(identified_singles, identified_aggregates)
+            estimate_values = get_estimated_values(identified_values, average=estimated_average)
+            average_error = calculate_error(correct_average, estimated_average)
+            value_error = calculate_error(correct_values, estimate_values)
+            result += "Identified values: %s\n" % identified_values
             result += "Estimated average: %s\n" % estimated_average
-            estimate_values = dict_to_list(d, host_size, default_value=estimated_average)
             result += "Estimated values: %s\n" % estimate_values
-            result += "Error rate: avg(%4.2f%%) individual(%4.2f%%)\n" % (calculate_error(correct_average, estimated_average), calculate_error(correct_values, estimate_values))
+            result += "%% precision: avg(%4.2f%%) individual(%4.2f%%)\n" % (100 - average_error, 100 - value_error)
             result += "Identified rate: aggregate(%4.2f%%(%d/%d)) single(%4.2f%%(%d/%d))\n" % \
                       (100.0*number_of_id_aggregate/host_size, number_of_id_aggregate, host_size,
                        100.0*number_of_id_singles/host_size, number_of_id_singles, host_size)
-            result += "Average number of cohorts: %4.2f%%(%d/%d)" % (average_number_per_cohort, number_of_ids_from_cohorts, number_of_cohorts)
+            result += "Average number of cohorts: %4.2f(%d/%d)" % (average_number_per_cohort, number_of_ids_from_cohorts, number_of_cohorts)
         else:
             result += "No sample data found\n"
 
