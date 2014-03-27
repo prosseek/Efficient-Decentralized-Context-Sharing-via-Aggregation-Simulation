@@ -125,6 +125,9 @@ class Context(object):
         A context is represented as a tuple
         (value, [cohorts], timestamp, hopcount)
 
+        >>> c = Context(value=1.0, cohorts=[1], timestamp=0, hopcount=1)
+        >>> print c.to_string()
+        v(1.00):c([1]):h(1):t(0)
         >>> c = Context(value=1.0, cohorts=[1,2,3], timestamp=0, hopcount=1)
         >>> print c.to_string()
         v(1.00):c([1,2,3]):h(1):t(0)

@@ -1,8 +1,6 @@
 import unittest
 import sys
 import os
-import re
-import shutil
 
 source_location = os.path.dirname(os.path.abspath(__file__)) + "/../context"
 sys.path.insert(0, source_location)
@@ -10,22 +8,23 @@ sys.path.insert(0, source_location)
 source_location = os.path.dirname(os.path.abspath(__file__)) + "/.."
 sys.path.insert(0, source_location)
 
+from context_aggregator.context_aggregator import ContextAggregator
+from aggregation_simulator.utils_configuration import *
+from aggregation_simulator.host import Host
+from aggregation_simulator.aggregation_simulator import AggregationSimulator
+from aggregation_simulator.utils import make_ready_for_test
+
 from aggregation_simulator.network import Network
 from context_aggregator.utils_same import same
 from context_aggregator.context_aggregator import ContextAggregator
-from execute_file import Host, execution_file_output
-from aggregation_simulator.sample_data import SampleData
+#from aggregation_simulator.aggregation_simulator import Host, execution_file_output
+from aggregation_simulator.sample import Sample
 
-root_directory = os.path.dirname(os.path.abspath(__file__)) + "/tmp/"
-#test_name = "test_network1"
-test_name = "real_world_intel_10"
-base_directory = os.path.join(root_directory, test_name)
-sample_file = os.path.join(base_directory, "%s_sample.txt" % test_name)
-sample = SampleData()
-sample.read(sample_file)
-network_file = os.path.join(base_directory, "%s.txt" % test_name)
+d = get_test_files_directory()
+network_file = os.path.join(d, "test_network1/test_network1.txt")
 network = Network()
 network.read(network_file)
+dot_file_path = os.path.join(d, network_file + ".dot")
 
 class TestNetwork(unittest.TestCase):
     def setUp(self):
@@ -43,8 +42,6 @@ class TestNetwork(unittest.TestCase):
         self.assertTrue(sorted(h) == [1,2,3,4,5,6,7,8])
 
     def test_dot_gen(self):
-        dot_file_path = os.path.join(base_directory, network_file + ".dot")
-
         network = Network()
         network.read(network_file)
         network.dot_gen(dot_file_path)
@@ -56,10 +53,13 @@ class TestNetwork(unittest.TestCase):
             hosts.append(Host(h))
         neighbors = network.get_network() # {0:[1], 1:[0,2], 2:[1]}
 
-        test_kind = "aggregation"
-        test_directory = os.path.join(base_directory, test_kind)
-        config = {"sample":sample, "test_directory":test_directory, ContextAggregator.PM:ContextAggregator.AGGREGATION_MODE}
-        execution_file_output(hosts=hosts, neighbors=neighbors, config=config)
+        test_directory, sample = make_ready_for_test("test_network1","aggregate")
+
+        config = {"hosts":hosts, "neighbors":neighbors,\
+                  "test_directory":test_directory, "sample":sample, \
+                  ContextAggregator.PM:ContextAggregator.AGGREGATION_MODE}
+
+        simulation = AggregationSimulator.run(config=config)
 
     def test_with_file_singles_only(self):
         host_ids = network.get_host_ids() # [h0, h1, h2]
@@ -68,10 +68,12 @@ class TestNetwork(unittest.TestCase):
             hosts.append(Host(h))
         neighbors = network.get_network() # {0:[1], 1:[0,2], 2:[1]}
 
-        test_kind = "singles_only"
-        test_directory = os.path.join(base_directory, test_kind)
-        config = {"sample":sample, "test_directory":test_directory, ContextAggregator.PM:ContextAggregator.SINGLE_ONLY_MODE}
-        execution_file_output(hosts=hosts, neighbors=neighbors, config=config)
+        test_directory, sample = make_ready_for_test("test_network1","singles")
+
+        config = {"hosts":hosts, "neighbors":neighbors,\
+                  "test_directory":test_directory, "sample":sample, \
+                  ContextAggregator.PM:ContextAggregator.SINGLE_ONLY_MODE}
+        simulation = AggregationSimulator.run(config=config)
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)

@@ -1,39 +1,56 @@
-"""Utilities for simulation
-"""
-import os.path
-from os.path import expanduser
-from ConfigParser import *
+from utils_configuration import *
+from network import Network
 
-CONFIGURATION_FILE_FOR_TEST = "config.cfg"
+from sample import Sample
 
-def find_configuration_file(config_filename):
-    """
+import os
+import shutil
+import distutils.core
 
-    >>> f = find_configuration_file(CONFIGURATION_FILE_FOR_TEST)
-    >>> f.endswith(CONFIGURATION_FILE_FOR_TEST)
+def get_sample_name(test_name):
+    return test_name + "_sample.txt"
+
+def make_ready_for_test(test_file_name, test_sub_name):
+    """Given test name in test_files directory, and sub directory
+    Returns the test_directory where the reports are recorded, and the sample file
+
+    >>> result = make_ready_for_test("test1","aggregate")
+    >>> len(result) == 2
     True
     """
-    home = expanduser("~")
-    current_directory = os.path.abspath(".")
-    while current_directory != home:
-        current_directory = os.path.abspath(os.path.join(current_directory, '..'))
-        file_path = os.path.join(current_directory, config_filename)
-        if os.path.exists(file_path):
-            return file_path
-    return None
+    test_files_directory = get_test_files_directory()
+    directory = os.path.join(test_files_directory, test_file_name)
+    sample_name = get_sample_name(test_file_name)
+    sample_file_path = os.path.join(directory, sample_name)
 
-def get_configuration(config_file_name, section, key):
-    """
+    net_file_path = os.path.join(directory, test_file_name + ".txt")
+    dot_file_path = net_file_path + ".dot"
 
-    >>> f = get_configuration(CONFIGURATION_FILE_FOR_TEST, "TestDirectory", "test1")
-    >>> f.endswith("network1.txt")
-    True
-    """
-    config_file_path = find_configuration_file(config_file_name)
-    if config_file_path:
-        f = ConfigParser()
-        f.read(config_file_path)
-        return f.get(section, key)
+    if os.path.exists(net_file_path):
+        if not os.path.exists(dot_file_path):
+            n = Network(net_file_path)
+            dumb = n.dot_gen(dot_file_path)
+
+
+    # There should be sample files
+    assert os.path.exists(sample_file_path)
+
+    # get the target root file
+    test_report_root_directory = get_test_report_root_directory()
+
+    test_report_directory = test_report_root_directory + os.sep + test_file_name
+    test_report_sub_directory = test_report_directory + os.sep + test_sub_name
+    if os.path.exists(test_report_sub_directory):
+        shutil.rmtree(test_report_sub_directory)
+    os.makedirs(test_report_sub_directory)
+
+    # http://stackoverflow.com/questions/15034151/copy-directory-contents-into-a-directory-with-python
+    distutils.dir_util.copy_tree(directory, test_report_directory)
+
+    sample = Sample()
+    sample.read(sample_file_path)
+
+    return test_report_sub_directory, sample
 
 if __name__ == "__main__":
     import doctest

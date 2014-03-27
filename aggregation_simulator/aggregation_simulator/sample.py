@@ -1,6 +1,6 @@
 import os.path
 
-class SampleData(object):
+class Sample(object):
     def __len__(self):
         return self.get_host_size()
 
@@ -11,16 +11,6 @@ class SampleData(object):
         self.sample = {}
 
     def __getitem__(self, i):
-        """
-        >>> root_directory = os.path.dirname(os.path.abspath(__file__)) + "/../test/tmp/"
-        >>> base_directory = os.path.join(root_directory, "test1/aggregation/")
-
-        >>> s = SampleData()
-        >>> file = os.path.abspath(base_directory + ".." + os.sep + "sample.txt")
-        >>> s.read(file)
-        >>> s[0]
-        [0, 1, 2, 3, 4]
-        """
         return self.sample[i]
 
     def __setitem__(self, key, value):
@@ -34,8 +24,8 @@ class SampleData(object):
         >>> root_directory = os.path.dirname(os.path.abspath(__file__)) + "/../test/tmp/"
         >>> base_directory = os.path.join(root_directory, "test1/aggregation/")
 
-        >>> s = SampleData()
-        >>> file = os.path.abspath(base_directory + ".." + os.sep + "sample.txt")
+        >>> s = Sample()
+        >>> file = os.path.abspath(base_directory + ".." + os.septest1_sample.txtample.txt)
         >>> s.read(file)
         >>> s.sample
         {0: [0, 1, 2, 3, 4], 1: [1, 2, 3, 4, 5], 2: [2, 3, 4, 5, 6]}
@@ -57,8 +47,8 @@ class SampleData(object):
         >>> root_directory = os.path.dirname(os.path.abspath(__file__)) + "/../test/tmp/"
         >>> base_directory = os.path.join(root_directory, "test1/aggregation/")
 
-        >>> s = SampleData()
-        >>> file = os.path.abspath(base_directory + ".." + os.sep + "sample.txt")
+        >>> s = Sample()
+        >>> file = os.path.abspath(base_directory + ".." + ostest1_sample.txtt1_sample.txt)
         >>> s.read(file)
         >>> s.get_average(0) == 1.0
         True
@@ -75,8 +65,8 @@ class SampleData(object):
         >>> root_directory = os.path.dirname(os.path.abspath(__file__)) + "/../test/tmp/"
         >>> base_directory = os.path.join(root_directory, "test1/aggregation/")
 
-        >>> s = SampleData()
-        >>> file = os.path.abspath(base_directory + ".." + os.sep + "sample.txt")
+        >>> s = Sample()
+        >>> file = os.path.abspath(base_directory + ".." test1_sample.txt test1_sample.txt)
         >>> s.read(file)
         >>> s.get_values(0)
         [0, 1, 2]

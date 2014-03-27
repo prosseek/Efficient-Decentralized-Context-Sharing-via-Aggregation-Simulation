@@ -20,7 +20,7 @@ import copy
 import re
 
 from context_aggregator.utils_same import *
-from utils import *
+from utils_configuration import *
 
 class Network(object):
     def __init__(self, network_file=None):
