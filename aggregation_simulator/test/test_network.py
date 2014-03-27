@@ -17,12 +17,13 @@ from execute_file import Host, execution_file_output
 from aggregation_simulator.sample_data import SampleData
 
 root_directory = os.path.dirname(os.path.abspath(__file__)) + "/tmp/"
-test_name = "test_network1"
+#test_name = "test_network1"
+test_name = "real_world_intel_6"
 base_directory = os.path.join(root_directory, test_name)
-sample_file = os.path.join(base_directory, "sample.txt")
+sample_file = os.path.join(base_directory, "%s_sample.txt" % test_name)
 sample = SampleData()
 sample.read(sample_file)
-network_file = os.path.join(base_directory, "network.txt")
+network_file = os.path.join(base_directory, "%s.txt" % test_name)
 network = Network()
 network.read(network_file)
 
@@ -42,12 +43,11 @@ class TestNetwork(unittest.TestCase):
         self.assertTrue(sorted(h) == [1,2,3,4,5,6,7,8])
 
     def test_dot_gen(self):
-        network_file = os.path.join(base_directory, "network.txt")
-        dot_file = os.path.join(base_directory, "network.dot")
+        dot_file_path = os.path.join(base_directory, network_file + ".dot")
 
         network = Network()
         network.read(network_file)
-        network.dot_gen(dot_file)
+        network.dot_gen(dot_file_path)
 
     def test_with_file_aggregation(self):
         host_ids = network.get_host_ids() # [h0, h1, h2]

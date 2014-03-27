@@ -60,22 +60,32 @@ def estimate_average(singles, aggregates):
 
     return 1.0*values/count
 
-def get_identified_values(singles, aggregate, size):
+def get_identified_values(singles, aggregate, size, shift_index=0):
     """Given singles/aggregates, returns a list
+
+    shift index is needed for node value that doesn't start from 0
+
     >>> s = {Context(value=3.0, cohorts={1})}
     >>> a = {Context(value=1.0, cohorts={3,5}), Context(value=2.0, cohorts={4,7})}
     >>> get_identified_values(s,a,10)
     ['?', 3.0, '?', '1.00(*)', '2.00(*)', '1.00(*)', '?', '2.00(*)', '?', '?']
+
+    >>> s = {Context(value=3.0, cohorts={1})}
+    >>> a = {Context(value=1.0, cohorts={3,5}), Context(value=2.0, cohorts={4,7})}
+    >>> get_identified_values(s,a,10,shift_index=1)
+    [3.0, '?', '1.00(*)', '2.00(*)', '1.00(*)', '?', '2.00(*)', '?', '?', '?']
     """
     result = ['?']*size
     for s in singles:
         v = s.value
         i = s.get_id()
+        i -= shift_index
         result[i] = v
     for a in aggregate:
         items = a.get_cohorts_as_set()
         value = a.value
         for i in items:
+            i -= shift_index
             result[i] = "%4.2f(*)" % value
     return result
 
@@ -123,6 +133,7 @@ class StatisticalReport(object):
     def run(self):
         result = ""
 
+
         # 1. get the number of received packets
         s,a = self.obj.input.get_number_of_contexts()
         result += "Received: %d (%d-%d)\n" % (s+a, s, a)
@@ -133,19 +144,20 @@ class StatisticalReport(object):
 
         # 3. calculate the accuracy
         sample = self.obj.get_sample()
+        shift_index = sample.get_min()
         host_size = sample.get_host_size()
         if sample is not None:
             correct_values = sample.get_values(self.timestamp)
             result += "Correct values: %s\n" % correct_values
             correct_average = sample.get_average(self.timestamp)
-            result += "Correct average: %4.2f\n" % correct_average
+            result += "Correct average: %s\n" % correct_average
 
             identified_singles = self.obj.get_singles(self.timestamp)
             identified_aggregates = list(self.obj.get_primes()) + list(self.obj.get_selected_non_primes())
 
             number_of_id_singles = len(identified_singles)
             number_of_cohorts, number_of_ids_from_cohorts = get_cohorts_statistics(identified_aggregates)
-            identified_values = get_identified_values(identified_singles, identified_aggregates, host_size)
+            identified_values = get_identified_values(identified_singles, identified_aggregates, host_size, shift_index=shift_index)
 
             average_number_per_cohort = 0 if number_of_cohorts == 0 else 1.0*number_of_ids_from_cohorts/number_of_cohorts
             number_of_id_aggregate = number_of_ids_from_cohorts + number_of_id_singles

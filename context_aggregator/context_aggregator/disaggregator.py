@@ -120,11 +120,13 @@ class Disaggregator(object):
         for sup in super_set:
             if sup > sub:
                 r = sup - sub
-                if r.is_single():
-                    singles.add(r)
-                else:
-                    aggregates.add(r)
-                processed.add(sup)
+
+                if r is not None:
+                    if r.is_single():
+                        singles.add(r)
+                    else:
+                        aggregates.add(r)
+                    processed.add(sup)
 
         return singles, aggregates, processed
 

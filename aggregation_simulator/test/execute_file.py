@@ -53,7 +53,7 @@ def execution_file_output(hosts, neighbors, config, timestamp=0):
         ## sample
         for h in hosts:
             n = neighbors[h.id]
-            r = h.context_aggregator.process_to_set_output(neighbors=n, timestamp = timestamp)
+            r = h.context_aggregator.process_to_set_output(neighbors=n, timestamp = timestamp, iteration=count)
 
         ## communication
         ### Check if there is anything to send

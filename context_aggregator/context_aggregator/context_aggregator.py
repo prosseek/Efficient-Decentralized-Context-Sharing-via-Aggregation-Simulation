@@ -72,6 +72,8 @@ from utils_configuration import  process_default_values
 
 import gc
 
+DEBUG = True
+
 class ContextAggregator(object):
     """database class"""
     AGGREGATION_MODE = 0
@@ -229,6 +231,54 @@ class ContextAggregator(object):
     #
     # Filter
     #
+    @staticmethod
+    def remove_same_id_singles(singles):
+        """
+
+        >>> singles = {Context(value=1.0, cohorts={1}, hopcount=1), Context(value=1.0, cohorts={1}, hopcount=2), Context(value=1.0, cohorts={1}, hopcount=3)}
+        >>> c = ContextAggregator.remove_same_id_singles(singles)
+        >>> len(c)
+        1
+        >>> s = list(c)[0]
+        >>> s.hopcount == 1
+        True
+        """
+        # It can happen that the same context with a change in hopcount can exist
+        singles_dictionary = {}
+        for s in singles:
+            key = s.get_id()
+            if key not in singles_dictionary:
+                singles_dictionary[key] = []
+            singles_dictionary[key].append(s)
+
+        result = set()
+        for key, values in singles_dictionary.items():
+            if len(values) == 1:
+                result.add(values[0])
+            else:
+                result.add(sorted(values, key=lambda m: m.hopcount)[0])
+        return result
+
+    @staticmethod
+    def remove_same_id_aggregates(aggregates):
+        """
+
+        >>> aggregates = {Context(value=1.0, cohorts={1,2,3}, hopcount=1), Context(value=1.0, cohorts={1,2,3}, hopcount=2), Context(value=1.0, cohorts={1,2,3}, hopcount=3)}
+        >>> c = ContextAggregator.remove_same_id_aggregates(aggregates)
+        >>> len(c)
+        1
+        >>> print list(c)[0]
+        v(1.00):c([1,2,3]):h(1):t(0)
+        """
+        # It can happen that the same context with a change in hopcount can exist
+        aggr_dictionary = {}
+        for s in aggregates:
+            key = frozenset(s.get_cohorts_as_set())
+            aggr_dictionary[key] = s
+
+        result = set(aggr_dictionary.values())
+        return result
+
     def filter_singles(self, singles):
         """Out of many input/stored singles, filter out the singles to send
         based on configuration.
@@ -251,7 +301,7 @@ class ContextAggregator(object):
 
         return results
 
-    def run_dataflow(self, neighbors=None, timestamp=0):
+    def run_dataflow(self, neighbors=None, timestamp=0, iteration=0):
         """when input data has received information, it processes the data to generate the output
 
         In this example with max_tau=1, when 1:[0,1,2], 2:[0], 3:[1] 4:[9]'(special context)
@@ -301,6 +351,11 @@ class ContextAggregator(object):
         True
         """
 
+        if DEBUG:
+            print "ID:%d start data_flow\n" % self.id
+            if self.id == 4 and iteration == 7:
+                pass
+
         # 1. DISAGGREGATES
         input_contexts = self.get_received_data()
 
@@ -313,10 +368,13 @@ class ContextAggregator(object):
 
             d = Disaggregator(union_contexts)
             combined_singles, combined_aggregates = d.run()
+            combined_aggregates = ContextAggregator.remove_same_id_aggregates(combined_aggregates)
+
         else:
             combined_singles = union_contexts
             combined_aggregates = set()
 
+        combined_singles = ContextAggregator.remove_same_id_singles(combined_singles)
         self.set_database(combined_singles, combined_aggregates, timestamp=timestamp)
 
         # ASSORT
@@ -340,6 +398,9 @@ class ContextAggregator(object):
 
         # OutputSelector requires all the data format as standard
         singles = contexts_to_standard(self.filtered_singles)
+        # if not is_standard(singles):
+        #     print singles
+
         new_info = add_standards(singles, aggregates)
         inputs_in_standard_form = {}
         for key, value in self.input.get_dictionary().items():
@@ -354,6 +415,8 @@ class ContextAggregator(object):
         selector = OutputSelector(inputs=inputs_in_standard_form, context_history=history, new_info=new_info, neighbors=neighbors)
         result = selector.run()
 
+        if DEBUG:
+            print "ID:%d end data_flow\n" % self.id
         # result is a {} in standard form
         return result
 
@@ -478,7 +541,7 @@ class ContextAggregator(object):
         received_info = contexts_to_standard(contexts)
         self.context_history.add_to_history(node_number=from_node, value=received_info, timestamp=timestamp)
 
-    def process_to_set_output(self, neighbors=None, timestamp=0):
+    def process_to_set_output(self, neighbors=None, timestamp=0, iteration=0):
         """Process method is a generalized code for propagating contexts.
 
         Input:
@@ -511,7 +574,7 @@ class ContextAggregator(object):
             for h in neighbors:
                 result[h] = [[self.id],[]]
         else:
-            result = self.run_dataflow(neighbors=neighbors, timestamp=timestamp)
+            result = self.run_dataflow(neighbors=neighbors, timestamp=timestamp, iteration=iteration)
 
         self.output.set_dictionary(result)
 

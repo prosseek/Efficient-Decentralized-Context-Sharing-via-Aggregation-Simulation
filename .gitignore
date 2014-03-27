@@ -19,3 +19,7 @@ aggregation_simulator/test/tmp/test1/aggregation/*
 aggregation_simulator/test/tmp/test1/singles_only/*
 aggregation_simulator/test/tmp/test_network1/aggregation/*
 aggregation_simulator/test/tmp/test_network1/singles_only/*
+aggregation_simulator/test/tmp/real_world_intel_6/singles_only/*
+aggregation_simulator/test/tmp/real_world_intel_6/aggregation/*
+aggregation_simulator/test/tmp/real_world_intel_10/singles_only/*
+aggregation_simulator/test/tmp/real_world_intel_10/aggregation/*

@@ -26,6 +26,9 @@ class SampleData(object):
     def __setitem__(self, key, value):
         self.sample[key] = value
 
+    def get_min(self):
+        return min(self.sample.keys())
+
     def read(self, file_path):
         """
         >>> root_directory = os.path.dirname(os.path.abspath(__file__)) + "/../test/tmp/"
@@ -45,7 +48,7 @@ class SampleData(object):
             for l in lines:
                 if len(l.strip()) == 0: continue
                 id = int(l.split(":")[0])
-                values = [int(i) for i in l.split(":")[1].split(',')]
+                values = [float(i) for i in l.split(":")[1].strip().split(',')]
                 self.sample[id] = values
             f.close()
 

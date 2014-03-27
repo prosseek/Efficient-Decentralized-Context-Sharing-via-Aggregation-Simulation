@@ -38,7 +38,7 @@ class Network(object):
             raise Exception("No file %s exists for graph" % self.network_file)
         else:
             self.network = self.network_file_parse_into_dictionary(network_file = self.network_file)
-            self.network = self.make_symmetric_network(self.network)
+            #self.network = self.make_symmetric_network(self.network)
 
         return self.network
 
@@ -147,12 +147,14 @@ class Network(object):
         string = ""
         dot_file_template = """graph graphname {%s}"""
 
-        cache = []
+        key_set = set()
         for key, value in sorted(self.network.items()):
             for i in value:
-                if sorted((key,i)) not in cache:
-                    string += "%d--%d\n" % (key, i)
-                    cache.append(sorted((key,i)))
+                key_set.add(tuple(sorted((key, i))))
+
+        #print key_set
+        for i in sorted(key_set):
+            string += "%d--%d\n" % (i[0], i[1])
 
         result = dot_file_template % string
 

@@ -162,6 +162,9 @@ def is_standard(input):
     >>> input = [[1,1,2,3,4],[5,6,7]]
     >>> is_standard(input)
     False
+    >>> input = [[],[]]
+    >>> is_standard(input)
+    True
     """
     if type(input) is not list: return False
     if len(input) != 2: return False
@@ -183,7 +186,7 @@ def add_standards(in1, in2):
     >>> r == [[1,2,3,4],[4,5,6,7,8]]
     True
     """
-    assert is_standard(in1) and is_standard(in2)
+    assert is_standard(in1) and is_standard(in2), "in1(%s) and in2(%s)" % (in1, in2)
     singles = sorted(list(set(in1[0]) | set(in2[0])))
     aggrs = sorted(list(set(in1[1]) | set(in2[1])))
     return [singles, aggrs]
