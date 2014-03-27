@@ -60,11 +60,11 @@ def estimate_average(singles, aggregates):
 
     return 1.0*values/count
 
-def to_string(values_in_string):
+def values_to_string(values_in_string):
     """to_string to prevent -> Identified values: [23.6438, 23.4968, 23.2812, 23.477199999999996, '22.86(*)', '22.86(*)', 22.732400000000027,
 
     >>> input = [23.6438, 23.4968, 23.2812, 23.477199999999996, '22.86(*)', '22.86(*)', 22.732400000000027]
-    >>> print to_string(input)
+    >>> print values_to_string(input)
     23.64, 23.50, 23.28, 23.48, 22.86(*), 22.86(*), 22.73
     """
     result = ""
@@ -185,9 +185,9 @@ class StatisticalReport(object):
             estimate_values = get_estimated_values(identified_values, average=estimated_average)
             average_error = calculate_error(correct_average, estimated_average)
             value_error = calculate_error(correct_values, estimate_values)
-            result += "Identified values: %s\n" % to_string(identified_values)
-            result += "Estimated average: %s\n" % to_string(estimated_average)
-            result += "Estimated values: %s\n" % to_string(estimate_values)
+            result += "Identified values: %s\n" % values_to_string(identified_values)
+            result += "Estimated average: %s\n" % estimated_average
+            result += "Estimated values: %s\n" % values_to_string(estimate_values)
             result += "%% precision: avg(%4.2f%%) individual(%4.2f%%)\n" % (100 - average_error, 100 - value_error)
             result += "Identified rate: aggregate(%4.2f%%(%d/%d)) single(%4.2f%%(%d/%d))\n" % \
                       (100.0*number_of_id_aggregate/host_size, number_of_id_aggregate, host_size,

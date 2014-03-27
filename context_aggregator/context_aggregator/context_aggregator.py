@@ -72,7 +72,7 @@ from utils_configuration import  process_default_values
 
 import gc
 
-DEBUG = True
+DEBUG = False
 
 class ContextAggregator(object):
     """database class"""
