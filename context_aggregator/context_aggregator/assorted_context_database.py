@@ -31,9 +31,9 @@ class AssortedContextDatabase(object):
         if timestamp not in self.timestamp:
             return "P:[], NP:[], SNP:[] (before initialization)"
         assorted = self.timestamp[timestamp]
-        primes = contexts_to_standard(assorted.primes)
-        non_primes = contexts_to_standard(assorted.non_primes)
-        selected_non_primes = contexts_to_standard(assorted.selected_non_primes)
+        primes = aggregated_contexts_to_list_of_standard(assorted.primes)
+        non_primes = aggregated_contexts_to_list_of_standard(assorted.non_primes)
+        selected_non_primes = aggregated_contexts_to_list_of_standard(assorted.selected_non_primes)
         return "P:%s, NP:%s, SNP:%s" % (primes, non_primes, selected_non_primes)
 
 

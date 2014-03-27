@@ -18,7 +18,7 @@ from aggregation_simulator.sample_data import SampleData
 
 root_directory = os.path.dirname(os.path.abspath(__file__)) + "/tmp/"
 #test_name = "test_network1"
-test_name = "real_world_intel_6"
+test_name = "real_world_intel_10"
 base_directory = os.path.join(root_directory, test_name)
 sample_file = os.path.join(base_directory, "%s_sample.txt" % test_name)
 sample = SampleData()

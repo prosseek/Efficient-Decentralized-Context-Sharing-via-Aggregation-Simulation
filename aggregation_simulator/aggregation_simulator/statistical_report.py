@@ -87,14 +87,17 @@ def get_identified_values(singles, aggregate, size, shift_index=0):
     >>> s = {Context(value=3.0, cohorts={1})}
     >>> a = {Context(value=1.0, cohorts={3,5}), Context(value=2.0, cohorts={4,7})}
     >>> get_identified_values(s,a,10)
-    ['?', 3.0, '?', '1.00(*)', '2.00(*)', '1.00(*)', '?', '2.00(*)', '?', '?']
+    ['?(0)', 3.0, '?(2)', '1.00(*)', '2.00(*)', '1.00(*)', '?(6)', '2.00(*)', '?(8)', '?(9)']
 
     >>> s = {Context(value=3.0, cohorts={1})}
     >>> a = {Context(value=1.0, cohorts={3,5}), Context(value=2.0, cohorts={4,7})}
     >>> get_identified_values(s,a,10,shift_index=1)
-    [3.0, '?', '1.00(*)', '2.00(*)', '1.00(*)', '?', '2.00(*)', '?', '?', '?']
+    [3.0, '?(2)', '1.00(*)', '2.00(*)', '1.00(*)', '?(6)', '2.00(*)', '?(8)', '?(9)', '?(10)']
     """
-    result = ['?']*size
+    result = [0]*size
+    for i in range(size):
+        result[i] = '?(%d)' % (i + shift_index)
+
     for s in singles:
         v = s.value
         i = s.get_id()
@@ -106,6 +109,7 @@ def get_identified_values(singles, aggregate, size, shift_index=0):
         for i in items:
             i -= shift_index
             result[i] = "%4.2f(*)" % value
+
     return result
 
 def get_estimated_values(identified_values, average):
@@ -118,7 +122,7 @@ def get_estimated_values(identified_values, average):
 
     result = [0]*len(identified_values)
     for i, v in enumerate(identified_values):
-        if v == '?':
+        if type(v) is str and v.startswith('?'):
             result[i] = average
         elif type(v) in [float, int,long]:
             result[i] = v
@@ -167,7 +171,7 @@ class StatisticalReport(object):
         host_size = sample.get_host_size()
         if sample is not None:
             correct_values = sample.get_values(self.timestamp)
-            result += "Correct values: %s\n" % correct_values
+            result += "Correct values: %s\n" % values_to_string(correct_values)
             correct_average = sample.get_average(self.timestamp)
             result += "Correct average: %s\n" % correct_average
 

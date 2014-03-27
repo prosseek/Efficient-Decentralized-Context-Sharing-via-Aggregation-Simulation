@@ -31,6 +31,18 @@ We define contexts as
 """
 from context.context import Context
 
+def aggregated_contexts_to_list_of_standard(contexts):
+    """
+    >>> x = set([Context(value=1.0, cohorts=[1,3,4,5]), Context(value=1.0, cohorts=[2,1,6,7]), Context(value=1.0, cohorts=[3,4,5,6,7])])
+    >>> aggregated_contexts_to_list_of_standard(x)
+    [[1, 3, 4, 5], [1, 2, 6, 7], [3, 4, 5, 6, 7]]
+    """
+    result = []
+    for c in contexts:
+        r = contexts_to_standard(set([c]))[1]
+        result.append(r)
+    return sorted(result, key=len)
+
 def contexts_to_standard2(context_set, remove_duplication=True):
     """
     Assume that there is only one aggregate, when there are more than one aggregated contexts, only
