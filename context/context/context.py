@@ -130,13 +130,18 @@ class Context(object):
         v(1.00):c([1,2,3]):h(1):t(0)
         >>> print c.to_string(simple=True)
         (1.00,[1,2,3],1,0)
+        >>> c = Context(value=1.0, cohorts={1,10,19,2,20,21,29,3,30,31,39,4,40,49,5,50,51,52,53,54,6,7,8,9})
+        >>> print c.to_string(simple=True)
+        (1.00,[1,2,3,4,5,6,7,8,9,10,19,20,21,29,30,31,39,40,49,50,51,52,53,54],0,0)
         """
         if self.cohorts is None:
             cohorts = set([])
         else:
             cohorts = self.get_cohorts_as_set()
 
-        cohorts_string = ",".join(sorted([str(cohort) for cohort in cohorts]))
+        sorted_cohorts = sorted(cohorts)
+        sorted_cohorts = map(str,sorted_cohorts)
+        cohorts_string = ",".join(sorted_cohorts)
 
         if simple:
             result = "(%4.2f,[%s],%d,%d)" % (self.value, cohorts_string, self.hopcount, self.timestamp)
