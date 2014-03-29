@@ -13,6 +13,9 @@ def get_test_files_directory():
     """
     return get_configuration(CONFIGURATION_FILE_FOR_TEST, "TestDirectory","test_files_directory")
 
+def get_img_report_root_directory():
+    return get_configuration(CONFIGURATION_FILE_FOR_TEST, "TestDirectory","img_report_root_directory")
+
 def get_test_report_root_directory():
     return get_configuration(CONFIGURATION_FILE_FOR_TEST, "TestDirectory","test_report_root_directory")
 
@@ -36,7 +39,7 @@ def find_configuration_file(config_filename):
 def get_configuration(config_file_name, section, key):
     """
 
-    >>> f = get_configuration(CONFIGURATION_FILE_FOR_TEST, "TestDirectory", "test_root_directory")
+    >>> f = get_configuration(CONFIGURATION_FILE_FOR_TEST, "TestDirectory", "test_report_root_directory")
     >>> f is not None
     True
     """
@@ -46,7 +49,10 @@ def get_configuration(config_file_name, section, key):
     if config_file_path:
         f = SafeConfigParser()
         f.read(config_file_path)
-        return f.get(section, key)
+        result = f.get(section, key)
+        if result.startswith("~"):
+            result = result.replace("~", os.path.expanduser("~"))
+        return result
 
 if __name__ == "__main__":
     import doctest

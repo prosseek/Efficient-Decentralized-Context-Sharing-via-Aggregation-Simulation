@@ -1,6 +1,47 @@
 from utils_is import *
 from utils_same import *
 
+def empty_list(input):
+    """
+    >>> a = [[],[],[]]
+    >>> empty_list(a)
+    True
+    >>> a = [[[],[]],[]]
+    >>> empty_list(a)
+    True
+    >>> a = [[[],[]],[],1]
+    >>> empty_list(a)
+    False
+    >>> a = [1,[]]
+    >>> empty_list(a)
+    False
+    """
+    # Non list value means non-empty -> return false
+    if not(type(input) is list): return False
+
+    # with  length zero means emtpy
+    if len(input) == 0: return True
+
+    # The real game
+    for i in input:
+        # We can finish the game early when it's not empty
+        if not empty_list(i): return False
+
+    # When nothing is non-empty, it's empty
+    return True
+
+
+def empty_dictionary(input):
+    """
+    >>> a = {33: [[], []], 2: [[], []], 3: [[], []], 35: [[], []]}
+    >>> empty_dictionary(a)
+    True
+    """
+    for key, value in input.items():
+        if type(value) is list:
+            if not empty_list(value): return False
+    return True
+
 def get_matching_single_contexts(single_contexts, set_of_numbers):
     """
 

@@ -4,6 +4,7 @@
 
 from context.context import Context
 from utils_standard import contexts_to_standard
+from utils import empty_dictionary
 
 class InputOutput(object):
     """database class"""
@@ -47,6 +48,7 @@ class InputOutput(object):
         result = {}
         for i, value in self.dictionary.items():
             result[i] = contexts_to_standard(value)
+        if empty_dictionary(result): return "{}"
         return str(result)
 
     def get_senders(self):

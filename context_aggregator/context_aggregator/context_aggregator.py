@@ -130,6 +130,7 @@ class ContextAggregator(object):
         sample = self.get_sample()
         if sample is None:
             return None # sampled_value = -2 # default value is -1
+        # [] works as an API
         return sample[self.id]
 
     #
@@ -438,17 +439,25 @@ class ContextAggregator(object):
         samples = self.get_sample_data()
 
         if samples is None:
-            return -1
+            return -1, False
         else:
             #samples = self.config["sample"][self.id]
+            if type(samples) is tuple:
+                # the order is important as samples are modified into a tuple to a list
+                special_flags = samples[1]
+                samples = samples[0] # now it's list
+            else:
+                special_flags = [False] * len(samples)
+
             length = len(samples)
             if length > timestamp:
                 sampled_value = samples[timestamp]
+                special_flag = special_flags[timestamp]
             else:
-                sampled_value = -1
+                special_flag = False
 
-        self.current_sample = sampled_value
-        return sampled_value
+        #self.current_sample = sampled_value
+        return sampled_value, special_flag
 
     def get_received_data(self, from_node = None):
         """Returns the received data from node_index
@@ -565,8 +574,11 @@ class ContextAggregator(object):
         True
         """
         if self.is_this_new_timestamp(timestamp):
-            sampled_data = self.sample(timestamp)
-            context = Context(value=sampled_data, cohorts=[self.id], hopcount=0, timestamp=timestamp)
+            sampled_data, special_flag = self.sample(timestamp)
+            hopcount = 0
+            if special_flag:
+                hopcount = Context.SPECIAL_CONTEXT
+            context = Context(value=sampled_data, cohorts=[self.id], hopcount=hopcount, timestamp=timestamp)
             self.set_database(singles=[context], aggregates=[], timestamp=timestamp)
 
             # store the context in the history and process

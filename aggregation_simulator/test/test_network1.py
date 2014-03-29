@@ -21,7 +21,7 @@ from context_aggregator.context_aggregator import ContextAggregator
 from aggregation_simulator.sample import Sample
 
 d = get_test_files_directory()
-network_file = os.path.join(d, "test_network1/test_network1.txt")
+network_file = os.path.join(d, "normal/test_network1/test_network1.txt")
 network = Network()
 network.read(network_file)
 dot_file_path = os.path.join(d, network_file + ".dot")
@@ -53,7 +53,7 @@ class TestNetwork(unittest.TestCase):
             hosts.append(Host(h))
         neighbors = network.get_network() # {0:[1], 1:[0,2], 2:[1]}
 
-        test_directory, sample = make_ready_for_test("test_network1","aggregate")
+        test_directory, sample = make_ready_for_test("normal","test_network1","aggregate")
 
         config = {"hosts":hosts, "neighbors":neighbors,\
                   "test_directory":test_directory, "sample":sample, \
@@ -68,11 +68,26 @@ class TestNetwork(unittest.TestCase):
             hosts.append(Host(h))
         neighbors = network.get_network() # {0:[1], 1:[0,2], 2:[1]}
 
-        test_directory, sample = make_ready_for_test("test_network1","singles")
+        test_directory, sample = make_ready_for_test("normal","test_network1","singles")
 
         config = {"hosts":hosts, "neighbors":neighbors,\
                   "test_directory":test_directory, "sample":sample, \
                   ContextAggregator.PM:ContextAggregator.SINGLE_ONLY_MODE}
+        simulation = AggregationSimulator.run(config=config)
+
+    def test_with_file_aggregation_marked_sample(self):
+        host_ids = network.get_host_ids() # [h0, h1, h2]
+        hosts = []
+        for h in host_ids:
+            hosts.append(Host(h))
+        neighbors = network.get_network() # {0:[1], 1:[0,2], 2:[1]}
+
+        test_directory, sample = make_ready_for_test("marked_sample","test_network1","aggregate")
+
+        config = {"hosts":hosts, "neighbors":neighbors,\
+                  "test_directory":test_directory, "sample":sample, \
+                  ContextAggregator.PM:ContextAggregator.AGGREGATION_MODE}
+
         simulation = AggregationSimulator.run(config=config)
 
 if __name__ == "__main__":

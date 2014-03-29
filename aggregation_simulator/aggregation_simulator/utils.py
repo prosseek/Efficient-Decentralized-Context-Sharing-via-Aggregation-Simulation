@@ -10,16 +10,16 @@ import distutils.core
 def get_sample_name(test_name):
     return test_name + "_sample.txt"
 
-def make_ready_for_test(test_file_name, test_sub_name):
+def make_ready_for_test(condition, test_file_name, test_sub_name):
     """Given test name in test_files directory, and sub directory
     Returns the test_directory where the reports are recorded, and the sample file
 
-    >>> result = make_ready_for_test("test1","aggregate")
+    >>> result = make_ready_for_test("normal", "test1","aggregate")
     >>> len(result) == 2
     True
     """
     test_files_directory = get_test_files_directory()
-    directory = os.path.join(test_files_directory, test_file_name)
+    directory = test_files_directory + os.sep + condition + os.sep + test_file_name
     sample_name = get_sample_name(test_file_name)
     sample_file_path = os.path.join(directory, sample_name)
 
@@ -38,7 +38,7 @@ def make_ready_for_test(test_file_name, test_sub_name):
     # get the target root file
     test_report_root_directory = get_test_report_root_directory()
 
-    test_report_directory = test_report_root_directory + os.sep + test_file_name
+    test_report_directory = test_report_root_directory + os.sep + condition + os.sep + test_file_name
     test_report_sub_directory = test_report_directory + os.sep + test_sub_name
     if os.path.exists(test_report_sub_directory):
         shutil.rmtree(test_report_sub_directory)

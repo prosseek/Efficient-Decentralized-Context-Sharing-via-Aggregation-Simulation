@@ -3,7 +3,7 @@
 """
 
 from inputoutput import InputOutput
-from utils import get_matching_single_contexts
+from utils import get_matching_single_contexts, empty_dictionary
 
 class Output(InputOutput):
     """Output is a dictionary format what to send
@@ -22,6 +22,8 @@ class Output(InputOutput):
         We can't use the parent's to_string, because output's element is list, when inputout's
         element is Context
         """
+        if empty_dictionary(self.dictionary):
+            return "{}"
         return "%s" % self.dictionary
 
     def get_number_of_contexts(self):

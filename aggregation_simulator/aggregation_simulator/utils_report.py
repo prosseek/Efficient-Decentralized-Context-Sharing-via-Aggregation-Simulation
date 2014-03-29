@@ -41,6 +41,11 @@ def calculate_error(val1, val2):
     """val1 is always the correct value to be compared against
 
     """
+    if type(val1) is tuple:
+        val1 = val1[0]
+    if type(val2) is tuple:
+        val2 = val2[0]
+
     if type(val1) is list and type(val2) is list:
         assert len(val1) == len(val2)
         diff = 0.0
@@ -229,11 +234,13 @@ class StatisticalReport(object):
             result += "Identified values: %s\n" % values_to_string(identified_values)
             result += "Estimated average: %s\n" % estimated_average
             result += "Estimated values: %s\n" % values_to_string(estimate_values)
-            result += "%% precision: avg(%4.2f%%) individual(%4.2f%%)\n" % (100 - average_error, 100 - value_error)
-            result += "Identified rate: aggregate(%4.2f%%(%d/%d)) single(%4.2f%%(%d/%d))\n" % \
+            result += "%% precision: [%4.2f, %4.2f] : avg(%4.2f%%) individual(%4.2f%%)\n" % (100 - average_error, 100 - value_error, 100 - average_error, 100 - value_error)
+            result += "Identified rate: [%4.2f, %d, %d, %4.2f,%d, %d] : aggregate(%4.2f%%(%d/%d)) single(%4.2f%%(%d/%d))\n" % \
                       (100.0*number_of_id_aggregate/host_size, number_of_id_aggregate, host_size,
+                       100.0*number_of_id_singles/host_size, number_of_id_singles, host_size,
+                       100.0*number_of_id_aggregate/host_size, number_of_id_aggregate, host_size,
                        100.0*number_of_id_singles/host_size, number_of_id_singles, host_size)
-            result += "Average number of cohorts: %4.2f(%d/%d)" % (average_number_per_cohort, number_of_ids_from_cohorts, number_of_cohorts)
+            result += "Average number of cohorts: [%4.2f,%d,%d] : %4.2f(%d/%d)" % (average_number_per_cohort, number_of_ids_from_cohorts, number_of_cohorts, average_number_per_cohort, number_of_ids_from_cohorts, number_of_cohorts)
         else:
             result += "No sample data found\n"
 
