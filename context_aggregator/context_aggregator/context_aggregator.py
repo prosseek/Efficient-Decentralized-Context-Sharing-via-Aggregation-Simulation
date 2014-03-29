@@ -409,9 +409,6 @@ class ContextAggregator(object):
         selector = OutputSelector(inputs=inputs_in_standard_form, context_history=history, new_info=new_info, neighbors=neighbors)
         result = selector.run()
 
-        if DEBUG:
-            print "ID:%d end data_flow\n" % self.id
-        # result is a {} in standard form
         return result
 
     def is_this_new_timestamp(self, timestamp=0):
