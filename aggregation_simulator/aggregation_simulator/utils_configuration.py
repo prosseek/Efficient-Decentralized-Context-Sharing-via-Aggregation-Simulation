@@ -13,8 +13,6 @@ def get_test_files_directory():
     """
     return get_configuration(CONFIGURATION_FILE_FOR_TEST, "TestDirectory","test_files_directory")
 
-def get_img_report_root_directory():
-    return get_configuration(CONFIGURATION_FILE_FOR_TEST, "TestDirectory","img_report_root_directory")
 
 def get_test_report_root_directory():
     return get_configuration(CONFIGURATION_FILE_FOR_TEST, "TestDirectory","test_report_root_directory")

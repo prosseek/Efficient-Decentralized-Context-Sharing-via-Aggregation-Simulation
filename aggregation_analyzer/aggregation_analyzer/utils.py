@@ -1,3 +1,16 @@
+def starts_with(name, keys):
+    """
+
+    >>> keys = ["abc", "def", "xyz"]
+    >>> print starts_with("abcdef", keys)
+    abc
+    >>> starts_with("k", keys)
+    """
+    for key in keys:
+        #if key.startswith(name): return key
+        if name.startswith(key): return key
+    return None
+
 def readLocationFile(fileName):
     """
     Given locatin file, returns a dictionary that maps id -> [x,y]
@@ -11,3 +24,7 @@ def readLocationFile(fileName):
             id, x, y = l.split(' ')
             result[int(id)] = [float(x),float(y)]
         return result
+
+if __name__ == "__main__":
+    import doctest
+    doctest.testmod()

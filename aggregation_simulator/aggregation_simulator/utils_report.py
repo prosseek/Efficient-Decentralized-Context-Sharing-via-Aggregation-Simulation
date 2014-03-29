@@ -201,11 +201,11 @@ class StatisticalReport(object):
 
         # 1. get the number of received packets
         s,a = self.obj.input.get_number_of_contexts()
-        result += "Received: %d (%d-%d)\n" % (s+a, s, a)
+        result += "Received: [%d, %d, %d] : %d (%d-%d)\n" % (s+a, s, a, s+a, s, a)
 
         # 2. get the number of sent packets
         s,a = self.obj.output.get_number_of_contexts()
-        result += "Sent: %d (%d-%d)\n\n" % (s+a, s, a)
+        result += "Sent: [%d, %d, %d] : %d (%d-%d)\n\n" % (s+a, s, a, s+a, s, a)
 
         # 3. calculate the accuracy
         sample = self.obj.get_sample()

@@ -72,8 +72,6 @@ from utils_configuration import  process_default_values
 
 import gc
 
-DEBUG = False
-
 class ContextAggregator(object):
     """database class"""
     AGGREGATION_MODE = 0
@@ -351,11 +349,6 @@ class ContextAggregator(object):
         >>> same(d.get_filtered_singles(), [[0,1,9],[]])
         True
         """
-
-        if DEBUG:
-            print "ID:%d start data_flow\n" % self.id
-            if self.id == 4 and iteration == 7:
-                pass
 
         # 1. DISAGGREGATES
         input_contexts = self.get_received_data()

@@ -29,9 +29,7 @@ class TestRealWorld(unittest.TestCase):
     def setUp(self):
         pass
 
-    def test_with_intel6_singles_only(self):
-        condition = "normal"
-        test_name = "real_world_intel_6"
+    def runit(self, condition, test_name, test_sub_name):
         network = get_test_network(condition, test_name)
         host_ids = network.get_host_ids() # [h0, h1, h2]
         hosts = []
@@ -39,80 +37,31 @@ class TestRealWorld(unittest.TestCase):
             hosts.append(Host(h))
         neighbors = network.get_network() # {0:[1], 1:[0,2], 2:[1]}
 
-        test_directory, sample = make_ready_for_test(condition, test_name,"singles")
+        test_directory, sample = make_ready_for_test(condition, test_name, test_sub_name)
 
         config = {"hosts":hosts, "neighbors":neighbors,\
                   "test_directory":test_directory, "sample":sample, \
-                  ContextAggregator.PM:ContextAggregator.SINGLE_ONLY_MODE}
+                  ContextAggregator.PM:ContextAggregator.AGGREGATION_MODE}
         simulation = AggregationSimulator.run(config=config)
+
+    def test_with_intel6_singles_only(self):
+        return self.runit("normal", "real_world_intel_6", "singles")
 
     def test_with_intel6_aggregate(self):
-        condition = "normal"
-        test_name = "real_world_intel_6"
-        network = get_test_network(condition, test_name)
-        host_ids = network.get_host_ids() # [h0, h1, h2]
-        hosts = []
-        for h in host_ids:
-            hosts.append(Host(h))
-        neighbors = network.get_network() # {0:[1], 1:[0,2], 2:[1]}
-
-        test_directory, sample = make_ready_for_test(condition, test_name,"aggregates")
-
-        config = {"hosts":hosts, "neighbors":neighbors,\
-                  "test_directory":test_directory, "sample":sample, \
-                  ContextAggregator.PM:ContextAggregator.AGGREGATION_MODE}
-        simulation = AggregationSimulator.run(config=config)
+        return self.runit("normal", "real_world_intel_6", "aggregates")
 
     def test_with_intel10_singles_only(self):
-        condition = "normal"
-        test_name = "real_world_intel_10"
-        network = get_test_network(condition, test_name)
-        host_ids = network.get_host_ids() # [h0, h1, h2]
-        hosts = []
-        for h in host_ids:
-            hosts.append(Host(h))
-        neighbors = network.get_network() # {0:[1], 1:[0,2], 2:[1]}
-
-        test_directory, sample = make_ready_for_test(condition, test_name,"singles")
-
-        config = {"hosts":hosts, "neighbors":neighbors,\
-                  "test_directory":test_directory, "sample":sample, \
-                  ContextAggregator.PM:ContextAggregator.SINGLE_ONLY_MODE}
-        simulation = AggregationSimulator.run(config=config)
+        return self.runit("normal", "real_world_intel_10", "singles")
 
     def test_with_intel10_aggregate(self):
-        condition = "normal"
-        test_name = "real_world_intel_10"
-        network = get_test_network(condition, test_name)
-        host_ids = network.get_host_ids() # [h0, h1, h2]
-        hosts = []
-        for h in host_ids:
-            hosts.append(Host(h))
-        neighbors = network.get_network() # {0:[1], 1:[0,2], 2:[1]}
+        return self.runit("normal", "real_world_intel_10", "aggregates")
 
-        test_directory, sample = make_ready_for_test(condition, test_name,"aggregates")
-
-        config = {"hosts":hosts, "neighbors":neighbors,\
-                  "test_directory":test_directory, "sample":sample, \
-                  ContextAggregator.PM:ContextAggregator.AGGREGATION_MODE}
-        simulation = AggregationSimulator.run(config=config)
+    def test_with_intel6_aggregate_marked_sample(self):
+        return self.runit("marked_sample", "real_world_intel_6", "aggregates")
 
     def test_with_intel10_aggregate_marked_sample(self):
-        condition = "marked_sample"
-        test_name = "real_world_intel_10"
-        network = get_test_network(condition, test_name)
-        host_ids = network.get_host_ids() # [h0, h1, h2]
-        hosts = []
-        for h in host_ids:
-            hosts.append(Host(h))
-        neighbors = network.get_network() # {0:[1], 1:[0,2], 2:[1]}
+        return self.runit("marked_sample", "real_world_intel_10", "aggregates")
 
-        test_directory, sample = make_ready_for_test(condition, test_name,"aggregates")
-
-        config = {"hosts":hosts, "neighbors":neighbors,\
-                  "test_directory":test_directory, "sample":sample, \
-                  ContextAggregator.PM:ContextAggregator.AGGREGATION_MODE}
-        simulation = AggregationSimulator.run(config=config)
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)
