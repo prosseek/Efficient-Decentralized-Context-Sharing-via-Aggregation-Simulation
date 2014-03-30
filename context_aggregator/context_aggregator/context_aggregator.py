@@ -66,11 +66,14 @@ from context_history import ContextHistory
 from copy import copy
 
 from disaggregator import Disaggregator
-from maxcover import MaxCover
+from greedy_maxcover import GreedyMaxCover
+#from brutal_force_maxcover import MaxCover
 from output_selector import OutputSelector
 from utils_configuration import  process_default_values
 
 import gc
+
+DEBUG = False
 
 class ContextAggregator(object):
     """database class"""
@@ -273,7 +276,13 @@ class ContextAggregator(object):
         aggr_dictionary = {}
         for s in aggregates:
             key = frozenset(s.get_cohorts_as_set())
-            aggr_dictionary[key] = s
+            if key in aggr_dictionary:
+                hopcount = aggr_dictionary[key].hopcount
+                # only the newest (smallest number) wins
+                if s.hopcount < hopcount:
+                    aggr_dictionary[key] = s
+            else:
+                aggr_dictionary[key] = s
 
         result = set(aggr_dictionary.values())
         return result
@@ -341,7 +350,7 @@ class ContextAggregator(object):
         True
         >>> same(d.get_non_primes(timestamp=10), [[3,4,5], [5,6]])
         True
-        >>> same(d.get_selected_non_primes(timestamp=10), [[],[3,4,5]])
+        >>> same(d.get_selected_non_primes(timestamp=10), [[3,4,5]])
         True
         >>> ### Check the new aggregate has correct elements
         >>> d.get_new_aggregate().get_cohorts_as_set() == set([0,1,2,3,4,5,7,8,9])
@@ -350,8 +359,15 @@ class ContextAggregator(object):
         True
         """
 
+        if DEBUG:
+            print "host (%d) - iteration (%d)" % (self.id, iteration)
+
         # 1. DISAGGREGATES
         input_contexts = self.get_received_data()
+
+        # process the early return
+        if not input_contexts: # if there is no inputs
+            return {}    # there is nothing to compute and send, as they are same as before.
 
         db_singles = self.get_database_singles(timestamp)
         union_contexts = input_contexts.union(db_singles)
@@ -379,7 +395,8 @@ class ContextAggregator(object):
             if combined_aggregates:
                 primes, non_primes = get_prime(combined_aggregates)
                 if non_primes:
-                    m = MaxCover()
+                    m = GreedyMaxCover()
+                    #m = MaxCover()
                     selected_non_primes = m.run(non_primes)
             self.new_aggregate = self.create_new_aggregate(contexts=[combined_singles, primes, selected_non_primes], timestamp=timestamp)
             aggregates = contexts_to_standard({self.new_aggregate})

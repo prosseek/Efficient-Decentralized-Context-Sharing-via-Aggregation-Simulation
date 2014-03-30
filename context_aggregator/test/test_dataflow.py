@@ -67,7 +67,7 @@ class TestDataflow(unittest.TestCase):
         self.assertTrue(same(d.get_singles(timestamp=10), [[0,1,2,9],[]]))
         self.assertTrue(same(d.get_primes(timestamp=10), [[],[7,8]]))
         self.assertTrue(same(d.get_non_primes(timestamp=10), [[3,4,5], [5,6]]))
-        self.assertTrue(same(d.get_selected_non_primes(timestamp=10), [[],[3,4,5]]))
+        self.assertTrue(same(contexts_to_standard(d.get_selected_non_primes(timestamp=10)), [[],[3,4,5]]))
         self.assertTrue(d.get_new_aggregate().get_cohorts_as_set() == set([0,1,2,3,4,5,7,8,9]))
         self.assertTrue(same(d.get_filtered_singles(), [[0,1,9],[]]))
 
@@ -115,7 +115,7 @@ class TestDataflow(unittest.TestCase):
         self.assertTrue(same(d.get_singles(timestamp=10), [[0,1,2,9],[]]))
         self.assertTrue(same(d.get_primes(timestamp=10), [[],[7,8]]))
         self.assertTrue(same(d.get_non_primes(timestamp=10), [[3,4,5], [5,6]]))
-        self.assertTrue(same(d.get_selected_non_primes(timestamp=10), [[],[3,4,5]]))
+        self.assertTrue(same(contexts_to_standard(d.get_selected_non_primes(timestamp=10)), [[],[3,4,5]]))
         self.assertTrue(d.get_new_aggregate().get_cohorts_as_set() == set([0,1,2,3,4,5,7,8,9]))
         self.assertTrue(same(d.get_filtered_singles(), [[2,9],[]]))
 
@@ -139,7 +139,7 @@ class TestDataflow(unittest.TestCase):
         self.assertTrue(same(d.get_singles(timestamp=10), [[0,1,2,9],[]]))
         self.assertTrue(same(d.get_primes(timestamp=10), [[],[7,8]]))
         self.assertTrue(same(d.get_non_primes(timestamp=10), [[3,4,5], [5,6]]))
-        self.assertTrue(same(d.get_selected_non_primes(timestamp=10), [[],[3,4,5]]))
+        self.assertTrue(same(contexts_to_standard(d.get_selected_non_primes(timestamp=10)), [[],[3,4,5]]))
         self.assertTrue(d.get_new_aggregate().get_cohorts_as_set() == set([0,1,2,3,4,5,7,8,9]))
         self.assertTrue(same(d.get_filtered_singles(), [[9],[]]))
 

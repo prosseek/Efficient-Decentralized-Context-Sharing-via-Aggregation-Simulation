@@ -139,10 +139,6 @@ class Network(object):
         >>> n = Network(file_path)
         >>> len(n.dot_gen()) == len('graph graphname {1--2\\n2--3\\n3--4\\n3--6\\n4--5\\n6--7\\n7--8\\n}')
         True
-        >>> dot_tmp = get_configuration(CONFIGURATION_FILE_FOR_TEST, "TestDirectory", "tmp_dot")
-        >>> dumb = n.dot_gen(dot_tmp)
-        >>> os.path.exists(dot_tmp)
-        True
         """
         string = ""
         dot_file_template = """graph graphname {%s}"""
@@ -226,8 +222,6 @@ class Network(object):
         >>> n = Network(file_path)
         >>> same(n.add_neighbor(10, 11), {1: [2], 2: [1, 3], 3: [2, 4, 6], 4: [3, 5], 5: [4], 6: [3, 7], 7: [8, 6], 8: [7], 10: [11], 11: [10]})
         True
-        >>> dot_file = get_configuration(CONFIGURATION_FILE_FOR_TEST, "TestDirectory", "tmp_dot3")
-        >>> dumb = n.dot_gen(dot_file)
         """
 
         network = self.get_network()

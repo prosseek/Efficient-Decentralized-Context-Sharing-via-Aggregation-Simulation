@@ -5,7 +5,7 @@ import copy
 from utils_same import *
 
 from disaggregator import Disaggregator
-from maxcover import MaxCover
+#from brutal_force_maxcover import MaxCover
 from context.context import Context
 
 import gc

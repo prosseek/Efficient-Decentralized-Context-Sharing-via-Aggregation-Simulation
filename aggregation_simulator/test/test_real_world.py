@@ -39,28 +39,33 @@ class TestRealWorld(unittest.TestCase):
 
         test_directory, sample = make_ready_for_test(condition, test_name, test_sub_name)
 
+        if test_sub_name.startswith("single"):
+            propagation_mode = ContextAggregator.SINGLE_ONLY_MODE
+        else:
+            propagation_mode = ContextAggregator.AGGREGATION_MODE
+
         config = {"hosts":hosts, "neighbors":neighbors,\
                   "test_directory":test_directory, "sample":sample, \
-                  ContextAggregator.PM:ContextAggregator.AGGREGATION_MODE}
+                  ContextAggregator.PM:propagation_mode}
         simulation = AggregationSimulator.run(config=config)
 
-    def test_with_intel6_singles_only(self):
-        return self.runit("normal", "real_world_intel_6", "singles")
+    # def test_with_intel6_singles_only(self):
+    #     return self.runit("normal", "real_world_intel_6", "singles")
 
     def test_with_intel6_aggregate(self):
         return self.runit("normal", "real_world_intel_6", "aggregates")
-
-    def test_with_intel10_singles_only(self):
-        return self.runit("normal", "real_world_intel_10", "singles")
-
-    def test_with_intel10_aggregate(self):
-        return self.runit("normal", "real_world_intel_10", "aggregates")
-
-    def test_with_intel6_aggregate_marked_sample(self):
-        return self.runit("marked_sample", "real_world_intel_6", "aggregates")
-
-    def test_with_intel10_aggregate_marked_sample(self):
-        return self.runit("marked_sample", "real_world_intel_10", "aggregates")
+    #
+    # def test_with_intel10_singles_only(self):
+    #     return self.runit("normal", "real_world_intel_10", "singles")
+    #
+    # def test_with_intel10_aggregate(self):
+    #     return self.runit("normal", "real_world_intel_10", "aggregates")
+    #
+    # def test_with_intel6_aggregate_marked_sample(self):
+    #     return self.runit("marked_sample", "real_world_intel_6", "aggregates")
+    #
+    # def test_with_intel10_aggregate_marked_sample(self):
+    #     return self.runit("marked_sample", "real_world_intel_10", "aggregates")
 
 
 if __name__ == "__main__":

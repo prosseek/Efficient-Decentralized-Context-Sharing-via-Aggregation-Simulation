@@ -136,12 +136,24 @@ def same_list(list1, list2):
     >>> same_list(a,b)
     True
 
+    >>> a = [Context(value=1.0, cohorts=[1,2,3]), Context(value=2.0, cohorts=[2,3,4])]
+    >>> b = [[1,2,3],[2,3,4]]
+    >>> same_list(a,b)
+    True
     """
     if len(list1) != len(list2): return False
     if len(list1) == 0: return True
 
     t1 = type(list1[0])
     t2 = type(list2[0])
+
+    if t1 is Context and t2 is list:
+        list1 = [list(m.get_cohorts_as_set()) for m in list1]
+        t1 = type(list1[0])
+
+    if t2 is Context and t1 is list:
+        list2 = [list(m.get_cohorts_as_set()) for m in list2]
+        t2 = type(list2[0])
 
     if t1 != t2: return False
 

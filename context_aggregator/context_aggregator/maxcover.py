@@ -1,192 +1,137 @@
-"""maximum cover algorithm"""
+"""maximum cover algorithm
+
+The interface is `run() method` with
+
+* input of a set of aggregate contexts
+* output of a set of selected contexts
+
+    if non_primes:
+        m = MaxCover()
+        selected_non_primes = m.run(non_primes)
+
+1. As a result, there should a format from/to a set of contexts to the
+data structure that we use for solving the problem.
+2. The run() is the inner method that actually solves the problem.
+
+"""
 
 from copy import *
 from collections import OrderedDict
-from utils import *
+
+from utils_same import same
+from context.context import Context
 
 class MaxCover(object):
-    def __init__(self): 
+    def __init__(self):
         self.solutionResults = []
+        self.conversion_dictionary = {}
+        self.results_in_list = []
+    #
+    # API
+    #
 
-    def create_universe(self, X):
+    def run(self, non_primes):
+        self.conversion_dictionary = MaxCover.make_conversion_dictionary(non_primes)
+        # The solver problem consists of only lists.
+        inputs = map(list, self.conversion_dictionary.keys())
+        self.results_in_list = self.solve(inputs)
+        result = []
+        for i in self.results_in_list:
+            result.append(self.conversion_dictionary[frozenset(i)])
+        return result
+
+    ########################################
+
+    #
+    # Converter from/to set of aggregated contexts
+    #
+
+    @staticmethod
+    def make_conversion_dictionary(non_primes):
         """
-        >>> d = {'A': [1, 2, 3], 'B': [3, 4], 'C': [4, 5, 6]}
-        >>> result = MaxCover().create_universe(d)
+
+        >>> np = {Context(value=1.0, cohorts={1,2,3}), Context(value=1.0, cohorts={3,4,5})}
+        >>> r = MaxCover.make_conversion_dictionary(np)
+        >>> same(r[frozenset([3,1,2])], Context(value=1.0, cohorts={1,2,3}))
+        True
+        >>> same(r[frozenset([3,5,4])], Context(value=1.0, cohorts={5,4,3}))
+        True
+        """
+        result = {}
+        for np in non_primes:
+            key = frozenset(np.get_cohorts_as_set())
+            result[key] = np
+        return result
+
+    @staticmethod
+    def create_universe(X):
+        """
+        >>> d = [[1, 2, 3],[3, 4],[4, 5, 6]]
+        >>> result = MaxCover.create_universe(d)
         >>> set([1,2,3,4,5,6]) == set(result)
         True
         """
 
         universe = set()
-        for value in X.values():
+        for value in X:
             universe |= set(value)
         return list(universe)
 
-    def find_maximum(self, d):
-        """Given a dictionary d, find the key and length of the key
-
-        >>> m = MaxCover()
-        >>> X = { 'A': [1, 2, 3], 'B': [3, 4], 'C': [4, 5, 6, 7, 8, 9, 10]}
-
-        #universe = self.m.createUniverse(X)
-        >>> key, value = m.find_maximum(X)
-        >>> key == 'C' and value == len(X['C'])
-        True
-
-        >>> X = {0: [0, 6, 12], 1: [4, 5, 7, 8], 2: [4, 5, 6, 13], 3: [3, 5, 12, 13], 4: [5, 6, 7, 8, 13]}
-        >>> key, value = m.find_maximum(X)
-        >>> key == 4 and value == len(X[4])
+    @staticmethod
+    def length_of_total_elements(X):
+        """
+        >>> X = [[1, 2, 3], [3, 4], [4, 5, 6]]
+        >>> l = MaxCover.length_of_total_elements(X)
+        >>> l == 6
         True
         """
 
-        # sort the dictionary based on the length of the element
-        result = OrderedDict(sorted(d.items(), key=lambda t: len(t[1]), reverse=True))
-        maximum = result.items()[0] # 0th item is the one with largest element
-        return maximum[0], len(maximum[1])
+        list_length = []
 
+        for e in X:
+            list_length += e
 
-    def find_friend_enemy(self, X, i):
+        return len(set(list_length))
+
+    @staticmethod
+    def find_friend_enemy(X, i):
         """Friend of X -> the set of lists that is not share elements with X
         Enemy of X -> the set of lists that shares elements with X
 
-        >>> X = {'A': [1, 2, 3], 'B': [3, 4], 'C': [4, 5, 6]}
-        >>> m = MaxCover()
-        >>> friend, enemy = m.find_friend_enemy(X, 'A')
-        >>> friend == set(['C'])
+        >>> X = [[1, 2, 3], [3, 4], [4, 5, 6]]
+        >>> friend, enemy = MaxCover.find_friend_enemy(X, [1,2,3])
+        >>> friend == [[4,5,6]]
         True
-        >>> enemy == set(['B'])
-        True
-
-        >>> friend, enemy = m.find_friend_enemy(X, 'B')
-        >>> friend == set([])
-        True
-        >>> enemy == set(['A','C'])
+        >>> enemy == [[3,4]]
         True
 
-        >>> friend, enemy = m.find_friend_enemy(X, 'C')
-        >>> friend == set(['A'])
+        >>> friend, enemy = MaxCover.find_friend_enemy(X, [3,4])
+        >>> friend == []
         True
-        >>> enemy == set(['B'])
+        >>> same(enemy,[[1,2,3],[4,5,6]])
+        True
+
+        >>> friend, enemy = MaxCover.find_friend_enemy(X, [4,5,6])
+        >>> friend == [[1,2,3]]
+        True
+        >>> enemy == [[3,4]]
         True
         """
 
-        # Don't spoil the input data
-        X = copy(X)
-        # 1. select the item in a dictionary
-        temp = X[i]
-        del X[i]
-
-        # We use set in order not to allow the duplicates
-        temp_set = set(temp)
-        friend_set = set()
-        enemy_set = set()
-
-        # j is a key
+        enemy = []
+        friend = []
+        set_i = set(i)
         for j in X:
-            # j_set is a value in a set
-            j_set = set(X[j])
-            if temp_set & j_set == set([]):
+            if i == j: continue
+            if set(j).isdisjoint(set_i):
                 # if there is an intersection, it's an enemy
-                friend_set.add(j)
+                friend.append(j)
             else:
-                enemy_set.add(j)
-            
-        return friend_set, enemy_set
+                enemy.append(j)
+        return friend, enemy
 
-
-    def length_of_total_elements(self, path, X):
-        """
-        >>> m = MaxCover()
-        >>> X = {'A': [1, 2, 3], 'B': [3, 4], 'C': [4, 5, 6]}
-        >>> l = m.length_of_total_elements(['A','C'], X)
-        >>> l == 6
-        True
-        >>> l = m.length_of_total_elements(['A','B'], X)
-        >>> l == -2
-        True
-        """
-
-        set_length = set()
-        list_length = list()
-
-        for p in path:
-            list_length += X[p]
-
-        if len(list_length) == len(set(list_length)): return len(list_length)
-        return -2 # Duplication exists, no meaning of path, -2 because initial max value is -1
-
-    def solve(self, all_dictionary):
-        """
-        >>> X = {'A': [1, 2, 3], 'B': [3, 4], 'C': [4, 5, 6]}
-        >>> ec = MaxCover()
-        >>> result = ec.solve(X)
-        >>> set(result) == set(['A','C'])
-        True
-        """
-
-        Xp = copy(all_dictionary)
-        path = []
-        results = []
-        self._solve(Xp.keys(), Xp, path, results)
-
-        # results has all the path information, from the results, find the maximum path
-        max_length = -1
-        max_path = None
-        for path in results:
-            pathLength = self.length_of_total_elements(path, all_dictionary)
-            if pathLength > max_length:
-                max_length = pathLength
-                max_path = path
-
-        return max_path
-
-    def run(self, non_primes): # all_dictionary):
-        all_dictionary, map_contexts = get_maxcover_dictionary(non_primes)
-        max_path = self.solve(all_dictionary)
-        result = set()
-        for i in max_path:
-            result.add(map_contexts[i])
-        return result
-
-    def _solve(self, keys, world_dictionary, cover, covers):
-        """It's the inner method for finding **all** paths that gives any kind of cover
-        Input: keys
-               world_dictionary
-
-        Output: cover
-                covers <-- This has all the path information
-
-        The covers include paths starting from each key iteratively
-        [['A', 'C']]
-        [['A', 'C'], ['C', 'A']]
-        [['A', 'C'], ['C', 'A'], ['B']]
-
-        >>> X = {'A': [1, 2, 3], 'B': [3, 4], 'C': [4, 5, 6]}
-        >>> ec = MaxCover()
-        >>> path = []
-        >>> results = []
-        >>> result = ec._solve(X.keys(), X, path, results)
-        >>> set(map(frozenset,results)) == set(map(frozenset,[['A', 'C'], ['C', 'A'], ['B']]))
-        True
-        """
-        if len(keys) == 0:
-            p = copy(cover)
-            covers.append(p)
-            return
-        for key in keys:
-            # X is a whole dictionary, we need to copy as X is modified
-            Xp = copy(world_dictionary)
-            friend_key_set, enemy_key_set = self.find_friend_enemy(Xp, key)
-            # Remove the key
-            del Xp[key]
-            # Remove all of the enemy set
-            for e in enemy_key_set:
-                del Xp[e]
-
-            cover.append(key) # push the key as this key covered the path
-            self._solve(friend_key_set, Xp, cover, covers)
-            # It's different path, so the appended key should be removed
-            cover.pop() # pop the key
-
+    def solve(self):
+        raise RuntimeError("MaxCover solve() was not supposed to run, you should inherit the class and implement the algorithm")
 
 if __name__ == "__main__":
     import doctest

@@ -30,12 +30,17 @@ We define contexts as
 
 """
 from context.context import Context
+#from utils_same import same
 
 def aggregated_contexts_to_list_of_standard(contexts):
     """
     >>> x = set([Context(value=1.0, cohorts=[1,3,4,5]), Context(value=1.0, cohorts=[2,1,6,7]), Context(value=1.0, cohorts=[3,4,5,6,7])])
-    >>> aggregated_contexts_to_list_of_standard(x)
-    [[1, 3, 4, 5], [1, 2, 6, 7], [3, 4, 5, 6, 7]]
+    >>> r = aggregated_contexts_to_list_of_standard(x)
+
+    >>> res1 = [[1, 3, 4, 5], [1, 2, 6, 7], [3, 4, 5, 6, 7]]
+    >>> res2 = [[1, 2, 6, 7], [1, 3, 4, 5], [3, 4, 5, 6, 7]]
+    >>> r == res1 or r == res2
+    True
     """
     result = []
     for c in contexts:
