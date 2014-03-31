@@ -26,8 +26,13 @@ def report_generate(obj, timestamp, iteration):
         r = contexts_to_standard(obj.filtered_singles)
         f.write("%s\n" % r[0])
         f.write("## NEW AGGREGATES\n")
-        aggr_string = "*" if obj.new_aggregate is None else obj.new_aggregate
-        f.write("%s\n" % aggr_string)
+        if obj.new_aggregate is None:
+            aggr_string = "*"
+            count = 0
+        else:
+            aggr_string = obj.new_aggregate
+            count = len(obj.new_aggregate.get_cohorts_as_set())
+        f.write("size(%d)-%s\n" % (count, aggr_string))
         f.write("## CONTEXT HISTORY\n")
         f.write(str(obj.context_history.get(timestamp)) + "\n")
         f.write("## OUTPUT\n")

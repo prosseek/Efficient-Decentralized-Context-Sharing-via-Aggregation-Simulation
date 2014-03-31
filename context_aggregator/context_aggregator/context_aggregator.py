@@ -387,6 +387,7 @@ class ContextAggregator(object):
         combined_singles = ContextAggregator.remove_same_id_singles(combined_singles)
         self.set_database(combined_singles, combined_aggregates, timestamp=timestamp)
 
+        previous_selection = self.assorted_context_database.get_selected_non_primes(timestamp)
         # ASSORT
         primes = set()
         non_primes = set()
@@ -397,7 +398,10 @@ class ContextAggregator(object):
                 if non_primes:
                     m = GreedyMaxCover()
                     #m = MaxCover()
-                    selected_non_primes = m.run(non_primes)
+                    if previous_selection:
+                        selected_non_primes = m.run(non_primes, previous_selection)
+                    else:
+                        selected_non_primes = m.run(non_primes)
             self.new_aggregate = self.create_new_aggregate(contexts=[combined_singles, primes, selected_non_primes], timestamp=timestamp)
             aggregates = contexts_to_standard({self.new_aggregate})
         else:

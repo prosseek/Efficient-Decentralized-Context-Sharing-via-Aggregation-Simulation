@@ -20,6 +20,7 @@ from collections import OrderedDict
 
 from utils_same import same
 from context.context import Context
+from utils_standard import aggregated_contexts_to_list_of_standard
 
 class MaxCover(object):
     def __init__(self):
@@ -30,11 +31,13 @@ class MaxCover(object):
     # API
     #
 
-    def run(self, non_primes):
+    def run(self, non_primes, previous_selection=None):
         self.conversion_dictionary = MaxCover.make_conversion_dictionary(non_primes)
         # The solver problem consists of only lists.
         inputs = map(list, self.conversion_dictionary.keys())
-        self.results_in_list = self.solve(inputs)
+        if previous_selection is not None:
+            previous_selection = aggregated_contexts_to_list_of_standard(previous_selection)
+        self.results_in_list = self.solve(inputs, previous_selection)
         result = []
         for i in self.results_in_list:
             result.append(self.conversion_dictionary[frozenset(i)])
@@ -86,12 +89,12 @@ class MaxCover(object):
         True
         """
 
-        list_length = []
+        set_result = set()
 
         for e in X:
-            list_length += e
+            set_result |= set(e)
 
-        return len(set(list_length))
+        return len(set(set_result))
 
     @staticmethod
     def find_friend_enemy(X, i):

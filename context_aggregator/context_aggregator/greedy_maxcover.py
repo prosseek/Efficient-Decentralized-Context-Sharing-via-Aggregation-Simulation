@@ -60,7 +60,35 @@ class GreedyMaxCover(MaxCover):
         #print r
         return lists[r[0][0]]
 
-    def solve(self, lists):
+    @staticmethod
+    def get_selection_from_previous_results(lists, previous_selection):
+        """
+
+        >>> previous_selection = [[17, 18, 19], [8, 10, 11, 13], [9, 12, 14, 48, 49, 50, 51, 52, 53, 54]]
+        >>> lists = [[18, 19], [47, 48], [8, 10, 11, 13], [8, 9, 10, 11, 52, 53, 54], [9, 14, 15, 16, 52, 53, 54], [9, 12, 14, 15, 18, 52, 53], [9, 12, 14, 48, 49, 50, 51, 52, 53, 54]]
+        >>> same(GreedyMaxCover.get_selection_from_previous_results(lists, previous_selection), [[8, 10, 11, 13], [9, 12, 14, 48, 49, 50, 51, 52, 53, 54], [18, 19]])
+        True
+        """
+        prev_set = map(frozenset, previous_selection)
+        current_set = map(frozenset, lists)
+
+        # find the one selected from previous choice
+        selected = []
+        for i in prev_set:
+            if i in current_set:
+                selected.append(sorted(list(i)))
+        for i in selected:
+            lists = GreedyMaxCover.remove_itself_and_enemies(lists, i)
+
+        # get the candidates from the rest
+        result = []
+        GreedyMaxCover._solve(lists, result)
+        selected += result
+
+        return selected
+
+
+    def solve(self, lists, previous_selection=None):
         """
         >>> x = {Context(value=1.0, cohorts={1,2,3}), Context(value=2.0, cohorts={2,3,4})}
         >>> m = GreedyMaxCover()
@@ -69,9 +97,18 @@ class GreedyMaxCover(MaxCover):
         >>> r == [[1,2,3]] or r == [[2,3,4]]
         True
         """
-        result = []
-        GreedyMaxCover._solve(lists, result)
-        return result
+        result1 = []
+        GreedyMaxCover._solve(lists, result1)
+        size1 = MaxCover.length_of_total_elements(result1)
+        size2 = -1
+        if previous_selection is not None:
+            result2 = GreedyMaxCover.get_selection_from_previous_results(lists, previous_selection)
+            size2 = MaxCover.length_of_total_elements(result2)
+
+        if size1 > size2: return result1
+        return result2
+
+
 
 if __name__ == "__main__":
     import doctest
