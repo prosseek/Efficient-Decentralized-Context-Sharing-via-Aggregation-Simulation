@@ -2,7 +2,7 @@ import unittest
 import sys
 import os
 
-from aggregation_analyzer.utils_read_results import read_results
+from aggregation_analyzer.utils_read_reports import read_results
 from aggregation_analyzer.utils_gif import generate_gifs
 
 class TestGif(unittest.TestCase):

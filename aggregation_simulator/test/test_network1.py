@@ -90,5 +90,24 @@ class TestNetwork(unittest.TestCase):
 
         simulation = AggregationSimulator.run(config=config)
 
+    def test_dot_files_gen(self):
+        kinds = ["marked_sample", "normal"]
+        samples = ["real_world_intel_6", "real_world_intel_10"]
+        test_files_directory = get_test_files_directory()
+
+        for kind in kinds:
+            k = os.path.join(test_files_directory, kind)
+            for sample in samples:
+                s = os.path.join(k, sample)
+                network_file = os.path.join(s, sample + ".txt")
+                if os.path.exists(network_file):
+                    n = Network()
+                    n.read(network_file)
+                    n.dot_gen(network_file + ".dot")
+
 if __name__ == "__main__":
+    # http://stackoverflow.com/questions/1068246/python-unittest-how-to-run-only-part-of-a-test-file
+    # selected_tests = unittest.TestSuite()
+    # selected_tests.addTest(TestDotFile)
+    # unittest.TextTestRunner().run(selected_tests)
     unittest.main(verbosity=2)
