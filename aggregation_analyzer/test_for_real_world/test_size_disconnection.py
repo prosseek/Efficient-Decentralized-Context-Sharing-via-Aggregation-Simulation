@@ -27,6 +27,10 @@ class TestSizeDisconnection(unittest.TestCase):
     def test_size_real_world_intel_10(self):
         """Size for real world intel 10
 
+        [2528, 743, 1785]
+        [2532, 743, 1789]
+        [17188, 17188, 0]
+
         -> 3% drop
 
         -> 8% drop
@@ -35,6 +39,20 @@ class TestSizeDisconnection(unittest.TestCase):
 
         -> 50% drop
 
+        [1906, 685, 1221]
+        [1906, 685, 1221]
+        [1751, 682, 1069]
+        [1751, 682, 1069]
+        [14099, 14099, 0]
+        [14099, 14099, 0]
+
+        -> 90% drop
+        [257, 154, 103]
+        [257, 154, 103]
+        [185, 118, 67]
+        [185, 118, 67]
+        [2378, 2378, 0]
+        [2378, 2378, 0]
         """
         self.run_to_get_received_data("real_world_intel_10_drop")
 
@@ -80,12 +98,9 @@ class TestSizeDisconnection(unittest.TestCase):
 
         --> drop rate 50%
 
-        [426, 153, 273]
-        [824, 276, 548]
-        [436, 100, 336]
-        [847, 186, 661]
-        [854, 854, 0]
-        [1604, 1604, 0]
+        [840, 257, 583]
+        [829, 230, 599]
+        [4229, 4229, 0]
 
         """
         self.run_to_get_received_data("real_world_intel_6_drop")

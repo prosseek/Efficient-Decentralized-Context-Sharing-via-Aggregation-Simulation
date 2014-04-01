@@ -27,13 +27,12 @@ class TestSizeDisconnection(unittest.TestCase):
         if not test_only_normal: get_results_and_print("marked_sample","aggregates")
         get_results_and_print("normal", "singles")
 
-    def test_size_real_world_intel_10(self):
+    def test_size_test1(self):
         """
-        [56, 56, 0]
-        [56, 56, 0]
-        [56, 56, 0]
-        [56, 56, 0]
-        [56, 56, 0]
+        [42, 14, 28]
+
+        [54, 26, 28]
+
         [56, 56, 0]
 
         -> 3% drop
@@ -46,17 +45,14 @@ class TestSizeDisconnection(unittest.TestCase):
 
         -> 50% drop
 
-        [41, 41, 0]
-        [41, 41, 0]
+        [17, 9, 8]
 
-        [41, 41, 0]
-        [41, 41, 0]
+        [21, 12, 9]
 
-        [27, 27, 0]
-        [27, 27, 0]
+        [42, 42, 0]
 
         """
-        self.run_to_get_received_data("test_network1_drop")
+        self.run_to_get_received_data("test_network1")
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)

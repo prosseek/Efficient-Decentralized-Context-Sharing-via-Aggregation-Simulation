@@ -61,6 +61,8 @@ class AggregationSimulator(object):
 
         timestamp = timestamp
 
+        disconnecion_count = 0
+        sent_count = 0
         count = 0
         while True:
             print "Iteration [%d]: at timestamp (%d)" % (count, timestamp)
@@ -78,12 +80,20 @@ class AggregationSimulator(object):
                 for h in hosts:
                     if not h.context_aggregator.is_nothing_to_send():
                         ns = neighbors[h.id]
+
                         for n in ns:
+
+                            # When host has nothing to send to neighbors, just skip it
+                            if [[],[]] == h.context_aggregator.output.dictionary[n]:
+                                continue
+
                             if disconnection_rate > 0.0 :
                                 if check_drop(disconnection_rate):
-                                    print "no connection from %d to %d" % (h.id, n)
+                                    disconnecion_count += 1
+                                    #print "no connection from %d to %d; couldn't send %s" % (h.id, n, h.context_aggregator.output.dictionary[n])
                                     continue
 
+                            sent_count += 1
                             sends = h.context_aggregator.send(neighbor=n, timestamp=timestamp)
 
                             # sends is a dictionary that maps id -> contexts
@@ -95,7 +105,6 @@ class AggregationSimulator(object):
                                 h.context_aggregator.output.actual_sent_dictionary[k] = contexts_to_standard(value)
 
                 #print from_to_map
-
                 for i, value in from_to_map.items():
                     from_node, to_node = AggregationSimulator.decode_key(i)
                     h = filter(lambda i: i.id == to_node, hosts)[0]
@@ -113,6 +122,8 @@ class AggregationSimulator(object):
                 break
 
             count += 1
+
+        print "sent count:(%d) disconnection count:(%d)" % (sent_count, disconnecion_count)
 
 if __name__ == "__main__":
     import doctest
