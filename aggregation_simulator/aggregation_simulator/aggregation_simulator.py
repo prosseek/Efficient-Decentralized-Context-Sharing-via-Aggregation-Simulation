@@ -8,6 +8,7 @@ import sys
 
 from utils_report import report_generate
 from utils import check_drop
+from context_aggregator.utils_standard import contexts_to_standard
 #from aggregation_simulator.utils_report import report_generate
 
 class AggregationSimulator(object):
@@ -78,10 +79,20 @@ class AggregationSimulator(object):
                     if not h.context_aggregator.is_nothing_to_send():
                         ns = neighbors[h.id]
                         for n in ns:
+                            if disconnection_rate > 0.0 :
+                                if check_drop(disconnection_rate):
+                                    print "no connection from %d to %d" % (h.id, n)
+                                    continue
+
                             sends = h.context_aggregator.send(neighbor=n, timestamp=timestamp)
+
+                            # sends is a dictionary that maps id -> contexts
                             for k, value in sends.items():
+                                if value == set([]): continue
                                 key = AggregationSimulator.encode_key(h.id, k)
                                 from_to_map[key] = value
+                                # store what is actually sent
+                                h.context_aggregator.output.actual_sent_dictionary[k] = contexts_to_standard(value)
 
                 #print from_to_map
 
@@ -90,12 +101,10 @@ class AggregationSimulator(object):
                     h = filter(lambda i: i.id == to_node, hosts)[0]
 
                     if drop_rate > 0.0:
-                        if not check_drop(drop_rate):
-                            h.context_aggregator.receive(from_node=from_node,contexts=value,timestamp=timestamp)
-                        else:
+                        if check_drop(drop_rate):
                             print "dropping packets %s" % i
-                    else:
-                        h.context_aggregator.receive(from_node=from_node,contexts=value,timestamp=timestamp)
+                            continue
+                    h.context_aggregator.receive(from_node=from_node,contexts=value,timestamp=timestamp)
 
             for h in hosts:
                 report_generate(h.context_aggregator, timestamp, count)

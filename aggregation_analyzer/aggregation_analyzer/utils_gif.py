@@ -29,7 +29,7 @@ def generate_gifs(condition, name, kind, host, timestamp, iteration=None):
         files = glob.glob(test_location + os.sep + "*")
 
         if not files:
-            raise RuntimeError("No test files to read")
+            raise RuntimeError("No test_for_real_world files to read")
 
         for file in files:
             base_name = os.path.basename(file)

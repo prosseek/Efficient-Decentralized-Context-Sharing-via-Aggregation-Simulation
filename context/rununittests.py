@@ -22,11 +22,11 @@ def getTestNames():
         return "".join(c.next()(x) if x else '_' for x in value.split("_"))
         
     db = {}
-    for dirname, dirnames, filenames in os.walk('./test'): 
+    for dirname, dirnames, filenames in os.walk('./test_for_real_world'):
         for filename in filenames:
             if filename.startswith("__"): continue
             if filename.endswith("pyc") or filename.endswith("class"): continue
-            if not filename.startswith("test"): continue
+            if not filename.startswith("test_for_real_world"): continue
             
             # test_context_history.py -> test_context_history
             file_name_without_extension = os.path.splitext(filename)[0]
@@ -43,7 +43,7 @@ def getTestNames():
     return generated_code
 
 if __name__ == "__main__":
-    sys.path.insert(0,"./test")
+    sys.path.insert(0,"./test_for_real_world")
     sys.path.insert(0,"./../context")
 
     #print getTestNames()

@@ -26,7 +26,7 @@ network = Network()
 network.read(network_file)
 dot_file_path = os.path.join(d, network_file + ".dot")
 
-class TestNetworkWithDrop(unittest.TestCase):
+class TestNetworkDrop(unittest.TestCase):
     def setUp(self):
         pass
 
@@ -37,7 +37,7 @@ class TestNetworkWithDrop(unittest.TestCase):
             hosts.append(Host(h))
         neighbors = network.get_network() # {0:[1], 1:[0,2], 2:[1]}
 
-        test_directory, sample = make_ready_for_test("normal","test_network1_drop","aggregate")
+        test_directory, sample = make_ready_for_test("normal","test_network1_drop","aggregates")
 
         config = {"hosts":hosts, "neighbors":neighbors,\
                   "test_directory":test_directory, "sample":sample, \
@@ -70,7 +70,7 @@ class TestNetworkWithDrop(unittest.TestCase):
             hosts.append(Host(h))
         neighbors = network.get_network() # {0:[1], 1:[0,2], 2:[1]}
 
-        test_directory, sample = make_ready_for_test("marked_sample","test_network1_drop","aggregate")
+        test_directory, sample = make_ready_for_test("marked_sample","test_network1_drop","aggregates")
 
         config = {"hosts":hosts, "neighbors":neighbors,\
                   "test_directory":test_directory, "sample":sample, \
@@ -82,7 +82,7 @@ class TestNetworkWithDrop(unittest.TestCase):
 
 
 if __name__ == "__main__":
-    # http://stackoverflow.com/questions/1068246/python-unittest-how-to-run-only-part-of-a-test-file
+    # http://stackoverflow.com/questions/1068246/python-unittest-how-to-run-only-part-of-a-test_for_real_world-file
     # selected_tests = unittest.TestSuite()
     # selected_tests.addTest(TestDotFile)
     # unittest.TextTestRunner().run(selected_tests)

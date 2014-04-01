@@ -36,7 +36,9 @@ def report_generate(obj, timestamp, iteration):
         f.write("## CONTEXT HISTORY\n")
         f.write(str(obj.context_history.get(timestamp)) + "\n")
         f.write("## OUTPUT\n")
-        f.write(str(obj.output.to_string()))
+        f.write(str(obj.output.to_string()) + "\n")
+        f.write("## ACTUAL OUTPUT\n")
+        f.write(str(obj.output.to_string(True))) # with a parameter, it will show actual output
 
         f.write("\n\n-------------------\n")
         f.write("## STATISTICS\n")
@@ -209,7 +211,8 @@ class StatisticalReport(object):
         result += "Received: [%d, %d, %d] : %d (%d-%d)\n" % (s+a, s, a, s+a, s, a)
 
         # 2. get the number of sent packets
-        s,a = self.obj.output.get_number_of_contexts()
+        s,a = self.obj.output.get_number_of_actual_sent_contexts()
+        #s,a = self.obj.output.get_number_of_contexts()
         result += "Sent: [%d, %d, %d] : %d (%d-%d)\n\n" % (s+a, s, a, s+a, s, a)
 
         # 3. calculate the accuracy

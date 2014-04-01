@@ -55,7 +55,7 @@ def read_report_into_dictionary(file_path):
     return result
 
 def read_host_timestamp_reports(condition, name, kind, host, timestamp, iteration = None):
-    """Given a location of a test results, it reads all of a specific iteration into dictionary.
+    """Given a location of a test_for_real_world results, it reads all of a specific iteration into dictionary.
 
     This method invokes read_statistics that reads one result from a filepath.
 

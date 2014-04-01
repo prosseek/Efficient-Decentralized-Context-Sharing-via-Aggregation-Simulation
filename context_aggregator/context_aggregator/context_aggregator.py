@@ -599,6 +599,7 @@ class ContextAggregator(object):
         else:
             result = self.run_dataflow(neighbors=neighbors, timestamp=timestamp, iteration=iteration)
 
+        # this also reset the actual_sent_dictionary
         self.output.set_dictionary(result)
 
         # WARNING! Don't forget the input is cleared after the process_to_set_output() call
