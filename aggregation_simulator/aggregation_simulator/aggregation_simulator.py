@@ -7,6 +7,7 @@ import sys
 # sys.path.insert(0, source_location)
 
 from utils_report import report_generate
+from utils import check_drop
 #from aggregation_simulator.utils_report import report_generate
 
 class AggregationSimulator(object):
@@ -39,6 +40,14 @@ class AggregationSimulator(object):
 
         assert hosts is not None
         assert neighbors is not None
+
+        # We don't drop any packets
+        drop_rate = 0.0
+        if "drop_rate" in config:
+            drop_rate = float(config["drop_rate"])
+        disconnection_rate = 0.0
+        if "disconnection_rate" in config:
+            disconnection_rate = float(config["disconnection_rate"])
 
         # if os.path.exists(test_directory):
         #     shutil.rmtree(test_directory)
@@ -79,7 +88,14 @@ class AggregationSimulator(object):
                 for i, value in from_to_map.items():
                     from_node, to_node = AggregationSimulator.decode_key(i)
                     h = filter(lambda i: i.id == to_node, hosts)[0]
-                    h.context_aggregator.receive(from_node=from_node,contexts=value,timestamp=timestamp)
+
+                    if drop_rate > 0.0:
+                        if not check_drop(drop_rate):
+                            h.context_aggregator.receive(from_node=from_node,contexts=value,timestamp=timestamp)
+                        else:
+                            print "dropping packets %s" % i
+                    else:
+                        h.context_aggregator.receive(from_node=from_node,contexts=value,timestamp=timestamp)
 
             for h in hosts:
                 report_generate(h.context_aggregator, timestamp, count)

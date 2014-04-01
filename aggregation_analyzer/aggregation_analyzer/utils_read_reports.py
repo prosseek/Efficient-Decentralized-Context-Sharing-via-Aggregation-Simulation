@@ -24,8 +24,8 @@ def read_report_into_dictionary(file_path):
     eval_skip_list = ["Identified values"]
     with open(file_path, "r") as f:
         #lines = f.readlines()
+        no_input = False
         while True:
-            no_input = False
             l = f.readline()
             if not l: break
             if l.startswith("## INPUT"):

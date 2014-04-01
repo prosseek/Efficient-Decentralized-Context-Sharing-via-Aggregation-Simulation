@@ -6,6 +6,7 @@ from sample import Sample
 import os
 import shutil
 import distutils.core
+from random import random
 
 def get_sample_name(test_name):
     return test_name + "_sample.txt"
@@ -19,7 +20,9 @@ def make_ready_for_test(condition, test_file_name, test_sub_name):
     True
     """
     test_files_directory = get_test_files_directory()
+
     directory = test_files_directory + os.sep + condition + os.sep + test_file_name
+
     sample_name = get_sample_name(test_file_name)
     sample_file_path = os.path.join(directory, sample_name)
 
@@ -51,6 +54,14 @@ def make_ready_for_test(condition, test_file_name, test_sub_name):
     sample.read(sample_file_path)
 
     return test_report_sub_directory, sample
+
+def check_drop(drop_rate):
+    """returns True at the rate of drop_rate
+    check_drop(0.2)
+    """
+    # This value should be around 200
+    # print len(filter(lambda m: m < drop_rate, [random() for i in range(1000)]))
+    return random() < drop_rate
 
 if __name__ == "__main__":
     import doctest
