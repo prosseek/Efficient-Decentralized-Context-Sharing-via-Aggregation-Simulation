@@ -49,23 +49,23 @@ class TestRealWorld(unittest.TestCase):
                   ContextAggregator.PM:propagation_mode}
         simulation = AggregationSimulator.run(config=config)
 
-    # def test_with_intel6_singles_only(self):
-    #     return self.runit("normal", "real_world_intel_6", "singles")
+    def test_with_intel6_singles_only(self):
+        return self.runit("normal", "real_world_intel_6", "singles")
 
     def test_with_intel6_aggregate(self):
         return self.runit("normal", "real_world_intel_6", "aggregates")
-    #
-    # def test_with_intel10_singles_only(self):
-    #     return self.runit("normal", "real_world_intel_10", "singles")
-    #
-    # def test_with_intel10_aggregate(self):
-    #     return self.runit("normal", "real_world_intel_10", "aggregates")
-    #
-    # def test_with_intel6_aggregate_marked_sample(self):
-    #     return self.runit("marked_sample", "real_world_intel_6", "aggregates")
-    #
-    # def test_with_intel10_aggregate_marked_sample(self):
-    #     return self.runit("marked_sample", "real_world_intel_10", "aggregates")
+
+    def test_with_intel10_singles_only(self):
+        return self.runit("normal", "real_world_intel_10", "singles")
+
+    def test_with_intel10_aggregate(self):
+        return self.runit("normal", "real_world_intel_10", "aggregates")
+
+    def test_with_intel6_aggregate_marked_sample(self):
+        return self.runit("marked_sample", "real_world_intel_6", "aggregates")
+
+    def test_with_intel10_aggregate_marked_sample(self):
+        return self.runit("marked_sample", "real_world_intel_10", "aggregates")
 
 
 if __name__ == "__main__":

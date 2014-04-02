@@ -34,7 +34,7 @@ class Network(object):
         """
         self.network_file = os.path.abspath(network_file)
         if not os.path.exists(self.network_file):
-            print >> sys.stderr, "\n>> ERROR! no file %" % self.network_file
+            #print >> sys.stderr, "\n>> ERROR! no file %" % self.network_file
             raise Exception("No file %s exists for graph" % self.network_file)
         else:
             self.network = self.network_file_parse_into_dictionary(network_file = self.network_file)
