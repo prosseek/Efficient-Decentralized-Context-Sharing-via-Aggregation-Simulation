@@ -7,6 +7,8 @@ import sys
 # sys.path.insert(0, source_location)
 
 from utils_report import report_generate
+from utils import check_drop
+from context_aggregator.utils_standard import contexts_to_standard
 #from aggregation_simulator.utils_report import report_generate
 
 class AggregationSimulator(object):
@@ -40,6 +42,14 @@ class AggregationSimulator(object):
         assert hosts is not None
         assert neighbors is not None
 
+        # We don't drop any packets
+        drop_rate = 0.0
+        if "drop_rate" in config:
+            drop_rate = float(config["drop_rate"])
+        disconnection_rate = 0.0
+        if "disconnection_rate" in config:
+            disconnection_rate = float(config["disconnection_rate"])
+
         # if os.path.exists(test_directory):
         #     shutil.rmtree(test_directory)
 
@@ -51,6 +61,8 @@ class AggregationSimulator(object):
 
         timestamp = timestamp
 
+        disconnecion_count = 0
+        sent_count = 0
         count = 0
         while True:
             print "Iteration [%d]: at timestamp (%d)" % (count, timestamp)
@@ -68,17 +80,39 @@ class AggregationSimulator(object):
                 for h in hosts:
                     if not h.context_aggregator.is_nothing_to_send():
                         ns = neighbors[h.id]
+
                         for n in ns:
+
+                            # When host has nothing to send to neighbors, just skip it
+                            if [[],[]] == h.context_aggregator.output.dictionary[n]:
+                                continue
+
+                            if disconnection_rate > 0.0 :
+                                if check_drop(disconnection_rate):
+                                    disconnecion_count += 1
+                                    #print "no connection from %d to %d; couldn't send %s" % (h.id, n, h.context_aggregator.output.dictionary[n])
+                                    continue
+
+                            sent_count += 1
                             sends = h.context_aggregator.send(neighbor=n, timestamp=timestamp)
+
+                            # sends is a dictionary that maps id -> contexts
                             for k, value in sends.items():
+                                if value == set([]): continue
                                 key = AggregationSimulator.encode_key(h.id, k)
                                 from_to_map[key] = value
+                                # store what is actually sent
+                                h.context_aggregator.output.actual_sent_dictionary[k] = contexts_to_standard(value)
 
                 #print from_to_map
-
                 for i, value in from_to_map.items():
                     from_node, to_node = AggregationSimulator.decode_key(i)
                     h = filter(lambda i: i.id == to_node, hosts)[0]
+
+                    if drop_rate > 0.0:
+                        if check_drop(drop_rate):
+                            print "dropping packets %s" % i
+                            continue
                     h.context_aggregator.receive(from_node=from_node,contexts=value,timestamp=timestamp)
 
             for h in hosts:
@@ -88,6 +122,8 @@ class AggregationSimulator(object):
                 break
 
             count += 1
+
+        print "sent count:(%d) disconnection count:(%d)" % (sent_count, disconnecion_count)
 
 if __name__ == "__main__":
     import doctest

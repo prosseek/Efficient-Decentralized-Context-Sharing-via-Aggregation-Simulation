@@ -3,7 +3,7 @@
 """
 from gnuplotter import Gnuplotter
 
-from utils_read_results import *
+from utils_read_reports import *
 from utils_location import get_img_report_root_directory
 
 def generate_gif(value, gif_name):
@@ -29,7 +29,7 @@ def generate_gifs(condition, name, kind, host, timestamp, iteration=None):
         files = glob.glob(test_location + os.sep + "*")
 
         if not files:
-            raise RuntimeError("No test files to read")
+            raise RuntimeError("No test_for_real_world files to read")
 
         for file in files:
             base_name = os.path.basename(file)

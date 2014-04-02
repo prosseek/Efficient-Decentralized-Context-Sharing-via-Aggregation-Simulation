@@ -46,7 +46,7 @@ class TestContextAggregator(unittest.TestCase):
 
         0 <-> 1 <-> 2
 
-        The test is to check if each one samples data and send correctly.
+        The test_for_real_world is to check if each one samples data and send correctly.
         The sent data is stored in r0,r1,r2
         """
         c0 = ContextAggregator(0)

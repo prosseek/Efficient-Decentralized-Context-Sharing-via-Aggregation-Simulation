@@ -66,14 +66,14 @@ from context_history import ContextHistory
 from copy import copy
 
 from disaggregator import Disaggregator
-#from greedy_maxcover import GreedyMaxCover
-from brutal_force_maxcover import BrutalForceMaxCover
+from greedy_maxcover import GreedyMaxCover
+#from brutal_force_maxcover import MaxCover
 from output_selector import OutputSelector
 from utils_configuration import  process_default_values
 
 import gc
 
-DEBUG = True
+DEBUG = False
 
 class ContextAggregator(object):
     """database class"""
@@ -395,8 +395,8 @@ class ContextAggregator(object):
             if combined_aggregates:
                 primes, non_primes = get_prime(combined_aggregates)
                 if non_primes:
-                    #m = GreedyMaxCover()
-                    m = BrutalForceMaxCover()
+                    m = GreedyMaxCover()
+                    #m = MaxCover()
                     selected_non_primes = m.run(non_primes)
             self.new_aggregate = self.create_new_aggregate(contexts=[combined_singles, primes, selected_non_primes], timestamp=timestamp)
             aggregates = contexts_to_standard({self.new_aggregate})

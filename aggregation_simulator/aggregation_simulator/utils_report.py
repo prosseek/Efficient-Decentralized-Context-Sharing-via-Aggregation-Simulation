@@ -26,12 +26,19 @@ def report_generate(obj, timestamp, iteration):
         r = contexts_to_standard(obj.filtered_singles)
         f.write("%s\n" % r[0])
         f.write("## NEW AGGREGATES\n")
-        aggr_string = "*" if obj.new_aggregate is None else obj.new_aggregate
-        f.write("%s\n" % aggr_string)
+        if obj.new_aggregate is None:
+            aggr_string = "*"
+            count = 0
+        else:
+            aggr_string = obj.new_aggregate
+            count = len(obj.new_aggregate.get_cohorts_as_set())
+        f.write("size(%d)-%s\n" % (count, aggr_string))
         f.write("## CONTEXT HISTORY\n")
         f.write(str(obj.context_history.get(timestamp)) + "\n")
         f.write("## OUTPUT\n")
-        f.write(str(obj.output.to_string()))
+        f.write(str(obj.output.to_string()) + "\n")
+        f.write("## ACTUAL OUTPUT\n")
+        f.write(str(obj.output.to_string(True))) # with a parameter, it will show actual output
 
         f.write("\n\n-------------------\n")
         f.write("## STATISTICS\n")
@@ -204,7 +211,8 @@ class StatisticalReport(object):
         result += "Received: [%d, %d, %d] : %d (%d-%d)\n" % (s+a, s, a, s+a, s, a)
 
         # 2. get the number of sent packets
-        s,a = self.obj.output.get_number_of_contexts()
+        s,a = self.obj.output.get_number_of_actual_sent_contexts()
+        #s,a = self.obj.output.get_number_of_contexts()
         result += "Sent: [%d, %d, %d] : %d (%d-%d)\n\n" % (s+a, s, a, s+a, s, a)
 
         # 3. calculate the accuracy
