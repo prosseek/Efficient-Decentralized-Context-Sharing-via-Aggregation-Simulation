@@ -1,5 +1,7 @@
 *.py[cod]
 *.class
+*.*~
+*.py.orig
 
 .DS_Store
 
