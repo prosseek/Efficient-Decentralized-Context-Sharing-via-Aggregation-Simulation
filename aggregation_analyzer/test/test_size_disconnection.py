@@ -37,8 +37,6 @@ class TestSizeDisconnection(unittest.TestCase):
 
         -> 3% drop
 
-
-
         -> 8% drop
 
         -> 33% drop
