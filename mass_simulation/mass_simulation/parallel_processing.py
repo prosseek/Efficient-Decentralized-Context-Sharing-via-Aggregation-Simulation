@@ -26,6 +26,7 @@ from context_aggregator.utils import *
 from context_aggregator.output_selector import *
 from context_aggregator.disaggregator import *
 from context_aggregator.greedy_maxcover import *
+from context_aggregator.maxcover import *
 
 methods = (process_one_network_file,
            get_test_name,
@@ -85,11 +86,12 @@ methods = (process_one_network_file,
            is_prime,
            sort_aggregates,
            is_exclusive,
+           MaxCover,
            GreedyMaxCover,
 )
 modules = ("re", "os",
            "ConfigParser",
-           "shutil","copy"
+           "shutil","copy","operator"
 )
 
 directory = os.path.expanduser("~/code/PyCharmProjects/contextAggregator/test_files/data/10_100_10_10/mesh")
