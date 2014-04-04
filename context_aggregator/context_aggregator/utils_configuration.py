@@ -3,7 +3,7 @@
 #
 
 from utils_same import *
-from copy import copy
+import copy
 
 def process_default_values(config, defaults):
     """When the config doesn't specify some critical configuration information, the values are set here
@@ -19,7 +19,7 @@ def process_default_values(config, defaults):
     if config is None:
         result = {}
     else:
-        result = copy(config)
+        result = copy.copy(config)
 
     for key in defaults:
         if key not in result:

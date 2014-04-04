@@ -2,28 +2,31 @@ import os.path
 import shutil
 import warnings
 import functools
+import glob
+import sys
 
 from aggregation_simulator.run_simulation import run_simulation
 from aggregation_simulator.utils_configuration import *
 from utils import *
 
-def log(func):
-    @functools.wraps(func)
-    def wrapper(*args):
-        with warnings.catch_warnings(record=True) as w:
-            try:
-                r = func(*args)
-                if w != []:
-                    print w[-1]
-                return r
-            except Exception, e:
-                print "sorry %s" % e
-    return wrapper
+CONFIGURATION_FILE_FOR_TEST = "config.cfg"
+# def log(func):
+#     @functools.wraps(func)
+#     def wrapper(*args):
+#         with warnings.catch_warnings(record=True) as w:
+#             try:
+#                 r = func(*args)
+#                 if w != []:
+#                     print w[-1]
+#                 return r
+#             except Exception, e:
+#                 print "sorry %s" % e
+#     return wrapper
 
 def get_mass_simulation_root_dir():
-    return get_configuration(CONFIGURATION_FILE_FOR_TEST, "TestDirectory","mass_simulation_root_dir")
+    return get_configuration("config.cfg", "TestDirectory","mass_simulation_root_dir")
 
-@log
+#@log
 def make_ready_for_one_file_simulation(network_file, sample_file=None):
     """Given a network_file path, it runs simulation based on the configuration
     >>> #network_file_path = '/Users/smcho/code/PyCharmProjects/contextAggregator/test_files/data/10_100_10_10/tree/tree10_10_2_0.txt'
@@ -71,15 +74,41 @@ def get_test_name(network_file):
     >>> print get_test_name("/blah/blah/hello.txt")
     hello
     """
-
     return os.path.basename(network_file).replace(".txt", "")
 
+def process_network_files(directory, condition="normal", disconnection_rate=0.0, drop_rate=0.0):
+    """
+    >>> directory = '/Users/smcho/code/PyCharmProjects/contextAggregator/test_files/data/10_100_10_10/tree'
+    >>> process_network_files(directory)
+    """
+    network_files = glob.glob(directory + os.sep + "*.txt")
+    for p in network_files:
+        sys.stdout.write("Processing: %s %s %4.2f %4.2f" % (p, condition, disconnection_rate, drop_rate))
+        process_one_network_file(p, condition, disconnection_rate, drop_rate)
+
 def process_one_network_file(network_file, condition="normal", disconnection_rate=0.0, drop_rate=0.0):
+    print "Processing %s ...\n" % network_file
+    test_name = get_test_name(network_file)
+    network_dir = make_ready_for_one_file_simulation(network_file)
+
+    params = {"condition":condition,
+              "test_name":test_name,
+              "test_sub_name":"singles",
+              "disconnection_rate":disconnection_rate,
+              "drop_rate":drop_rate}
+    run_simulation(network_dir, **params) # condition, test_name, test_sub_name, disconnection_rate = 0.0, drop_rate=0.0):
+    params["test_sub_name"] = "aggregates"
+    run_simulation(network_dir, **params)
+
+    return "OK"
+
+def __process_one_network_file(network_file, condition="normal", disconnection_rate=0.0, drop_rate=0.0):
     """
     >>> network_file_path = '/Users/smcho/code/PyCharmProjects/contextAggregator/test_files/data/10_100_10_10/tree/tree10_10_2_0.txt'
-    >>> process_one_network_file(network_file_path)
-    True
+    >>> sys.stdout.write('skip from here '); process_one_network_file(network_file_path) # doctest:+ELLIPSIS
+    skip from here ...
     """
+    # http://stackoverflow.com/questions/1024411/can-python-doctest-ignore-some-output-lines
     test_name = get_test_name(network_file)
     network_dir = make_ready_for_one_file_simulation(network_file)
     #network_path = os.path.join(network_dir, test_name + ".txt")
@@ -93,6 +122,7 @@ def process_one_network_file(network_file, condition="normal", disconnection_rat
     run_simulation(network_dir, **params) # condition, test_name, test_sub_name, disconnection_rate = 0.0, drop_rate=0.0):
     params["test_sub_name"] = "aggregates"
     run_simulation(network_dir, **params)
+
 if __name__ == "__main__":
     import doctest
     doctest.testmod()

@@ -2,8 +2,9 @@
 """
 import os.path
 from os.path import expanduser
-from ConfigParser import *
+import ConfigParser #import *
 
+# global doesn't seem to work with parallel python
 CONFIGURATION_FILE_FOR_TEST = "config.cfg"
 
 def get_network1():
@@ -17,18 +18,18 @@ def get_test_files_directory():
     >>> get_test_files_directory() is not None
     True
     """
-    return get_configuration(CONFIGURATION_FILE_FOR_TEST, "TestDirectory","test_files_directory")
+    return get_configuration("config.cfg", "TestDirectory","test_files_directory")
 
 
 def get_test_report_root_directory():
-    return get_configuration(CONFIGURATION_FILE_FOR_TEST, "TestDirectory","test_report_root_directory")
+    return get_configuration("config.cfg", "TestDirectory","test_report_root_directory")
 
 
 def find_configuration_file(config_filename):
     """
 
-    >>> f = find_configuration_file(CONFIGURATION_FILE_FOR_TEST)
-    >>> f.endswith(CONFIGURATION_FILE_FOR_TEST)
+    >>> f = find_configuration_file("config.cfg")
+    >>> f.endswith("config.cfg")
     True
     """
     home = os.path.expanduser("~")
@@ -43,7 +44,7 @@ def find_configuration_file(config_filename):
 def get_configuration(config_file_name, section, key):
     """
 
-    >>> f = get_configuration(CONFIGURATION_FILE_FOR_TEST, "TestDirectory", "test_report_root_directory")
+    >>> f = get_configuration("config.cfg", "TestDirectory", "test_report_root_directory")
     >>> f is not None
     True
     """
@@ -51,7 +52,7 @@ def get_configuration(config_file_name, section, key):
         config_file_path = find_configuration_file(config_file_name)
 
     if config_file_path:
-        f = SafeConfigParser()
+        f = ConfigParser.SafeConfigParser()
         f.read(config_file_path)
         result = f.get(section, key)
         if result.startswith("~"):

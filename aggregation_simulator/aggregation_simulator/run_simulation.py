@@ -78,6 +78,7 @@ def run_simulation(network_dir, condition, test_name, test_sub_name, disconnecti
               "disconnection_rate":disconnection_rate, "drop_rate":drop_rate, \
               ContextAggregator.PM:propagation_mode}
     simulation = AggregationSimulator.run(config=config)
+    return simulation
 
 if __name__ == "__main__":
     import doctest

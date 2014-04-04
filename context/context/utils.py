@@ -9,13 +9,13 @@ r"""context.utils is a module for context operations
 """
 import struct
 
-MAXIMUM_INTEGER_BYTES=8
+#MAXIMUM_INTEGER_BYTES=8
 
 #
 # utilities that can be used other routins
 #
 
-def get_number_of_one_from_number(value, number_of_bytes = MAXIMUM_INTEGER_BYTES):
+def get_number_of_one_from_number(value, number_of_bytes = 8):
     """Returns the number of 1 in a value
     assumes that the value is integer with 8 bytes (unsigned long long int)
 

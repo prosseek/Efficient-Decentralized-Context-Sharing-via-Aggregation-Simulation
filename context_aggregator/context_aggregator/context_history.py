@@ -6,7 +6,7 @@ Assume all the data is in standard format
 
 from context.context import Context
 from utils_same import *
-from copy import copy
+import copy
 
 class ContextHistory(object):
     """database class"""
@@ -116,7 +116,7 @@ class ContextHistory(object):
         True
         """
         container = self.check_and_get_container(timestamp)
-        result = copy(container.get(node_number))
+        result = copy.copy(container.get(node_number))
 
         # Well, is it a good idea to have a None as a return value or specific data structure([[],[]])?
         # I guess, the most important thing is consistency. For this project, I chose to return None, so be careful

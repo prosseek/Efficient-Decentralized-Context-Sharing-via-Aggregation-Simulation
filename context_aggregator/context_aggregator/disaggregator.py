@@ -98,7 +98,7 @@ class Disaggregator(object):
 
         return used_singles, aggregates, processed_aggregates
 
-    def split(self, sub, super_set):
+    def split(self, input_sub, super_set):
         """Given sub context, and super_set, split the super_set to generate aggregates or singles
 
         >>> s  = Context(value=0.0, cohorts=[0])
@@ -118,9 +118,8 @@ class Disaggregator(object):
         processed = set()
 
         for sup in super_set:
-            if sup > sub:
-                r = sup - sub
-
+            if sup > input_sub:
+                r = sup - input_sub
                 if r is not None:
                     if r.is_single():
                         singles.add(r)

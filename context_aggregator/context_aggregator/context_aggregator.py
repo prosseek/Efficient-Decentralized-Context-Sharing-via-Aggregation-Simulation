@@ -73,7 +73,7 @@ from utils_configuration import  process_default_values
 
 import gc
 
-DEBUG = False
+#DEBUG = False
 
 class ContextAggregator(object):
     """database class"""
@@ -359,8 +359,8 @@ class ContextAggregator(object):
         True
         """
 
-        if DEBUG:
-            print "host (%d) - iteration (%d)" % (self.id, iteration)
+        # if DEBUG:
+        #     print "host (%d) - iteration (%d)" % (self.id, iteration)
 
         # 1. DISAGGREGATES
         input_contexts = self.get_received_data()
