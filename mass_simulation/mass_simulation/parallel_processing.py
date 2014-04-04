@@ -99,7 +99,7 @@ network_files = glob.glob(directory + os.sep + "*.txt")
 def function_to_run(network_file):
     return process_one_network_file(network_file)
 
-ppservers = ("146.6.28.105:30001",)
+ppservers = ("146.6.28.105:30000",)
 #ppservers=()
 
 job_server = pp.Server(ppservers=ppservers)
