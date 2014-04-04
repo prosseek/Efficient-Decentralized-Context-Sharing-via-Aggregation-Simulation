@@ -25,6 +25,7 @@ from aggregation_simulator.utils_report import *
 from context_aggregator.utils import *
 from context_aggregator.output_selector import *
 from context_aggregator.disaggregator import *
+from context_aggregator.greedy_maxcover import *
 
 methods = (process_one_network_file,
            get_test_name,
@@ -84,13 +85,14 @@ methods = (process_one_network_file,
            is_prime,
            sort_aggregates,
            is_exclusive,
+           GreedyMaxCover,
 )
 modules = ("re", "os",
            "ConfigParser",
            "shutil","copy"
 )
 
-directory = os.path.expanduser("~/code/PyCharmProjects/contextAggregator/test_files/data/10_100_10_10/tree")
+directory = os.path.expanduser("~/code/PyCharmProjects/contextAggregator/test_files/data/10_100_10_10/mesh")
 print directory
 print os.path.exists(directory)
 # get all the simulation files
