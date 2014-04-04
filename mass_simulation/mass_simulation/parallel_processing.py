@@ -94,27 +94,34 @@ modules = ("re", "os",
            "shutil","copy","operator"
 )
 
-directory = os.path.expanduser("~/code/PyCharmProjects/contextAggregator/test_files/data/10_100_10_10/mesh")
-print directory
-print os.path.exists(directory)
-# get all the simulation files
-network_files = glob.glob(directory + os.sep + "*.txt")
+def run_parallel(subdir):
+    directory = os.path.expanduser("~/code/PyCharmProjects/contextAggregator/test_files/data/%s" % subdir)
+    print directory
+    print os.path.exists(directory)
+    # get all the simulation files
+    network_files = glob.glob(directory + os.sep + "*.txt")
 
-def function_to_run(network_file):
-    return process_one_network_file(network_file)
+    def function_to_run(network_file):
+        return process_one_network_file(network_file)
 
-ppservers = ("146.6.28.105:30000",)
-#ppservers=()
+    ppservers = ("146.6.28.105:30000",)
+    #ppservers=()
 
-job_server = pp.Server(ppservers=ppservers)
+    job_server = pp.Server(ppservers=ppservers)
 
-#fn = pp.Template(job_server, sum_primes, (a.A, b.B), ("a","b","math"))
-fn = pp.Template(job_server, function_to_run, methods, modules)
+    #fn = pp.Template(job_server, sum_primes, (a.A, b.B), ("a","b","math"))
+    fn = pp.Template(job_server, function_to_run, methods, modules)
 
-jobs = [(network_file, fn.submit(network_file)) for network_file in network_files]
+    jobs = [(network_file, fn.submit(network_file)) for network_file in network_files]
 
-for input, job in jobs:
-    print "Processing", input, "is ", job()
+    for input, job in jobs:
+        print "Processing", input, "is ", job()
 
-job_server.print_stats()
+    job_server.print_stats()
+
+if __name__ == "__main__":
+    subdirs = ["10_100_10_80/mesh","10_100_10_80/tree","200_500_50_50/mesh","200_500_50_50/tree"]
+    # 10_100_10_10/mesh, 10_100_10_10/tree
+    for subdir in subdirs:
+        run_parallel(subdir)
 
