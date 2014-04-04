@@ -43,7 +43,7 @@ class Network(object):
         return self.network
 
     def get_host_ids(self):
-        return self.network.keys()
+        return sorted(self.network.keys())
 
     def get_network(self):
         return self.network

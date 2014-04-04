@@ -25,7 +25,8 @@ class TestContextAggregator(unittest.TestCase):
         hosts = [h0, h1, h2]
         neighbors = {0:[1], 1:[0,2], 2:[1]}
 
-        test_directory, sample = make_ready_for_test("normal","test1","aggregate")
+        test_files_directory = get_test_files_directory()
+        test_directory, sample = make_ready_for_test(test_files_directory,"normal","test1","aggregate")
 
         config = {"hosts":hosts, "neighbors":neighbors,\
                   "test_directory":test_directory, "sample":sample, \
@@ -40,7 +41,8 @@ class TestContextAggregator(unittest.TestCase):
         hosts = [h0, h1, h2]
         neighbors = {0:[1], 1:[0,2], 2:[1]}
 
-        test_directory, sample = make_ready_for_test("normal","test1","singles")
+        test_files_directory = get_test_files_directory()
+        test_directory, sample = make_ready_for_test(test_files_directory, "normal","test1","singles")
         config = {"hosts":hosts, "neighbors":neighbors,\
                   "test_directory":test_directory, "sample":sample, \
                   ContextAggregator.PM:ContextAggregator.SINGLE_ONLY_MODE}
