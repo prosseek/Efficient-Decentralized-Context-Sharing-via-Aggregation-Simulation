@@ -6,6 +6,12 @@ from ConfigParser import *
 
 CONFIGURATION_FILE_FOR_TEST = "config.cfg"
 
+def get_network1():
+    directory = get_test_files_directory()
+    file_path = directory + os.sep + "tmp" + os.sep + "network1.txt"
+    assert os.path.exists(file_path), "No %s exists - check if it is deleted" % file_path
+    return file_path
+
 def get_test_files_directory():
     """
     >>> get_test_files_directory() is not None
