@@ -90,7 +90,8 @@ modules = ("re", "os",
            "shutil","copy"
 )
 
-directory = os.path.abspath("~/code/PyCharmProjects/contextAggregator/test_files/data/10_100_10_10/tree")
+directory = os.path.expanduser("~/code/PyCharmProjects/contextAggregator/test_files/data/10_100_10_10/tree")
+print directory
 print os.path.exists(directory)
 # get all the simulation files
 network_files = glob.glob(directory + os.sep + "*.txt")
