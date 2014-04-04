@@ -90,14 +90,16 @@ modules = ("re", "os",
            "shutil","copy"
 )
 
-directory = "/Users/smcho/code/PyCharmProjects/contextAggregator/test_files/data/10_100_10_10/tree"
+directory = os.path.abspath("~/code/PyCharmProjects/contextAggregator/test_files/data/10_100_10_10/tree")
+print os.path.exists(directory)
 # get all the simulation files
 network_files = glob.glob(directory + os.sep + "*.txt")
 
 def function_to_run(network_file):
     return process_one_network_file(network_file)
 
-ppservers = ("146.6.28.105:30000",)
+ppservers = ("146.6.28.105:30001",)
+#ppservers=()
 
 job_server = pp.Server(ppservers=ppservers)
 
