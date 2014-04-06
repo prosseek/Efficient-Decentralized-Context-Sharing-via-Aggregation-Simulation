@@ -6,14 +6,14 @@ import random
 from utils import *
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
-pdf_dir = current_dir + os.sep + "mote_loc_data" + os.sep + "pdf"
+pdf_dir = current_dir + os.sep + ".." + os.sep + "mote_loc_data" + os.sep + "pdf"
 file1 = os.path.join(pdf_dir, "alpha_0.1.txt")
 file5 = os.path.join(pdf_dir, "alpha_0.5.txt")
 ad_file1 = os.path.join(pdf_dir, "alpha_0.1.txt.txt")
 ad_file5 = os.path.join(pdf_dir, "alpha_0.5.txt.txt")
 
 loc_data = os.path.join(pdf_dir, "mote_locs.txt")
-sample_data = os.path.join(pdf_dir, "sensor.txt")
+sample_data = os.path.join(pdf_dir, "sensor.500.txt")
 
 def get_position(length, count):
     """
@@ -96,7 +96,9 @@ def run():
 
     row_count = len(lines)
     col_count = len(lines[0])
-    res, res2 = get_positions(row_count, 50, disturbance_range=3.0)
+    # 50 -> 50x50 = 2500
+    # 22 -> 22x22 = 484
+    res, res2 = get_positions(row_count, 22, disturbance_range=3.0)
 
     f_loc = open(loc_data, "w")
     f_sample = open(sample_data, "w")

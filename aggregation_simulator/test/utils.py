@@ -17,4 +17,5 @@ def get_test_network(condition, network_name):
 def runit(condition, test_name, test_sub_name, disconnection_rate = 0.0, drop_rate=0.0):
     d = get_test_files_directory()
     #network_dir = get_test_network(condition, test_name)
-    run_simulation(d, condition, test_name, test_sub_name, disconnection_rate, drop_rate)
+    run_simulation(d, condition=condition, test_sub_name=test_sub_name, disconnection_rate=disconnection_rate,
+                   drop_rate=drop_rate)

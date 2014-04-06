@@ -18,7 +18,7 @@ class TestGenerateNetwork(unittest.TestCase):
 
     def test_gen_pdf_sample(self):
         current_dir = os.path.dirname(os.path.abspath(__file__))
-        location_file = os.path.join(current_dir + os.sep + "../mote_loc_data/pdf", "mote_locs.txt")
+        location_file = os.path.join(current_dir + os.sep + "../mote_loc_data/pdf", "mote_locs.2500.txt")
         con(location_file, "network14.txt", 14)
 
 if __name__ == "__main__":

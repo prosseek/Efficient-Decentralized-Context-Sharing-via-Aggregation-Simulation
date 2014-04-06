@@ -13,6 +13,7 @@ import distutils.core
 def get_sample_name(test_name):
     return test_name + "_sample.txt"
 
+#TODO: Why sample is  generated here?
 def make_ready_for_test(network_dir, test_name, condition, test_sub_name):
     """Given test_for_real_world name in test_files directory, and sub directory
     Returns the test_directory where the reports are recorded, and the sample file
@@ -57,8 +58,17 @@ def make_ready_for_test(network_dir, test_name, condition, test_sub_name):
 
     return test_report_sub_directory, sample
 
-def run_simulation(network_dir, condition, test_name, test_sub_name, disconnection_rate = 0.0, drop_rate=0.0):
+def run_simulation(network_dir, condition, test_sub_name, disconnection_rate=0.0, drop_rate=0.0):
+    """
+    Network directory should contain network and sample files
+    """
+    test_name = os.path.basename(network_dir)
+    print "%s - %s" % (network_dir, test_name)
     network_file_path = os.path.join(network_dir, test_name + ".txt")
+    assert os.path.exists(network_file_path), "No network file %s exists " % network_file_path
+    sample_file_path = os.path.join(network_dir, test_name + "_sample.txt")
+    assert os.path.exists(sample_file_path), "No network file %s exists " % sample_file_path
+
     network = Network(network_file_path)
     host_ids = network.get_host_ids() # [h0, h1, h2]
     hosts = []
