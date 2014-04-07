@@ -79,10 +79,58 @@ class ContextDatabase(object):
         self.timestamp[timestamp].aggregates = aggregates
 
     def get_singles(self, timestamp=0):
+        """When timestamp is negative number, it returns the newest timestamp
+        """
+        if timestamp < 0: timestamp = self.get_last_timestamp()
         return self.timestamp[timestamp].singles
 
+    def get_single_from_id(self, id, timestamp=0):
+        """
+        >>> cd = ContextDatabase()
+        >>> s = set([Context(value=1.0, cohorts=[3])])
+        >>> a = set([Context(value=2.0, cohorts=[1,2])])
+        >>> cd.set(s, a)
+        >>> cd.get_single_from_id(3).get_id() == 3
+        True
+        """
+        singles = self.get_singles(timestamp)
+        for s in singles:
+            if s.get_id() == id: return s
+        return None
+
     def get_aggregates(self, timestamp=0):
+        if timestamp < 0: timestamp = self.get_last_timestamp()
         return self.timestamp[timestamp].aggregates
+
+    def get_last_timestamp(self):
+        """
+        >>> last_timestamp = 123
+        >>> cd = ContextDatabase()
+        >>> s ={Context(value=1.0, cohorts=[0])}
+        >>> a ={Context(value=2.0, cohorts=[1,2])}
+        >>> cd.set(s, a, 0)
+        >>> s ={Context(value=1.0, cohorts=[1])}
+        >>> a ={Context(value=2.0, cohorts=[1,2,3])}
+        >>> cd.set(s, a, last_timestamp)
+        >>> cd.get_last_timestamp() == last_timestamp
+        True
+        """
+        # timestamp is negative, so get the newest timestamp
+        return sorted(self.timestamp.keys(), reverse=True)[0]
+
+    def update_context_hopcount(self, id, value):
+        """
+        >>> cd = ContextDatabase()
+        >>> s ={Context(value=1.0, cohorts=[3])}
+        >>> a ={Context(value=2.0, cohorts=[1,2])}
+        >>> cd.set(s, a, 0)
+        >>> cd.update_context_hopcount(3, Context.SPECIAL_CONTEXT)
+        >>> cd.get_single_from_id(3).hopcount == Context.SPECIAL_CONTEXT
+        True
+        """
+        single = self.get_single_from_id(id)
+        if single is not None:
+            single.hopcount = value
 
 if __name__ == "__main__":
     import doctest

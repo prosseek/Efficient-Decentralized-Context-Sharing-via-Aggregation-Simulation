@@ -1,6 +1,54 @@
 from utils_is import *
 from utils_same import *
 
+def is_in(context, contexts):
+    """
+
+    >>> contexts = {Context(value=1.0, cohorts=[1]), Context(value=2.0, cohorts=[2])}
+    >>> context = Context(value=1.0, cohorts=[2], hopcount=10)
+    >>> not is_in(context, contexts)
+    False
+    """
+
+    cohorts1 = context.get_cohorts_as_set()
+
+    for c in contexts:
+        cohorts2 = c.get_cohorts_as_set()
+        if cohorts1 == cohorts2:
+            return c
+    return False
+
+def remove_if_in(context, contexts):
+    """
+
+    >>> contexts = {Context(value=1.0, cohorts=[1]), Context(value=2.0, cohorts=[2])}
+    >>> context = Context(value=1.0, cohorts=[2], hopcount=10)
+    >>> not is_in(context, contexts)
+    False
+    >>> remove_if_in(context, contexts)
+    >>> is_in(context, contexts)
+    False
+    """
+    c = is_in(context, contexts)
+    if c is not None:
+        contexts.remove(c)
+
+def get_average(contexts):
+    """
+    Caution: It assumes all the cohorts are exclusive.
+
+    >>> a = {Context(value=2.0, cohorts=[1,2,3]), Context(value=1.0, cohorts=[5])}
+    >>> get_average(a) == 1.75
+    True
+    """
+    total_size = 0
+    value = 0
+    for c in contexts:
+        size = len(c)
+        total_size += size
+        value += (c.value * size)
+    return value/total_size
+
 def empty_list(input):
     """
     >>> a = [[],[],[]]
@@ -49,11 +97,17 @@ def get_matching_single_contexts(single_contexts, set_of_numbers):
     >>> r = get_matching_single_contexts(singles, [0,1])
     >>> same({Context(value=0.0, cohorts={0}), Context(value=0.0, cohorts={1})}, r)
     True
+    >>> singles = {Context(value=0.0, cohorts={1}, hopcount=Context.SPECIAL_CONTEXT), Context(value=0.0, cohorts={3}), Context(value=0.0, cohorts={2})}
+    >>> r = get_matching_single_contexts(singles, [-1,3])
+    >>> same({Context(value=0.0, cohorts={1}, hopcount=Context.SPECIAL_CONTEXT), Context(value=0.0, cohorts={3})}, r)
+    True
     """
     result = set()
     for c in single_contexts:
         id = c.get_id()
         assert id != Context.AGGREGATED_CONTEXT
+        if c.hopcount == Context.SPECIAL_CONTEXT:
+            id = -id
         if id in set_of_numbers:
             result.add(c)
     return result

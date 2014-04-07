@@ -107,6 +107,9 @@ class ContextAggregator(object):
         self.new_aggregate = None
         self.filtered_singles = None
 
+        self.data = None
+        self.average = None
+
     def __reset(self):
         self.input.reset()
         self.context_database.reset()
@@ -303,6 +306,7 @@ class ContextAggregator(object):
                         context = copy(s)
                         context.hopcount = 0
                         results.add(context)
+
         elif self.is_single_only_mode():
             for s in singles:
                 results.add(s)
@@ -404,12 +408,32 @@ class ContextAggregator(object):
                         selected_non_primes = m.run(non_primes)
             self.new_aggregate = self.create_new_aggregate(contexts=[combined_singles, primes, selected_non_primes], timestamp=timestamp)
             aggregates = contexts_to_standard({self.new_aggregate})
+            self.average = self.new_aggregate.value # In aggregation, average is the value of new aggregates
         else:
+            self.average = get_average(self.get_singles(-1))
             aggregates = [[],[]]
+
+        # SMCHO - simulation purposes
+
         self.assorted_context_database.set(combined_singles, primes, non_primes, selected_non_primes, timestamp)
 
         # Only filtered singles are the candidates
         self.filtered_singles = self.filter_singles(combined_singles)
+
+        variation = self.data - self.average
+        percentage_variation = abs(variation)/self.average*100.0
+        #print "iteration (%d), host (%d) variation (%4.2f)" % (iteration, self.id, percentage_variation)
+
+        if self.is_aggregation_mode() and percentage_variation > self.config["threshold"]: # Threshold is 50 as now
+            context = Context(value=self.data, cohorts=[self.id], hopcount=Context.SPECIAL_CONTEXT, timestamp=timestamp)
+            # update the current context to have special context flag
+            # HINT: You may just update it without checking.
+            print "Weird, diesseminate myself %d %d" % (self.id, iteration)
+            # it just compares the id and hopcount is ignored in comparison
+            remove_if_in(context, self.filtered_singles)
+            self.filtered_singles.add(context)
+            # the single context in the db should be updated
+            self.context_database.update_context_hopcount(self.id, Context.SPECIAL_CONTEXT)
 
         # OutputSelector requires all the data format as standard
         singles = contexts_to_standard(self.filtered_singles)
@@ -586,6 +610,9 @@ class ContextAggregator(object):
         """
         if self.is_this_new_timestamp(timestamp):
             sampled_data, special_flag = self.sample(timestamp)
+            # store the sampled data for comparison purposes
+            self.data = sampled_data
+
             hopcount = 0
             if special_flag:
                 hopcount = Context.SPECIAL_CONTEXT

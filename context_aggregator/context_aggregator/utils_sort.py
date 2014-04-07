@@ -3,6 +3,7 @@
 #
 
 from context.context import Context
+from utils_standard import aggregated_contexts_to_list_of_standard
 
 def sort_singles(contexts):
     """
@@ -26,8 +27,16 @@ def sort_aggregates(contexts):
     True
     >>> print r[0],r[1],r[2]
     v(10.00):c([1,2,3,6,7]):h(0):t(5) v(10.00):c([1,2,3]):h(0):t(5) v(10.00):c([1,3]):h(4):t(5)
+    >>> i = {Context(1,[1,2,3,4]), Context(3,[5,1,4]), Context(2,[4,2,3])}
+    >>> r = sort_aggregates(i)
+    >>> aggregated_contexts_to_list_of_standard(r) ==  [[1, 4, 5], [2, 3, 4], [1, 2, 3, 4]]
+    True
+    >>> i = {Context(25.08,[26,27,28,29,30],-1,0), Context(24.83,[28,29,30,31,32],-1,0), Context(25.26,[40,41,43,44,45],-1,0), Context(25.10,[28,29,30,40,43],-1,0)}
+    >>> r = sort_aggregates(i)
+    >>> aggregated_contexts_to_list_of_standard(r) == [[26, 27, 28, 29, 30], [28, 29, 30, 31, 32], [28, 29, 30, 40, 43], [40, 41, 43, 44, 45]]
+    True
     """
-    return sorted(list(contexts), key=len, reverse=True)
+    return sorted(list(contexts), key=lambda a: (-len(a), list(a.get_cohorts_as_set())))
 
 def sort(contexts):
     """Given a set, sort the set in terms of size of elements, and return a sorted list

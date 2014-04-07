@@ -90,6 +90,7 @@ methods = (process_one_network_file,
            MaxCover,
            GreedyMaxCover,
            check_drop,
+           get_average,
 )
 modules = ("re", "os",
            "ConfigParser",
@@ -210,7 +211,9 @@ if __name__ == "__main__":
         assert os.path.exists(network_file_path), "no %s exists" % network_file_path
         assert os.path.exists(sample_file_path), "no %s exists" % sample_file_path
 
-        network_dir = make_ready_for_one_file_simulation(simulation_root_dir=simulation_root_dir, network_file=network_file_path, sample_file=sample_file_path)
+        network_dir = make_ready_for_one_file_simulation(simulation_root_dir=simulation_root_dir,
+                                                         network_file_path=network_file_path,
+                                                         sample_file_path=sample_file_path)
 
         for key, value in choices.items():
             print key, value
