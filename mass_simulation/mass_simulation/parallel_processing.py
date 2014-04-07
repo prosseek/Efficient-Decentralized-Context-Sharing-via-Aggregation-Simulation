@@ -194,14 +194,14 @@ if __name__ == "__main__":
     if not os.path.exists(simulation_root_dir): os.makedirs(simulation_root_dir)
     base_directory = get_configuration("config.cfg","TestDirectory","test_files_directory")
     network_files = [
-        # "pseudo_realworld_50",
-        # "pseudo_realworld_30",
-        # "real_world_intel_6",
-        # "real_world_intel_10"
-        "test_network1"
+        "pseudo_realworld_50",
+        "pseudo_realworld_30",
+        "real_world_intel_6",
+        "real_world_intel_10"
+        #"test_network1"
     ]
-    #choices = {"drop_rate":(20, 0.0, 50.0, 5.0), "disconnection_rate":(20, 0.0, 50.0, 5.0)}
-    choices = {"drop_rate":(2, 0.0, 5.0, 5.0)}
+    choices = {"drop_rate":(5, 0.0, 50.0, 5.0), "disconnection_rate":(20, 0.0, 50.0, 5.0)}
+    #choices = {"drop_rate":(2, 0.0, 5.0, 5.0)}
     for file in network_files:
         # make ready for the simulation
         file_name = os.path.join(base_directory, file)
