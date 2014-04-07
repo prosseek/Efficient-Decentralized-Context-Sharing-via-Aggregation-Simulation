@@ -9,13 +9,16 @@ def get_dir(network_dir, condition, sub_name, host, timestamp=0):
     directory = network_dir + os.sep + condition + os.sep + sub_name + os.sep + host + os.sep + timestamp
     return directory
 
+def get_intel_test_dir():
+    return get_configuration("config.cfg", "TestDirectory", "intel_test_root_dir")
+
 def get_simple_test_dir():
     return get_configuration("config.cfg", "TestDirectory", "simple_test_root_dir")
 
 def get_img_report_dir():
     return get_configuration("config.cfg", "TestDirectory","img_report_root_directory")
 
-def get_host_names(network_dir, condition, sub_name):
+def get_host_names(network_dir, condition="normal", sub_name=""):
     """Get the host names for the network + condition + sub_name in sorted way
     >>> network_dir = os.path.join(simple_test_root_dir(), "test_network1")
     >>> print get_host_names(network_dir, "normal", "singles")

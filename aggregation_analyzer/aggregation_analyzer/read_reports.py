@@ -1,15 +1,53 @@
+"""
+{'disseminate_abnormal':
+    {'aggregation':
+        {'host7':
+            {0: {'Received': [2, 2, 0],
+                'Average number of cohorts': [0.0, 0, 0],
+                'Estimated average': 7.0,
+                'Correct average': 4.5,
+                '% precision': [44.44, -40.94],
+                'Identified rate': [12.5, 1, 8, 12.5, 1, 8],
+                'null IO': False,
+                'Sent': [2, 2, 0],
+                'Identified values': ' [?(1), ?(2), ?(3), ?(4), ?(5), ?(6), 7.00, ?(8)]\n',
+                'Estimated values': [7.0, 7.0, 7.0, 7.0, 7.0, 7.0, 7.0, 7.0],
+                'Correct values': [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0]},
+            1: {'Received': [1, 0, 1], ...
+
+"""
 import os
 import glob
 import re
+import cPickle
 
 from utils import *
 from utils_location import *
+from aggregation_simulator.network import Network
 
 class ReadReports(object):
     def __init__(self, network_dir):
         self.network_dir = network_dir
         self.test_name = os.path.basename(network_dir)
         self.report = {}
+        self.hosts = self.get_hosts()
+
+    #@staticmethod
+    def get_hosts(self):
+        """
+        >>> d = get_simple_test_dir() + os.sep + "test_network1"
+        >>> r = ReadReports.get_hosts(d)
+        >>> r == ['host1', 'host2', 'host3', 'host4', 'host5', 'host6', 'host7', 'host8']
+        True
+        """
+        network_dir = self.network_dir
+        network_name = os.path.basename(network_dir)
+        network_file_path = os.path.join(network_dir, network_name + ".txt")
+        assert os.path.exists(network_file_path), "No %s network file exists" % network_file_path
+
+        n = Network(network_file_path)
+        ids = n.get_host_ids()
+        return ["host%d" % i for i in sorted(ids)]
 
     def read_iterations(self, directory):
         results = {}
@@ -69,18 +107,11 @@ class ReadReports(object):
                             # [1.00, ?(2), ?(3), ?(4), ?(5), ?(6), ?(7), ?(8)]
                             #        ^
                             # SyntaxError: invalid syntax
-                            result[key] = l.split(":")[1]
+                            result[key] = (l.split(":")[1]).rstrip()
 
         return result
 
-    def read_all(self):
-        """
-        >>> d = get_simple_test_dir() + os.sep + "test_network1"
-        >>> r = ReadReports(d)
-        >>> results = r.read_all()
-        >>> type(results) == dict and results is not None
-        True
-        """
+    def read_files_from_dir(self):
         dirs = os.listdir(self.network_dir)
 
         # d is the condition
@@ -96,7 +127,35 @@ class ReadReports(object):
                         self.report[condition][sub_name] = self.read(condition, sub_name, timestamp=0)
         return self.report
 
-    def read(self, condition = None, sub_name = None, timestamp=0):
+    def read_all(self, use_cache=False):
+        """
+        >>> d = get_simple_test_dir() + os.sep + "test_network1"
+        >>> r = ReadReports(d)
+        >>> results = r.read_all()
+        >>> type(results) == dict and results is not None
+        True
+        >>> results = r.read_all()
+        """
+        cache_img = get_configuration("config.cfg","TestDirectory","cache_dir") + os.sep + self.test_name + ".img"
+        dirname = os.path.dirname(cache_img)
+        if not os.path.exists(dirname):
+            os.makedirs(dirname)
+
+        if not os.path.exists(cache_img) or not use_cache:
+            result = self.read_files_from_dir()
+            with open(cache_img, "w") as f:
+                cPickle.dump(result, f)
+                f.close()
+        else:
+            # os.path.exists and not ignore_cache
+            with open(cache_img, "r") as f:
+                result = cPickle.load(f)
+                #result = cPickle.load(f.read())
+                f.close()
+        self.report = result
+        return result
+
+    def read(self, condition, sub_name, timestamp):
         """
         >>> d = get_simple_test_dir() + os.sep + "test_network1"
         >>> r = ReadReports(d)
@@ -106,15 +165,13 @@ class ReadReports(object):
         """
         # For simple API
         # Users can just call read() without parameters to get the whole directory
-        if condition is None and sub_name is None and timestamp == 0:
-            return self.read_all()
-        else:
-            host_names = get_host_names(self.network_dir, condition, sub_name)
-            results = {}
-            for h in host_names:
-                d = get_dir(self.network_dir, condition, sub_name, h, timestamp)
-                results[h] = self.read_iterations(d)
-            return results
+
+        host_names = get_host_names(self.network_dir, condition, sub_name)
+        results = {}
+        for h in host_names:
+            d = get_dir(self.network_dir, condition, sub_name, h, timestamp)
+            results[h] = self.read_iterations(d)
+        return results
 
 if __name__ == "__main__":
     import doctest
