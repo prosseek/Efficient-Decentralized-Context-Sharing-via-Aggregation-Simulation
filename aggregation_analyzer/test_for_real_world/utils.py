@@ -1,6 +1,6 @@
 from copy import copy
 
-from aggregation_analyzer.utils_read_reports import read_hosts_reports, get_data_from_iteration_key
+from aggregation_analyzer.read_reports import read_hosts_reports, get_data_from_iteration_key
 from aggregation_analyzer.utils_location import *
 
 def get_count_from_key(hosts_reports, key): # condition, name, kind, timestamp, key):

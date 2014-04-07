@@ -4,9 +4,24 @@ import re
 
 from aggregation_simulator.utils_configuration import get_test_report_root_directory, get_configuration, CONFIGURATION_FILE_FOR_TEST
 
-def get_host_names(condition, name, kind):
-    test_root_dir = get_test_report_root_directory()
-    directory = test_root_dir + os.sep + condition + os.sep + name + os.sep + kind + os.sep
+def get_dir(network_dir, condition, sub_name, host, timestamp=0):
+    timestamp = "%04d" % timestamp
+    directory = network_dir + os.sep + condition + os.sep + sub_name + os.sep + host + os.sep + timestamp
+    return directory
+
+def get_simple_test_dir():
+    return get_configuration("config.cfg", "TestDirectory", "simple_test_root_dir")
+
+def get_img_report_dir():
+    return get_configuration("config.cfg", "TestDirectory","img_report_root_directory")
+
+def get_host_names(network_dir, condition, sub_name):
+    """Get the host names for the network + condition + sub_name in sorted way
+    >>> network_dir = os.path.join(simple_test_root_dir(), "test_network1")
+    >>> print get_host_names(network_dir, "normal", "singles")
+    ['host1', 'host2', 'host3', 'host4', 'host5', 'host6', 'host7', 'host8']
+    """
+    directory = network_dir + os.sep + condition + os.sep + sub_name + os.sep
     files = os.listdir(directory)
 
     r = {}
@@ -20,21 +35,6 @@ def get_host_names(condition, name, kind):
     for key in sorted(r.keys()):
         result.append(r[key])
     return result
-
-# def get_report_root_directory():
-#     test_root_dir = get_test_report_root_directory()
-#     report_dir = os.path.join(test_root_dir, "report")
-#     if not os.path.exists(report_dir):
-#         os.makedirs(report_dir)
-#     return report_dir
-
-def get_test_location(condition, name, kind, host, timestamp=0):
-    test_root_dir = get_test_report_root_directory()
-    timestamp = "%04d" % timestamp
-    return test_root_dir + os.sep + condition + os.sep + name + os.sep + kind + os.sep + host + os.sep + timestamp
-
-def get_img_report_root_directory():
-    return get_configuration(CONFIGURATION_FILE_FOR_TEST, "TestDirectory","img_report_root_directory")
 
 if __name__ == "__main__":
     import doctest

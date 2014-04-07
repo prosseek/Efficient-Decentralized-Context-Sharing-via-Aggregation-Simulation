@@ -3,7 +3,7 @@
 """
 from gnuplotter import Gnuplotter
 
-from utils_read_reports import *
+from read_reports import *
 from utils_location import get_img_report_root_directory
 
 def generate_gif(value, gif_name):
