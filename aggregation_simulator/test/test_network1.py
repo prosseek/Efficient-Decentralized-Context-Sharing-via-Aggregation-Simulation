@@ -13,15 +13,14 @@ from aggregation_simulator.utils_configuration import *
 from aggregation_simulator.network import Network
 from context_aggregator.utils_same import same
 
-d = get_test_files_directory()
-network_file = os.path.join(d, "normal/test_network1/test_network1.txt")
-network = Network()
-network.read(network_file)
-dot_file_path = os.path.join(d, network_file + ".dot")
+d = os.path.join(get_test_files_directory(), "test_network1")
+test_name = "test_network1"
+network_file_path = os.path.join(d, test_name + ".txt")
+simulation_root_dir = get_configuration("config.cfg", "TestDirectory", "simple_test_root_dir")
 
-test_file_name = "test_network1_drop"
-disconnection_rate = 0.5
-drop_rate = 0.0
+network = Network()
+network.read(network_file_path)
+dot_file_path = os.path.join(d, network_file_path + ".dot")
 
 class TestNetwork(unittest.TestCase):
     def setUp(self):
@@ -40,20 +39,51 @@ class TestNetwork(unittest.TestCase):
 
     def test_dot_gen(self):
         network = Network()
-        network.read(network_file)
+        network.read(network_file_path)
         network.dot_gen(dot_file_path)
 
     def test_with_aggr(self):
-        return runit("normal", test_file_name, "aggregates", disconnection_rate=disconnection_rate,drop_rate=drop_rate)
+        params = {
+            "simulation_root_dir":simulation_root_dir,
+            "network_file_path":network_file_path,
+            "sample_file_path":None,
+            "condition":"normal",
+            "test_sub_name":"aggregation",
+            "disconnection_rate":0.0,
+            "drop_rate":0.0
+        }
+        return runit(**params)
+
+    def test_with_aggr_disseminate_abnormal(self):
+        params = {
+            "simulation_root_dir":simulation_root_dir,
+            "network_file_path":network_file_path,
+            "sample_file_path":None,
+            "condition":"disseminate_abnormal",
+            "test_sub_name":"aggregation",
+            "disconnection_rate":0.0,
+            "drop_rate":0.0,
+            "threshold":50
+        }
+        return runit(**params)
 
     def test_with_single(self):
-        return runit("normal", test_file_name, "singles", disconnection_rate=disconnection_rate,drop_rate=drop_rate)
+        params = {
+            "simulation_root_dir":simulation_root_dir,
+            "network_file_path":network_file_path,
+            "sample_file_path":None,
+            "condition":"normal",
+            "test_sub_name":"singles",
+            "disconnection_rate":0.0,
+            "drop_rate":0.0
+        }
+        return runit(**params)
 
-    def test_with_aggr_marked(self):
-        return runit("marked_sample", test_file_name, "aggregates", disconnection_rate=disconnection_rate,drop_rate=drop_rate)
-
-    def test_with_single_marked(self):
-        return runit("marked_sample", test_file_name, "singles", disconnection_rate=disconnection_rate,drop_rate=drop_rate)
+    # def test_with_aggr_marked(self):
+    #     return runit("marked_sample", test_file_name, "aggregates", disconnection_rate=disconnection_rate,drop_rate=drop_rate)
+    #
+    # def test_with_single_marked(self):
+    #     return runit("marked_sample", test_file_name, "singles", disconnection_rate=disconnection_rate,drop_rate=drop_rate)
 
 if __name__ == "__main__":
     # http://stackoverflow.com/questions/1068246/python-unittest-how-to-run-only-part-of-a-test_for_real_world-file

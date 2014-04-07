@@ -170,8 +170,7 @@ class Disaggregator(object):
                 break
 
             # sort the aggregates, for this we need a list
-            aggregates_list = sorted(aggregates, key=len)
-
+            aggregates_list = sorted(aggregates, key=lambda m: (len(m), list(m.get_cohorts_as_set())))
 
             for i, c in enumerate(aggregates_list):
                 super_contexts = aggregates_list[i+1:]

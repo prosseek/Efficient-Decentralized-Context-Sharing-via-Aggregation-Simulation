@@ -1,11 +1,5 @@
-from aggregation_simulator.utils_configuration import *
-from aggregation_simulator.network import Network
-from context_aggregator.context_aggregator import ContextAggregator
-from aggregation_simulator.utils_configuration import *
 from aggregation_simulator.run_simulation import *
-from aggregation_simulator.host import Host
-from aggregation_simulator.aggregation_simulator import AggregationSimulator
-from aggregation_simulator.utils import make_ready_for_test
+
 
 def get_test_network(condition, network_name):
     d = get_test_files_directory()
@@ -14,8 +8,14 @@ def get_test_network(condition, network_name):
     network.read(network_file)
     return network
 
-def runit(condition, test_name, test_sub_name, disconnection_rate = 0.0, drop_rate=0.0):
-    d = get_test_files_directory()
-    #network_dir = get_test_network(condition, test_name)
-    run_simulation(d, condition=condition, test_sub_name=test_sub_name, disconnection_rate=disconnection_rate,
-                   drop_rate=drop_rate)
+def runit(simulation_root_dir, network_file_path, sample_file_path, condition, test_sub_name, disconnection_rate = 0.0, drop_rate=0.0, threshold=sys.maxint):
+    network_dir = make_ready_for_one_file_simulation(simulation_root_dir=simulation_root_dir,
+                                                     network_file_path=network_file_path,
+                                                     sample_file_path=sample_file_path,
+                                                     remove_existing_files=False)
+    run_simulation(network_dir=network_dir,
+                   condition=condition,
+                   test_sub_name=test_sub_name,
+                   disconnection_rate=disconnection_rate,
+                   drop_rate=drop_rate,
+                   threshold=threshold)

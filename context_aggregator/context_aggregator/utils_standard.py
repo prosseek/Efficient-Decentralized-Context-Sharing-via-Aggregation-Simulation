@@ -46,7 +46,7 @@ def aggregated_contexts_to_list_of_standard(contexts):
     for c in contexts:
         r = contexts_to_standard(set([c]))[1]
         result.append(r)
-    return sorted(result, key=len)
+    return sorted(result, key=lambda a: (len(a), a))
 
 def contexts_to_standard2(context_set, remove_duplication=True):
     """
@@ -55,6 +55,10 @@ def contexts_to_standard2(context_set, remove_duplication=True):
 
     When return_list, duplication may be possible, so the caller should be make sure there is no duplication.
 
+    >>> x = set([Context(value=1.0, cohorts=[1], hopcount=Context.SPECIAL_CONTEXT), Context(value=1.0, cohorts=[2]), Context(value=1.0, cohorts=[3,4])])
+    >>> y = [[(1,-3),(2,0)],[3,4]]
+    >>> contexts_to_standard2(x) == y
+    True
     >>> x = set([Context(value=1.0, cohorts=[1], hopcount=0), Context(value=1.0, cohorts=[2], hopcount=-3), Context(value=1.0, cohorts=[3,4])])
     >>> y = [[(1,0),(2,-3)],[3,4]]
     >>> contexts_to_standard2(x) == y
@@ -97,6 +101,16 @@ def contexts_to_standard(context_set, remove_duplication=True):
 
     When return_list, duplication may be possible, so the caller should be make sure there is no duplication.
 
+    >>> x = set([Context(value=1.0, cohorts=[1], hopcount=Context.SPECIAL_CONTEXT), Context(value=1.0, cohorts=[2]), Context(value=1.0, cohorts=[3,4])])
+    >>> y = [[-1,2],[3,4]]
+    >>> contexts_to_standard(x) == y
+    True
+
+    >>> x = set([Context(value=1.0, cohorts=[1], hopcount=Context.SPECIAL_CONTEXT), Context(value=1.0, cohorts=[2],hopcount=Context.SPECIAL_CONTEXT), Context(value=1.0, cohorts=[3,4])])
+    >>> y = [[-2,-1],[3,4]]
+    >>> contexts_to_standard(x) == y
+    True
+
     >>> x = set([Context(value=1.0, cohorts=[1]), Context(value=1.0, cohorts=[2]), Context(value=1.0, cohorts=[3,4])])
     >>> y = [[1,2],[3,4]]
     >>> contexts_to_standard(x) == y
@@ -116,14 +130,19 @@ def contexts_to_standard(context_set, remove_duplication=True):
     >>> y = [[1],[3,4]]
     >>> contexts_to_standard(x) == y
     True
-    """
-    result = contexts_to_standard2(context_set, remove_duplication)
 
+    >>> x = None
+    >>> y = [[],[]]
+    >>> contexts_to_standard(x) == y
+    True
+    """
+    # y = [[(1,0),(1,0)],[3,4]]
     # When  result is [[],[]] with input of None, it shouldn't go through this routine
+    result = contexts_to_standard2(context_set, remove_duplication)
     if context_set is not None:
-        return [map(lambda m: m[0], result[0]), result[1]]
+        return [sorted(map(lambda m: m[0] if m[1] >= 0 else -m[0], result[0])), result[1]]
     else:
-        return result
+        return result # [[],[]] will be returned
 
 def is_standard2(input):
     """
@@ -163,7 +182,12 @@ def is_standard2(input):
 
 def is_standard(input):
     """
-
+    >>> in1 = [[-2,-1],[]]
+    >>> is_standard(in1)
+    True
+    >>> input = [[-2,1,3,4],[5,6,7]]
+    >>> is_standard(input)
+    True
     >>> input = [[1,2,3,4],[5,6,7]]
     >>> is_standard(input)
     True

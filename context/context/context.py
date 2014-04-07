@@ -65,7 +65,6 @@ class Context(object):
             # use set([...]), but [...]
             cohorts = cohort_type_as_bytearray(cohorts)
 
-        self.cohorts = cohorts
         self.timestamp = timestamp
         self.cohorts = cohorts
         self.hopcount = hopcount

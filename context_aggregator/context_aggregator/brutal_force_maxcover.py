@@ -114,6 +114,24 @@ class BrutalForceMaxCover(object):
         if len(list_length) == len(set(list_length)): return len(list_length)
         return -2 # Duplication exists, no meaning of path, -2 because initial max value is -1
 
+    def solve_list_input(self, all_lists):
+        """
+        >>> x = [[1,2,3],[3,4],[4,5,6]]
+        >>> ec = BrutalForceMaxCover()
+        >>> ec.solve_list_input(x) == [[1,2,3],[4,5,6]]
+        True
+        """
+        result = {}
+        for list in all_lists:
+            key = str(list)
+            result[key] = list
+        r = self.solve(result)
+
+        final_result = []
+        for key in r:
+            final_result.append(result[key])
+        return final_result
+
     def solve(self, all_dictionary):
         """
         >>> X = {'A': [1, 2, 3], 'B': [3, 4], 'C': [4, 5, 6]}

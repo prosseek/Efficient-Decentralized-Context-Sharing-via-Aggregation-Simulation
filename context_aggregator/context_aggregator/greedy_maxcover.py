@@ -87,6 +87,18 @@ class GreedyMaxCover(MaxCover):
 
         return selected
 
+    @staticmethod
+    def _solve_from_size(lists, selected_paths):
+        # get the largest element
+        if not lists:
+            return
+        else:
+            sorted_list = sorted(lists, key=lambda e: (-len(e), e))
+            l = sorted_list[0]
+            selected_paths.append(l)
+            l = GreedyMaxCover.remove_itself_and_enemies(lists, l)
+            GreedyMaxCover._solve_from_size(l, selected_paths)
+
 
     def solve(self, lists, previous_selection=None):
         """
@@ -101,12 +113,22 @@ class GreedyMaxCover(MaxCover):
         GreedyMaxCover._solve(lists, result1)
         size1 = MaxCover.length_of_total_elements(result1)
         size2 = -1
-        if previous_selection is not None:
-            result2 = GreedyMaxCover.get_selection_from_previous_results(lists, previous_selection)
-            size2 = MaxCover.length_of_total_elements(result2)
+        result2 = []
 
-        if size1 > size2: return result1
-        return result2
+        if previous_selection is not None:
+           result2 = GreedyMaxCover.get_selection_from_previous_results(lists, previous_selection)
+           size2 = MaxCover.length_of_total_elements(result2)
+
+        result3 = []
+        GreedyMaxCover._solve_from_size(lists, result3)
+        size3 = MaxCover.length_of_total_elements(result3)
+
+        if size1 > size2:
+            if size1 > size3: return result1
+            else: return result3
+        else:
+            if size2 > size3: return result2
+            else: return result3
 
 
 

@@ -56,6 +56,9 @@ def context_set_to_string(set_of_contexts, display_mode=0):
     [1,3:2]
     >>> print context_set_to_string(aggregates,display_mode=1)
     [1,3,4:2][2,3:]
+    >>> ag = {Context(24.83,[28,29,30],-1,0),Context(25.08,[28,29,30,40,43],-1,0),Context(25.10,[26,27,28,29,30],-1,0)}
+    >>> print context_set_to_string(ag)
+    [(25.10,[26,27,28,29,30],0,-1)(25.08,[28,29,30,40,43],0,-1)(24.83,[28,29,30],0,-1)]
     """
     if not set_of_contexts:
         return "[]"

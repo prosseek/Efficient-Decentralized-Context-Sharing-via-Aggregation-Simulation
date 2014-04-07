@@ -8,9 +8,12 @@ sys.path.insert(0, source_location)
 source_location = os.path.dirname(os.path.abspath(__file__)) + "/.."
 sys.path.insert(0, source_location)
 
+from context_aggregator.brutal_force_maxcover import BrutalForceMaxCover
+from context_aggregator.greedy_maxcover import GreedyMaxCover
 from context_aggregator.maxcover import MaxCover
 from utils import *
 from context_aggregator.utils_same import *
+
 
 world1 = [[47, 48], [37, 39], [24, 46], [48, 54], [15, 18], [30, 37], [38, 40], [20, 21, 22], [9, 11, 54],
          [32, 34, 36], [13, 14, 16, 19],[8, 10, 11, 13], [8, 10, 52, 53], [11, 13, 49, 50, 51],
@@ -20,7 +23,6 @@ world1 = [[47, 48], [37, 39], [24, 46], [48, 54], [15, 18], [30, 37], [38, 40], 
 selection1 = [[15, 18], [24, 46], [37, 39], [47, 48], [38, 40], [9, 11, 54], [32, 34, 36], [20, 21, 22], [13, 14, 16, 19], [49, 50, 51, 52, 53], [26, 27, 28, 30, 41, 43]]
 
 class TestMaxcover(unittest.TestCase):
-
     def setUp(self):
         pass
         
