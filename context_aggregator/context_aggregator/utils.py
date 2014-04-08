@@ -30,7 +30,7 @@ def remove_if_in(context, contexts):
     False
     """
     c = is_in(context, contexts)
-    if c is not None:
+    if c:
         contexts.remove(c)
 
 def get_average(contexts):

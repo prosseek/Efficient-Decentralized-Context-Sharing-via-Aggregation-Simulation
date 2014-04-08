@@ -1,5 +1,104 @@
 import math
 
+from copy import copy
+
+from aggregation_analyzer.read_reports import *
+from aggregation_analyzer.utils_location import *
+
+def recover_to_list(input):
+    """
+    >>> input = ' [?(1), ?(2), ?(3), ?(4), ?(5), 6.00, 7.00, 8.00]'
+    >>> recover_to_list(input) == ['?(1)', '?(2)', '?(3)', '?(4)', '?(5)', 6.0, 7.0, 8.0]
+    True
+    """
+    pos1 = input.index('[')
+    pos2 = input.index(']')
+    r = input[pos1+1:pos2]
+    results = []
+    for val in r.split(','):
+        if val.startswith('?'):
+            results.append(val)
+        elif val.startswith(' ?'):
+            results.append(val[1:])
+        else:
+            results.append(float(val))
+    return results
+
+def get_index_with_true(input):
+    """This is the routine to find the *real* communication speed:
+    True means that there is no input/ouput (no communication); in some cases the communication temporarily
+    stops to start again.
+
+    This example stops after 6 steps
+    >>> input = [False, False, False, False, False, False, True, True, True]
+    >>> get_index_with_true(input)
+    6
+    >>> input = [False, False, False, False, False, False, False, True, True]
+    >>> get_index_with_true(input)
+    7
+    >>> input = [False, True, False, False, False, False, False, True, True]
+    >>> get_index_with_true(input)
+    7
+    """
+    reversed_input = copy(input)
+    reversed_input.reverse()
+    result = -1
+    for i, value in enumerate(reversed_input):
+        if value == False:
+            result = i
+            break
+    if result == -1: raise RuntimeError("Input error: all values are True %s" % input)
+    return len(input) - i
+
+def sum_lists_column(input):
+    """Sums a list of list column by column
+
+    >>> input = [[1,2,3],[1,2,3],[1,2,3]]
+    >>> sum_lists_column(input) == [3,6,9]
+    True
+    """
+    return map(sum, zip(*input))
+
+def avg_lists_column(input):
+    """Sums a list of list column by column
+
+    >>> input = [[1,2,3],[1,2,3],[1,2,3]]
+    >>> avg_lists_column(input) == [1,2,3]
+    True
+    """
+    r = map(sum, zip(*input))
+    length = len(input)
+    return map(lambda m: m/length, r)
+
+def max_lists_column(input):
+    """Sums a list of list column by column
+
+    >>> input = [[1,2,3],[1,2,5],[7,2,3]]
+    >>> max_lists_column(input) == [7,2,5]
+    True
+    """
+    r = map(lambda m: max(m), zip(*input))
+    return r
+
+def min_lists_column(input):
+    """Sums a list of list column by column
+
+    >>> input = [[1,2,3],[1,2,5],[7,2,3]]
+    >>> min_lists_column(input) == [1,2,3]
+    True
+    """
+    r = map(lambda m: min(m), zip(*input))
+    return r
+
+def last_lists(input):
+    """Sums a list of list column by column
+
+    >>> input = [[1,2,3],[1,2,3],[1,2,3]]
+    >>> last_lists(input) == [3,3,3]
+    True
+    """
+    return map(lambda m: m[-1], input)
+
 def starts_with(name, keys):
     """
 

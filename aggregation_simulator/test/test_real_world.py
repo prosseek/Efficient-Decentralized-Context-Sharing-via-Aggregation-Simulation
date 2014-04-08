@@ -35,7 +35,7 @@ class TestRealWorld(unittest.TestCase):
             "network_file_path":network_file_path6,
             "sample_file_path":sample_file_path6,
             "condition":"normal",
-            "test_sub_name":"single",
+            "test_sub_name":"singles",
             "disconnection_rate":0.0,
             "drop_rate":0.0,
             "threshold":sys.maxint
@@ -60,11 +60,11 @@ class TestRealWorld(unittest.TestCase):
             "simulation_root_dir":simulation_root_dir,
             "network_file_path":network_file_path6,
             "sample_file_path":sample_file_path6,
-            "condition":"threshold_50",
+            "condition":"threshold_5",
             "test_sub_name":"aggregates",
             "disconnection_rate":0.0,
             "drop_rate":0.0,
-            "threshold":10
+            "threshold":5
         }
         return runit(**params)
 

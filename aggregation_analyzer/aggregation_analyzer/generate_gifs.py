@@ -5,6 +5,7 @@ from gnuplotter import Gnuplotter
 
 from read_reports import *
 from utils_location import get_img_report_dir
+from get_information import GetInformation
 
 class GenerateGifs(object):
     def __init__(self, dir_name = "tmp"):
@@ -17,7 +18,7 @@ class GenerateGifs(object):
         >>> value = [23.64, 23.50, 23.28, 23.48, 22.86, 22.86, 22.73, 22.50, 22.66, 22.50, 21.52, 21.03, 21.36, 22.49, 22.76, 23.34, 23.60, 23.23, 24.01, 23.87, 24.07, 24.42, 24.59, 25.00, 25.20, 24.95, 25.19, 25.24, 24.95, 25.06, 24.53, 24.38, 24.21, 24.64, 24.92, 25.22, 24.91, 24.40, 24.57, 25.05, 25.05, 25.21, 25.18, 26.25, 24.79, 23.88, 25.77, 24.17, 24.79, 24.30, 23.96, 23.87, 23.16, 22.11]
         >>> GenerateGifs(dir_name="experiments/hello").generate_diff_gif(ref_value, value, "hello_dif.gif", config)
         """
-        diff_value = [value[i] - val for i, val in enumerate(ref_value)]
+        diff_value = [abs(value[i] - val) for i, val in enumerate(ref_value)]
         self.generate_gif(diff_value, os.path.splitext(gif_name)[0] + ".diff.gif", config)
 
     def generate_gif(self, value, gif_name, config = None):
@@ -50,6 +51,37 @@ class GenerateGifs(object):
 
         config = {"img":True, "output_file_path":output_file_path}
         Gnuplotter.gnuplotter(config=config, contents=contents)
+
+
+    @staticmethod
+    def generate_gifs_for_one_host(output_dir_name, host, correct_value, values):
+        max_val = max(correct_value)
+        min_val = min(correct_value)
+
+        g = GenerateGifs("%s/abs" % output_dir_name)
+        param = {"max_val":max_val, "min_val":min_val}
+        for i, value in enumerate(values):
+            g.generate_gif(value, host + "_%04d.gif" % i, param)
+
+        g = GenerateGifs("%s/diffs" % output_dir_name)
+        max_val = GetInformation.get_diff_max(correct_value, values)
+        param = {"max_val":max_val, "min_val":0}
+        for i, value in enumerate(values):
+            g.generate_diff_gif(correct_value, value, host + "_%04d.gif" % i, param)
+
+    @staticmethod
+    def generate_gifs(network_dir, condition, sub_name):
+        r = ReadReports(network_dir)
+        get_info = GetInformation(r, use_cache=True)
+        hosts = get_info.get_hosts()
+        network_name = os.path.basename(network_dir)
+        correct_value = get_info.get_correct_values(condition)
+
+        for host in hosts:
+            values = get_info.get_iterations(condition, sub_name, host, "Estimated values")
+            output_dir_name = network_name + os.sep + condition + os.sep + sub_name + os.sep + host
+            GenerateGifs.generate_gifs_for_one_host(output_dir_name, host, correct_value, values)
+
 
 if __name__ == "__main__":
     import doctest

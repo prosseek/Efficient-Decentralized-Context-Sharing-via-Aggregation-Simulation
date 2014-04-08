@@ -107,7 +107,7 @@ class ReadReports(object):
                             # [1.00, ?(2), ?(3), ?(4), ?(5), ?(6), ?(7), ?(8)]
                             #        ^
                             # SyntaxError: invalid syntax
-                            result[key] = (l.split(":")[1]).rstrip()
+                            result[key] = recover_to_list((l.split(":")[1]).rstrip())
 
         return result
 

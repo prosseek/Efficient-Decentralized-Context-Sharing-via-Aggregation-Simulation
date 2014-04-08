@@ -31,13 +31,13 @@ class TestReadReport(unittest.TestCase):
         d = get_intel_test_dir() + os.sep + "real_world_intel_6"
         r = ReadReports(d)
 
-        t1 = time.clock()
+        t1 = time.time()
         results1 = r.read_all(use_cache=False)
-        print time.clock() - t1
+        print time.time() - t1
 
-        t1 = time.clock()
+        t1 = time.time()
         results2 = r.read_all(use_cache=True)
-        print time.clock() - t1
+        print time.time() - t1
 
         print len(results1), len(results2)
 
