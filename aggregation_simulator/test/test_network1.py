@@ -48,7 +48,7 @@ class TestNetwork(unittest.TestCase):
             "network_file_path":network_file_path,
             "sample_file_path":None,
             "condition":"normal",
-            "test_sub_name":"aggregation",
+            "test_sub_name":"aggregations",
             "disconnection_rate":0.0,
             "drop_rate":0.0
         }
@@ -60,7 +60,7 @@ class TestNetwork(unittest.TestCase):
             "network_file_path":network_file_path,
             "sample_file_path":None,
             "condition":"disseminate_abnormal",
-            "test_sub_name":"aggregation",
+            "test_sub_name":"aggregations",
             "disconnection_rate":0.0,
             "drop_rate":0.0,
             "threshold":50

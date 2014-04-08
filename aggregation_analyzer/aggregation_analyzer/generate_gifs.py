@@ -5,6 +5,7 @@ from gnuplotter import Gnuplotter
 
 from read_reports import *
 from utils_location import get_img_report_dir
+from get_processed_information import GetProcessedInformation
 from get_information import GetInformation
 
 class GenerateGifs(object):
@@ -64,7 +65,7 @@ class GenerateGifs(object):
             g.generate_gif(value, host + "_%04d.gif" % i, param)
 
         g = GenerateGifs("%s/diffs" % output_dir_name)
-        max_val = GetInformation.get_diff_max(correct_value, values)
+        max_val = GetProcessedInformation.get_diff_max(correct_value, values)
         param = {"max_val":max_val, "min_val":0}
         for i, value in enumerate(values):
             g.generate_diff_gif(correct_value, value, host + "_%04d.gif" % i, param)

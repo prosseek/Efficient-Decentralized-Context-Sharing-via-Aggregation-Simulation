@@ -26,10 +26,12 @@ from utils_location import *
 from aggregation_simulator.network import Network
 
 class ReadReports(object):
-    def __init__(self, network_dir):
+    def __init__(self, network_dir, auto_read = True, use_cache = True):
         self.network_dir = network_dir
         self.test_name = os.path.basename(network_dir)
         self.report = {}
+        if auto_read:
+            self.read_all(use_cache)
         self.hosts = self.get_hosts()
 
     #@staticmethod

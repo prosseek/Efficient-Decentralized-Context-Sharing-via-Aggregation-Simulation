@@ -53,74 +53,38 @@ class GetInformation(object):
             results.append(value[key])
         return results
 
-    @staticmethod
-    def get_diff_max(correct_value, iterations):
-        """In this example, the biggest difference is (5-1) = 4
-
-        >>> correct_value = [1,2,3,4,5]
-        >>> iterations = [[1,1,1,1,1], [2,2,2,2,2], [3,3,3,3,3]]
-        >>> GetInformation.get_diff_max(correct_value, iterations) == 4
-        True
-        """
-        zipped = zip(*iterations)
-        maxes = map(max, zipped)
-        mins = map(min, zipped)
-        diffs1 = map(abs, map(operator.sub, maxes, correct_value))
-        diffs2 = map(abs, map(operator.sub, mins, correct_value))
-        result = [max(i,j) for i,j in zip(diffs1, diffs2)]
-        return max(result)
-
     #
     # Get APIs
     #
-    def get_sum_list(self, condition, sub_name, key):
-        """
-        When key is "Sent": this list is returned
-        index - host, [Sum of single + aggr, number of single, number of aggr]
-        [[9, 9, 0], [9, 9, 0], [1, 1, 0], [9, 9, 0], [17, 17, 0], [9, 9, 0], [1, 1, 0], [1, 1, 0]]
-
-        >>> d = get_simple_test_dir() + os.sep + "test_network1"
-        >>> r = ReadReports(d)
-        >>> info = GetInformation(r, use_cache=False)
-        >>> info.get_sum_list("normal","singles","Sent")[0] == [9,9,0]
-        True
-        """
-        results = []
-        r = self.get_progress_data(condition, sub_name, key)
-        for host, value in r.items():
-            results.append(sum_lists_column(value))
-        return results
 
     def get_sent(self, condition, sub_name):
         """
         >>> d = get_simple_test_dir() + os.sep + "test_network1"
         >>> r = ReadReports(d)
         >>> info = GetInformation(r, use_cache=False)
-        >>> info.get_sent("normal","singles") == [56,56,0]
+        >>> info.get_sent("normal","singles")['host7'][0] == [2, 2, 0]
         True
         """
-        results = []
-        r = self.get_sum_list(condition, sub_name, "Sent")
-        return sum_lists_column(r)
+        r = self.get_progress_data(condition, sub_name, "Sent")
+        return r
 
     def get_received(self, condition, sub_name):
         """
         >>> d = get_simple_test_dir() + os.sep + "test_network1"
         >>> r = ReadReports(d)
         >>> info = GetInformation(r, use_cache=False)
-        >>> info.get_received("normal","singles") == [56,56,0]
+        >>> info.get_received("normal","singles")['host8'][0] == [1, 1, 0]
         True
         """
-        results = []
-        r = self.get_sum_list(condition, sub_name, "Received")
-        return sum_lists_column(r)
+        r = self.get_progress_data(condition, sub_name, "Sent")
+        return r
 
     def get_correct_values(self, condition):
         """
         >>> d = get_simple_test_dir() + os.sep + "test_network1"
         >>> r = ReadReports(d)
         >>> info = GetInformation(r, use_cache=False)
-        >>> info.get_correct_value("normal") == [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0]
+        >>> info.get_correct_values("normal") == [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0]
         True
         """
         if "singles" in self.report[condition]:
@@ -139,11 +103,85 @@ class GetInformation(object):
         >>> d = get_simple_test_dir() + os.sep + "test_network1"
         >>> r = ReadReports(d)
         >>> info = GetInformation(r, use_cache=False)
-        >>> info.get_identified_values("normal","singles")[0][0] == ['?(1)', '?(2)', '?(3)', '?(4)', '?(5)', '?(6)', 7.0, '?(8)']
+        >>> info.get_identified_values("normal","singles")['host1'][0] == [1.0, '?(2)', '?(3)', '?(4)', '?(5)', '?(6)', '?(7)', '?(8)']
         True
         """
-        results = []
-        r = self.get_progress_data(condition, sub_name, "Identified values")
-        for host, value in r.items():
-            results.append(value)
-        return results
+        return self.get_progress_data(condition, sub_name, "Identified values")
+
+    def get_estimated_average(self, condition, sub_name):
+        """
+        >>> d = get_simple_test_dir() + os.sep + "test_network1"
+        >>> r = ReadReports(d)
+        >>> info = GetInformation(r, use_cache=False)
+        >>> info.get_estimated_average("normal","singles")['host7']
+        [7.0, 7.0, 6.0, 5.0, 4.5, 4.5]
+        """
+        return self.get_progress_data(condition, sub_name, "Estimated average")
+
+    def get_estimated_values(self, condition, sub_name):
+        """
+        >>> d = get_simple_test_dir() + os.sep + "test_network1"
+        >>> r = ReadReports(d)
+        >>> info = GetInformation(r, use_cache=False)
+        >>> info.get_estimated_values("normal","singles")['host7'][0]
+        [7.0, 7.0, 7.0, 7.0, 7.0, 7.0, 7.0, 7.0]
+        """
+        return self.get_progress_data(condition, sub_name, "Estimated values")
+
+    def get_precision(self, condition, sub_name):
+        """
+        >>> d = get_simple_test_dir() + os.sep + "test_network1"
+        >>> r = ReadReports(d)
+        >>> info = GetInformation(r, use_cache=False)
+        >>> info.get_precision("normal","singles")['host7'][-1]
+        [100.0, 100.0]
+        """
+        return self.get_progress_data(condition, sub_name, "% precision")
+
+    def get_identified_rate(self, condition, sub_name):
+        """
+        >>> d = get_simple_test_dir() + os.sep + "test_network1"
+        >>> r = ReadReports(d)
+        >>> info = GetInformation(r, use_cache=False)
+        >>> info.get_identified_rate("normal","singles")['host7'][-1]
+        [100.0, 8, 8, 100.0, 8, 8]
+        """
+        return self.get_progress_data(condition, sub_name, "Identified rate")
+
+    def get_average_number_of_cohorts(self, condition, sub_name):
+        """
+        >>> d = get_simple_test_dir() + os.sep + "test_network1"
+        >>> r = ReadReports(d)
+        >>> info = GetInformation(r, use_cache=False)
+        >>> info.get_average_number_of_cohorts("normal","singles")['host7'][-1]
+        [0.0, 0, 0]
+        """
+        return self.get_progress_data(condition, sub_name, "Average number of cohorts")
+
+    def get_null_io(self, condition, sub_name):
+        """
+        >>> d = get_simple_test_dir() + os.sep + "test_network1"
+        >>> r = ReadReports(d)
+        >>> info = GetInformation(r, use_cache=False)
+        >>> info.get_null_io("normal","singles")['host7'] == [False, False, False, False, False, True]
+        True
+        """
+        return self.get_progress_data(condition, sub_name, "null IO")
+
+    def get_last_non_null_io(self, condition, sub_name):
+        """
+        >>> d = get_simple_test_dir() + os.sep + "test_network1"
+        >>> r = ReadReports(d)
+        >>> info = GetInformation(r, use_cache=False)
+        >>> info.get_last_non_null_io("normal","singles")['host7'] == 5
+        True
+        """
+        null_io = self.get_null_io(condition, sub_name)
+        result = {}
+        for host, value in null_io.items():
+            result[host] = get_index_with_true(value)
+        return result
+
+if __name__ == "__main__":
+    import doctest
+    doctest.testmod()
