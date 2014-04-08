@@ -63,8 +63,10 @@ class ReadReports(object):
                     i = int(p.group(1))
                     if type(i) is int:
                         results[i] = ReadReports.read_simulation_report(file)
-                except ValueError:
-                    pass # if the name is not 00..0 (int), don't do anything.
+                    else:
+                        raise RuntimeError("i is not int type %s" % type(i))
+                except ValueError, e:
+                    raise RuntimeError("(%s)%s/%s is wrong in the directory %d" % (e, file, base_name,i))
         return results
 
     @staticmethod

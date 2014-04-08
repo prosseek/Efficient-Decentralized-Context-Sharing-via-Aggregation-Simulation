@@ -5,10 +5,26 @@ from copy import copy
 from aggregation_analyzer.read_reports import *
 from aggregation_analyzer.utils_location import *
 
+def avg(l):
+    """
+    >>> l = [1,2,3]
+    >>> avg(l) == 2.0
+    True
+    """
+    return 1.0*sum(l)/len(l)
+
+def dict_to_list(dictionary):
+    """
+    >>> x = {'a':10, 'b':20}
+    >>> dict_to_list(x) == [10,20]
+    True
+    """
+    return [dictionary[key] for key in sorted(dictionary.keys())]
+
 def recover_to_list(input):
     """
-    >>> input = ' [?(1), ?(2), ?(3), ?(4), ?(5), 6.00, 7.00, 8.00]'
-    >>> recover_to_list(input) == ['?(1)', '?(2)', '?(3)', '?(4)', '?(5)', 6.0, 7.0, 8.0]
+    >>> input = ' [?(1), ?(2), ?(3), ?(4), ?(5), 6.00, 7.00, 5.00(*)]'
+    >>> recover_to_list(input) == ['?(1)', '?(2)', '?(3)', '?(4)', '?(5)', 6.0, 7.0, '5.00(*)']
     True
     """
     pos1 = input.index('[')
@@ -20,6 +36,8 @@ def recover_to_list(input):
             results.append(val)
         elif val.startswith(' ?'):
             results.append(val[1:])
+        elif val.endswith('(*)'):
+            results.append(val)
         else:
             results.append(float(val))
     return results

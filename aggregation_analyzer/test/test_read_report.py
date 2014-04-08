@@ -29,17 +29,20 @@ class TestReadReport(unittest.TestCase):
 
     def test_read_intel_reports(self):
         d = get_intel_test_dir() + os.sep + "real_world_intel_6"
-        r = ReadReports(d)
-
         t1 = time.time()
+        r = ReadReports(d, auto_read = False, use_cache = False)
         results1 = r.read_all(use_cache=False)
-        print time.time() - t1
+        time1 = time.time() - t1
+
 
         t1 = time.time()
+        r = ReadReports(d, auto_read = False, use_cache = True)
         results2 = r.read_all(use_cache=True)
-        print time.time() - t1
+        time2 = time.time() - t1
 
-        print len(results1), len(results2)
+        print "For test real_world_intel_6"
+        print time1, time2
+        print "--------------"
 
 
 if __name__ == "__main__":
