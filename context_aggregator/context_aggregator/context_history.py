@@ -153,7 +153,7 @@ class ContextHistory(object):
         container = self.get_container(timestamp=timestamp)
         if container is not None:
             return container.dictionary
-        return None
+        return {}
 
     def set(self, dictionary, timestamp=0):
         """

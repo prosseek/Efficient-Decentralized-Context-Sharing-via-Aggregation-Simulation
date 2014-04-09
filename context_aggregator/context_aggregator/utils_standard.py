@@ -180,6 +180,23 @@ def is_standard2(input):
     if len(set(input[0])) != len(input[0]) or len(set(input[1])) != len(input[1]): return False
     return True
 
+def is_dictionary_standard(input):
+    """Check if all the elements of dictionary input are in standard form
+    By definition, {} is *not* in standard form
+
+    >>> in1 = {1:[[],[]]}
+    >>> is_dictionary_standard(in1)
+    True
+    >>> in2 = {}
+    >>> is_dictionary_standard(in2)
+    False
+    """
+    assert type(input) is dict, "input is not dictionary"
+    if input == {}: return False
+    for value in input.values():
+        if not is_standard(value): return False
+    return True
+
 def is_standard(input):
     """
     >>> in1 = [[-2,-1],[]]

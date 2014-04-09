@@ -100,7 +100,7 @@ class GreedyMaxCover(MaxCover):
             GreedyMaxCover._solve_from_size(l, selected_paths)
 
 
-    def solve(self, lists, previous_selection=None):
+    def solve(self, lists, previous_selection=set()):
         """
         >>> x = {Context(value=1.0, cohorts={1,2,3}), Context(value=2.0, cohorts={2,3,4})}
         >>> m = GreedyMaxCover()
@@ -115,7 +115,7 @@ class GreedyMaxCover(MaxCover):
         size2 = -1
         result2 = []
 
-        if previous_selection is not None:
+        if previous_selection:
            result2 = GreedyMaxCover.get_selection_from_previous_results(lists, previous_selection)
            size2 = MaxCover.length_of_total_elements(result2)
 

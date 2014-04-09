@@ -3,21 +3,54 @@
 """
 
 from inputoutput import InputOutput
-from utils import get_matching_single_contexts, empty_dictionary
+from utils import get_matching_single_contexts, is_empty_dictionary
+from utils_standard import *
 
 class Output(InputOutput):
-    """Output is a dictionary format what to send
+    """Output is a dictionary format what to send; However, it's dictionary is in standard format([[],[]]) not in
+    context format. As a result, some of the methods are overridden.
 
-    However, it's dictionary is in standard format([[],[]]) not in
-    context format.
-
-    As a result, some of the methods are overridden.
     """
     def __init__(self):
         self.dictionary = {}
         self.actual_sent_dictionary = {}
 
+    def get_singles(self, id):
+        """
+        >>> o = Output()
+        >>> o.set_dictionary({1:[[1,2],[3,4]]})
+        >>> o.get_singles(1) == [1,2]
+        True
+        >>> o.get_aggregates(1) == [3,4]
+        """
+        assert id in self.dictionary
+        return self.dictionary[id][0]
+
+    def get_aggregates(self, id):
+        assert id in self.dictionary
+        return self.dictionary[id][1]
+
     def set_dictionary(self, dictionary):
+        """
+        >>> o = Output()
+        >>> o.set_dictionary({1:[[],[]]})
+        >>> o.get_dictionary() == {}
+        True
+        >>> o.set_dictionary({})
+        >>> o.get_dictionary() == {}
+        True
+        >>> o.set_dictionary({1:[[1],[]]})
+        >>> o.get_dictionary() == {1:[[1],[]]}
+        True
+        """
+        # You can set {} to the output dictionary, but as long as it's not empty the input should be in standard form
+        if dictionary != {}:
+            assert is_dictionary_standard(dictionary), "dictionary is not in standard form %s" % dictionary
+
+        # When dictionary is empty, make it explicitly null
+        if is_empty_dictionary(dictionary):
+            dictionary = {}
+
         self.dictionary = dictionary
         self.actual_sent_dictionary = {}
 
@@ -33,7 +66,7 @@ class Output(InputOutput):
         else:
             dictionary = self.actual_sent_dictionary
 
-        if empty_dictionary(dictionary):
+        if is_empty_dictionary(dictionary):
             return "{}"
         return "%s" % dictionary
 
@@ -62,7 +95,7 @@ class Output(InputOutput):
         return self.get_number_of_contexts_from_dictionary(self.actual_sent_dictionary)
 
     def generate_single_contexts(self, o, single_contexts):
-        singles = self.dictionary[o][0]
+        singles = self.get_singles(o) # dictionary[o][0]
         single_contexts = get_matching_single_contexts(single_contexts, singles)
         return single_contexts
 
@@ -72,6 +105,15 @@ class Output(InputOutput):
             # aggregate should be turned into set(), so you need to convert it into list first
             aggregate = [aggregate_contexts]
         return set(aggregate)
+
+    def is_empty(self):
+        """
+        >>> r = Output()
+        >>> r.is_empty()
+        True
+        >>> r.
+        """
+        return is_empty_dictionary(self.dictionary)
 
 if __name__ == "__main__":
     import doctest

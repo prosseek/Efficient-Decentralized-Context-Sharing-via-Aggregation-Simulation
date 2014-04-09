@@ -4,7 +4,7 @@
 
 from context.context import Context
 from utils_standard import contexts_to_standard
-from utils import empty_dictionary
+from utils import is_empty_dictionary
 
 class InputOutput(object):
     """database class"""
@@ -48,7 +48,7 @@ class InputOutput(object):
         result = {}
         for i, value in self.dictionary.items():
             result[i] = contexts_to_standard(value)
-        if empty_dictionary(result): return "{}"
+        if is_empty_dictionary(result): return "{}"
         return str(result)
 
     def get_senders(self):
@@ -80,6 +80,20 @@ class InputOutput(object):
                 else:
                     aggr_result += 1
         return single_result, aggr_result
+
+    def get_in_standard_from(self):
+        """
+
+        >>> c = InputOutput()
+        >>> c[1] = {Context(value=1.0, cohorts=[0])}
+        >>> c[2] = {Context(value=1.0, cohorts=[0,1,2,4])}
+        >>> c.get_in_standard() == {1: [[0], []], 2: [[], [0, 1, 2, 4]]}
+        True
+        """
+        results = {}
+        for key, value in self.dictionary.items():
+            results[key] = contexts_to_standard(value)
+        return results
 
 if __name__ == "__main__":
     import doctest

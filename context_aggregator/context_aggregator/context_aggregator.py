@@ -104,11 +104,14 @@ class ContextAggregator(object):
         self.output = Output()
         self.context_history = ContextHistory()
 
+        # instance variables for debugging purposes
         self.new_aggregate = None
         self.filtered_singles = None
-
         self.data = None
         self.average = None
+
+    def get_data(self):
+        return self.data
 
     def __reset(self):
         self.input.reset()
@@ -205,7 +208,12 @@ class ContextAggregator(object):
     def get_filtered_singles(self):
         return self.filtered_singles
 
-    def create_new_aggregate(self, contexts, timestamp=0):
+    ###################################
+    # STATIC METHODS
+    ###################################
+
+    @staticmethod
+    def create_new_aggregate(contexts, timestamp=0):
         """Given contexts (a list of a set of contexts, create a context that collects all
         the information in them)
 
@@ -213,14 +221,15 @@ class ContextAggregator(object):
         1. We can recover the aggregate without the x, whenever x is available.
         2. We can cover larger aggregate even when x is lost (or unavailable with any reason).
 
-        >>> d = ContextAggregator()
         >>> s1 = set([Context(value=1.0, cohorts=[0])])
         >>> c1 = set([Context(value=1.0, cohorts=[1,2])])
-        >>> c = d.create_new_aggregate([c1,s1])
+        >>> c = ContextAggregator.create_new_aggregate([c1,s1])
         >>> c.value
         1.0
         >>> c.get_cohorts_as_set() == set([0,1,2])
         True
+        >>> c = ContextAggregator.create_new_aggregate([s1, c1, set(), set()])
+        >>> c.value
         """
         sum = 0.0
         elements = set()
@@ -233,9 +242,6 @@ class ContextAggregator(object):
         c = Context(value=value, cohorts=elements, hopcount=Context.AGGREGATED_CONTEXT, timestamp=timestamp)
         return c
 
-    #
-    # Filter
-    #
     @staticmethod
     def remove_same_id_singles(singles):
         """
@@ -290,205 +296,29 @@ class ContextAggregator(object):
         result = set(aggr_dictionary.values())
         return result
 
-    def filter_singles(self, singles):
+    @staticmethod
+    def filter_singles_by_hopcount(singles, configuration):
         """Out of many input/stored singles, filter out the singles to send
         based on configuration.
 
         """
+        max_tau = configuration(ContextAggregator.MAX_TAU)
         results = set()
-
-        if self.is_aggregation_mode():
-            for s in singles:
-                if s.hopcount == Context.SPECIAL_CONTEXT or 0 <= s.hopcount <= self.configuration(ContextAggregator.MAX_TAU):
-                    results.add(s)
-                if self.configuration("propagate_recovered_singles"):
-                    if s.hopcount == Context.RECOVERED_CONTEXT:
-                        context = copy(s)
-                        context.hopcount = 0
-                        results.add(context)
-
-        elif self.is_single_only_mode():
-            for s in singles:
+        for s in singles:
+            if s.hopcount == Context.SPECIAL_CONTEXT or 0 <= s.hopcount <= max_tau:
                 results.add(s)
-
+            if configuration("propagate_recovered_singles"):
+                if s.hopcount == Context.RECOVERED_CONTEXT:
+                    context = copy(s)
+                    context.hopcount = 0
+                    results.add(context)
         return results
 
-    def run_dataflow(self, neighbors=None, timestamp=0, iteration=0):
-        """when input data has received information, it processes the data to generate the output
-
-        In this example with max_tau=1, when 1:[0,1,2], 2:[0], 3:[1] 4:[9]'(special context)
-        is given as a input, and [[2,3,4,5][5,6],[7,8]] is already stored as contexts
-
-        1. [0][1][9]' -> [2] is identified
-        2. [3,4,5],[5,6],[7,8] is now a new aggregates
-        3. [7,8] is a prime
-        4. [3,4,5],[5,6] is non_prime
-        5. [3,4,5] is selected_non_prime
-        6. new aggregates has [0,1,2,3,4,5,7,8,9] as elements
-        7. From filtering, [0][1][2][9]' will be propagated with [0,1,2,3,4,5,7,8,9] as an aggregate
-
-        Return value: dictionary that stores the standard form
-
-        * For 1: [0][1][9] and [1..9] is sent. [2] is not propagated
-
-        >>> d = ContextAggregator(config={ContextAggregator.PM: ContextAggregator.AGGREGATION_MODE, ContextAggregator.MAX_TAU: 1})
-        >>> # Emulating receive data from neighbors
-        >>> d.receive(1, set([Context(value=1.0, cohorts=[0,1,2])]))
-        >>> d.receive(2, set([Context(value=2.0, cohorts=[0])]))
-        >>> d.receive(3, set([Context(value=3.0, cohorts=[1])]))
-        >>> d.receive(4, set([Context(value=7.0, cohorts=[9], hopcount=Context.SPECIAL_CONTEXT)]))
-        >>> # Emulating accumulated contexts
-        >>> context_db = set([Context(value=1.0, cohorts=[2,4,5,3]),Context(value=1.0, cohorts=[5,6]),Context(value=7.0, cohorts=[7,8])])
-        >>> d.set_database(singles=set([]), aggregates=context_db, timestamp=10)
-        >>> d.context_history.set(dictionary={}, timestamp=10)
-        >>> r = d.run_dataflow(timestamp=10)
-        >>> # Emulating newly found singles and aggregates from database
-        >>> same(d.get_database_singles(timestamp=10), [[0,1,2,9],[]])
-        True
-        >>> same(d.get_database_aggregates(timestamp=10),[[7,8],[3,4,5],[6,5]])
-        True
-        >>> # Emulating the disaggregation process
-        >>> same(d.get_singles(timestamp=10), [[0,1,2,9],[]])
-        True
-        >>> same(d.get_primes(timestamp=10), [[],[7,8]])
-        True
-        >>> same(d.get_non_primes(timestamp=10), [[3,4,5], [5,6]])
-        True
-        >>> same(d.get_selected_non_primes(timestamp=10), [[3,4,5]])
-        True
-        >>> ### Check the new aggregate has correct elements
-        >>> d.get_new_aggregate().get_cohorts_as_set() == set([0,1,2,3,4,5,7,8,9])
-        True
-        >>> same(d.get_filtered_singles(), [[0,1,9],[]])
-        True
-        """
-
-        # if DEBUG:
-        #     print "host (%d) - iteration (%d)" % (self.id, iteration)
-
-        # 1. DISAGGREGATES
-        input_contexts = self.get_received_data()
-
-        # process the early return
-        if not input_contexts: # if there is no inputs
-            return {}    # there is nothing to compute and send, as they are same as before.
-
-        db_singles = self.get_database_singles(timestamp)
-        union_contexts = input_contexts.union(db_singles)
-
-        if self.is_aggregation_mode(): # self.configuration(ContextAggregator.PM) == ContextAggregator.AGGREGATION_MODE:
-            db_aggregates = self.get_database_aggregates(timestamp)
-            union_contexts = union_contexts.union(db_aggregates)
-
-            d = Disaggregator(union_contexts)
-            combined_singles, combined_aggregates = d.run()
-            combined_aggregates = ContextAggregator.remove_same_id_aggregates(combined_aggregates)
-
-        else:
-            combined_singles = union_contexts
-            combined_aggregates = set()
-
-        combined_singles = ContextAggregator.remove_same_id_singles(combined_singles)
-        self.set_database(combined_singles, combined_aggregates, timestamp=timestamp)
-
-        previous_selection = self.assorted_context_database.get_selected_non_primes(timestamp)
-        # ASSORT
-        primes = set()
-        non_primes = set()
-        selected_non_primes_list = [set()]
-        if self.is_aggregation_mode(): # if self.configuration(ContextAggregator.PM) == ContextAggregator.AGGREGATION_MODE:
-            if combined_aggregates:
-                primes, non_primes = get_prime(combined_aggregates)
-                if non_primes:
-                    m = GreedyMaxCover()
-                    #m = MaxCover()
-                    if previous_selection:
-                        selected_non_primes_list = m.run(non_primes, previous_selection)
-                    else:
-                        selected_non_primes_list = m.run(non_primes)
-
-            for selected_non_primes in selected_non_primes_list:
-                self.new_aggregate = self.create_new_aggregate(contexts=[combined_singles, primes, selected_non_primes], timestamp=timestamp)
-                aggregates = contexts_to_standard({self.new_aggregate})
-                self.average = self.new_aggregate.value # In aggregation, average is the value of new aggregates
-
-                self.assorted_context_database.set(combined_singles, primes, non_primes, selected_non_primes, timestamp)
-
-                # Only filtered singles are the candidates
-                self.filtered_singles = self.filter_singles(combined_singles)
-
-                variation = self.data - self.average
-                percentage_variation = abs(variation)/self.average*100.0
-                #print "iteration (%d), host (%d) variation (%4.2f)" % (iteration, self.id, percentage_variation)
-
-                if self.is_aggregation_mode() and percentage_variation > self.config["threshold"]: # Threshold is 50 as now
-                    context = Context(value=self.data, cohorts=[self.id], hopcount=Context.SPECIAL_CONTEXT, timestamp=timestamp)
-                    # update the current context to have special context flag
-                    # HINT: You may just update it without checking.
-                    print "Weird, diesseminate myself %d %d" % (self.id, iteration)
-                    # it just compares the id and hopcount is ignored in comparison
-                    remove_if_in(context, self.filtered_singles)
-                    self.filtered_singles.add(context)
-                    # the single context in the db should be updated
-                    self.context_database.update_context_hopcount(self.id, Context.SPECIAL_CONTEXT)
-
-                # OutputSelector requires all the data format as standard
-                singles = contexts_to_standard(self.filtered_singles)
-                # if not is_standard(singles):
-                #     print singles
-
-                new_info = add_standards(singles, aggregates)
-                inputs_in_standard_form = {}
-                for key, value in self.input.get_dictionary().items():
-                    inputs_in_standard_form[key] = contexts_to_standard(value)
-                history = self.context_history.get(timestamp)
-
-                # TODO:
-                # For the convention, None is returned when nothing is found in Container, and this
-                # causes an error condition.
-                # However, for testing code, this value can be None, so make this code for by passing the error
-                if history is None: history = {}
-                selector = OutputSelector(inputs=inputs_in_standard_form, context_history=history, new_info=new_info, neighbors=neighbors)
-                result = selector.run()
-
-                if not empty_dictionary(result):
-                    return result
-
-            return dict()
-
-        else: # single case
-
-            self.average = get_average(self.get_singles(-1))
-            aggregates = [[],[]]
-            self.assorted_context_database.set(combined_singles, primes, non_primes, selected_non_primes, timestamp)
-            self.filtered_singles = self.filter_singles(combined_singles)
-            singles = contexts_to_standard(self.filtered_singles)
-            new_info = add_standards(singles, aggregates)
-            inputs_in_standard_form = {}
-            for key, value in self.input.get_dictionary().items():
-                inputs_in_standard_form[key] = contexts_to_standard(value)
-            history = self.context_history.get(timestamp)
-            if history is None: history = {}
-            selector = OutputSelector(inputs=inputs_in_standard_form, context_history=history, new_info=new_info, neighbors=neighbors)
-            result = selector.run()
-            return result
-
-    def is_this_new_timestamp(self, timestamp=0):
-        """Checks if this is the start of timestamp
-
-        >>> c = ContextAggregator()
-        >>> c.is_this_new_timestamp()
-        True
-        """
-
-        if timestamp not in self.context_database.timestamp: return True
-        else:
-            return self.context_database.timestamp[timestamp] == {}
-
-    def sample(self, timestamp=0):
+    @staticmethod
+    def sample(samples, timestamp=0):
         """Sampling means read (acuquire) data at timestamp, and create a single context out of the data
         """
-        samples = self.get_sample_data()
+        #samples = self.get_sample_data()
 
         if samples is None:
             return -1, False
@@ -511,6 +341,185 @@ class ContextAggregator(object):
         #self.current_sample = sampled_value
         return sampled_value, special_flag
 
+    ###################################
+    # DATA FLOW
+    ###################################
+
+    def application_disseminate_when_above_average(self, new_aggregate, filtered_singles, timestamp, iteration):
+        """Application
+
+        Given average, compare the average with the sensor data to create and replace the single context
+
+        Side effect: filtered_singles are modified when necessary
+        """
+        average = new_aggregate.value
+        variation = self.get_data() - average
+        percentage_variation = abs(variation)/average*100.0
+
+        if percentage_variation > self.config["threshold"]: # Threshold is 50 as now
+            context = Context(value=self.get_data(), cohorts=[self.id], hopcount=Context.SPECIAL_CONTEXT, timestamp=timestamp)
+            print "Weird, diesseminate myself %d %d" % (self.id, iteration)
+            # it just compares the id and hopcount is ignored in comparison
+            remove_if_in(context, filtered_singles)
+            #
+            # WARINING! Side effect here!
+            #
+            filtered_singles.add(context)
+            # the single context in the db should be updated
+            self.context_database.update_context_hopcount(self.id, Context.SPECIAL_CONTEXT)
+        return filtered_singles
+
+    def get_new_info(self, singles, filtered_singles, primes, selected_non_primes, timestamp, iteration):
+        """Given singles/primes/non_primes return new_info in standard form, and newly created new_aggregates
+
+        * singles are needed to make maximal aggregates
+        * filtered_singles are needed to identify what singles are to sent
+
+        new_aggregate is None when there is no new aggregates created
+        """
+        if len(singles) == 1 and primes == set() and selected_non_primes == set(): # there is only one single context
+            singles = contexts_to_standard(singles)
+            new_info = add_standards(singles, [[],[]]) # standard operation
+            new_aggregate = None
+        else:
+            # from singles/primes/non_primes get new aggregated contexts
+            new_aggregate = ContextAggregator.create_new_aggregate(contexts=[singles, primes, selected_non_primes], timestamp=timestamp)
+            filtered_singles = self.application_disseminate_when_above_average(new_aggregate, filtered_singles, timestamp, iteration)
+            # we need to generate the new_info in the form of standard
+            a = contexts_to_standard({new_aggregate})
+            s = contexts_to_standard(filtered_singles)
+            new_info = add_standards(a, s)
+
+        return new_info, new_aggregate
+
+    def set_database_and_return(self, result, new_aggregates, singles, aggregates, primes, non_primes, selected_non_primes, timestamp):
+        self.new_aggregate = new_aggregates
+        self.set_database(singles, aggregates, timestamp=timestamp)
+        self.assorted_context_database.set(singles, primes, non_primes, selected_non_primes, timestamp)
+        return result, singles, aggregates, new_aggregates
+
+    def dataflow_aggregations_mode(self, neighbors, timestamp, iteration):
+        """
+        """
+        # 1. collect all the contexts
+        input_contexts = self.get_received_data()
+        db_singles = self.get_database_singles(timestamp)
+        db_aggregates = self.get_database_aggregates(timestamp)
+        input_singles, input_aggregates = separate_single_and_group_contexts(input_contexts)
+        history = self.context_history.get(timestamp)
+        inputs_in_standard_form = self.input.get_in_standard_from()
+
+        # 2. union, remove the redundancies
+        unique_singles = ContextAggregator.remove_same_id_singles(input_singles.union(db_singles))
+        unique_aggregates = ContextAggregator.remove_same_id_aggregates(input_aggregates.union(db_aggregates))
+
+        # 3. Run disaggregator
+        union_contexts = unique_aggregates | unique_singles
+        disaggregated_singles, disaggregated_aggregates = Disaggregator(union_contexts).run()
+        # remove generated redundancies
+        disaggregated_singles = ContextAggregator.remove_same_id_singles(disaggregated_singles)
+        disaggregated_aggregates = ContextAggregator.remove_same_id_aggregates(disaggregated_aggregates)
+
+        filtered_singles = ContextAggregator.filter_singles_by_hopcount(disaggregated_singles, self.configuration)
+
+        if not disaggregated_aggregates: # no aggregates and treat the same as singles only case
+            # 3. The code is the same as singles except the singles are filtered out
+            primes = set()
+            non_primes = set()
+            selected_non_primes = set()
+            param = {
+                "singles":disaggregated_singles,
+                "filtered_singles":filtered_singles,
+                "primes":primes,
+                "selected_non_primes":selected_non_primes,
+                "timestamp":timestamp,
+                "iteration":iteration
+            }
+            new_info, new_aggregates = self.get_new_info(**param)
+            selector_result = OutputSelector(inputs=inputs_in_standard_form, context_history=history, new_info=new_info, neighbors=neighbors).run()
+            return self.set_database_and_return(selector_result, new_aggregates, disaggregated_singles, disaggregated_aggregates, primes, non_primes, selected_non_primes, timestamp)
+
+        primes, non_primes = get_prime(disaggregated_aggregates)
+
+        if not non_primes: # only primes
+            assert primes is not None, "No primes and non-primes, it's an error condition"
+
+            non_primes = set()
+            selected_non_primes = set()
+            param = {
+                "singles":disaggregated_singles,
+                "filtered_singles":filtered_singles,
+                "primes":primes,
+                "selected_non_primes":selected_non_primes,
+                "timestamp":timestamp,
+                "iteration":iteration
+            }
+            new_info, new_aggregates = self.get_new_info(**param)
+            selector_result = OutputSelector(inputs=inputs_in_standard_form, context_history=history, new_info=new_info, neighbors=neighbors).run()
+            return self.set_database_and_return(selector_result, new_aggregates, disaggregated_singles, disaggregated_aggregates, primes, non_primes, selected_non_primes, timestamp)
+
+        # for non-prime cases
+        previous_selection = self.assorted_context_database.get_selected_non_primes(timestamp)
+        m = GreedyMaxCover()
+        selected_non_primes_list = m.run(non_primes, previous_selection)
+
+        for selected_non_primes in selected_non_primes_list:
+            param = {
+                "singles":disaggregated_singles,
+                "filtered_singles":filtered_singles,
+                "primes":primes,
+                "selected_non_primes":selected_non_primes,
+                "timestamp":timestamp,
+                "iteration":iteration
+            }
+            new_info, new_aggregates = self.get_new_info(**param)
+            selector_result = OutputSelector(inputs=inputs_in_standard_form, context_history=history, new_info=new_info, neighbors=neighbors).run()
+
+            if not is_empty_dictionary(selector_result):
+                return self.set_database_and_return(selector_result, new_aggregates, disaggregated_singles, disaggregated_aggregates, primes, non_primes, selected_non_primes, timestamp)
+
+        # no output found
+        return self.set_database_and_return(dict(), new_aggregates, disaggregated_singles, disaggregated_aggregates, primes, non_primes, selected_non_primes, timestamp)
+
+    def dataflow_singles_mode(self, neighbors, timestamp, iteration):
+        """
+        Assumption: 1. there exist input_contexts
+        """
+        # 1. collect all the contexts
+        input_contexts = self.get_received_data()
+        db_singles = self.get_database_singles(timestamp)
+        inputs_in_standard_form = self.input.get_in_standard_from()
+        history = self.context_history.get(timestamp)
+
+        # 2. union, remove the redundancies
+        combined_singles = ContextAggregator.remove_same_id_singles(input_contexts.union(db_singles))
+
+        # 3. Run the selector with proper inputs
+        new_info = contexts_to_standard(combined_singles)
+
+        selector_result = OutputSelector(inputs=inputs_in_standard_form, context_history=history, new_info=new_info, neighbors=neighbors).run()
+        return self.set_database_and_return(
+            result = selector_result,
+            new_aggregates = None,
+            singles = combined_singles,
+            aggregates = set(), primes = set(), non_primes = set(), selected_non_primes = set(), timestamp = timestamp)
+
+    def is_this_new_timestamp(self, timestamp=0):
+        """Checks if this is the start of timestamp, initially context database has {} in it,
+        when it has any kind of data, it implies it's not new timestamp anymore
+
+        >>> c = ContextAggregator()
+        >>> c.is_this_new_timestamp()
+        True
+        >>> c.set_database(set(), set())
+        >>> c.is_this_new_timestamp()
+        False
+        """
+
+        if timestamp not in self.context_database.timestamp: return True
+        else:
+            return self.context_database.timestamp[timestamp] == {}
+
     def get_received_data(self, from_node = None):
         """Returns the received data from node_index
 
@@ -531,15 +540,25 @@ class ContextAggregator(object):
 
         return result
 
-    #######################################################
+    def available_input_contexts(self):
+        """Returns the received data from node_index
+        >>> d = ContextAggregator()
+        >>> d.receive(1, {Context(value=1.0, cohorts=[0,1,2]), Context(value=4.0, cohorts=[3], hopcount = 1)})
+        >>> d.receive(2, {Context(value=2.0, cohorts=[0], hopcount=1), Context(value=4.0, cohorts=[4], hopcount = 10)})
+        >>> d.available_input_contexts()
+        True
+        >>> d = ContextAggregator()
+        >>> d.available_input_contexts()
+        False
+        """
+        return len(self.get_received_data()) > 0
+
+    ###################################
     # API
-    #######################################################
+    ###################################
 
     def is_nothing_to_send(self):
-        output_dictionary = self.output.dictionary
-        for o, v in output_dictionary.items():
-            if v != [[],[]]: return False
-        return True
+        return is_empty_dictionary(self.output.dictionary)
 
     def send(self, neighbor = None, timestamp=0):
         """
@@ -626,7 +645,7 @@ class ContextAggregator(object):
         True
         """
         if self.is_this_new_timestamp(timestamp):
-            sampled_data, special_flag = self.sample(timestamp)
+            sampled_data, special_flag = ContextAggregator.sample(self.get_sample_data(), timestamp)
             # store the sampled data for comparison purposes
             self.data = sampled_data
 
@@ -641,7 +660,13 @@ class ContextAggregator(object):
             for h in neighbors:
                 result[h] = [[self.id],[]]
         else:
-            result = self.run_dataflow(neighbors=neighbors, timestamp=timestamp, iteration=iteration)
+            # process the early return
+            result = {}
+            if self.available_input_contexts(): # input_contexts: # if there is no inputs
+                if self.is_aggregation_mode():
+                    result, combined_singles, combined_aggregates, new_aggregates = self.dataflow_aggregations_mode(neighbors, timestamp, iteration)
+                else:
+                    result, combined_singles, combined_aggregates, new_aggregates = self.dataflow_singles_mode(neighbors, timestamp, iteration)
 
         # this also reset the actual_sent_dictionary
         self.output.set_dictionary(result)

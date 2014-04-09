@@ -123,6 +123,8 @@ class Disaggregator(object):
             if sup > input_sub:
                 r = sup - input_sub
                 if r is not None:
+                    if r.value > 26:
+                        pass
                     if r.is_single():
                         singles.add(r)
                     else:
@@ -174,6 +176,7 @@ class Disaggregator(object):
             # sort the aggregates, for this we need a list
             # We introduce randomness in the selection of divider of aggregated contexts
             aggregates_list = sorted(aggregates, key=lambda m: (len(m), random.random()))
+            #aggregates_list = sorted(aggregates, key=lambda m: (len(m), list(m.get_cohorts_as_set())))
 
             for i, c in enumerate(aggregates_list):
                 super_contexts = aggregates_list[i+1:]

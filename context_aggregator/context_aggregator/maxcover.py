@@ -31,7 +31,7 @@ class MaxCover(object):
     # API
     #
 
-    def run(self, non_primes, previous_selection=None):
+    def run(self, non_primes, previous_selection=set()):
         self.conversion_dictionary = MaxCover.make_conversion_dictionary(non_primes)
         # The solver problem consists of only lists.
         inputs = map(list, self.conversion_dictionary.keys())

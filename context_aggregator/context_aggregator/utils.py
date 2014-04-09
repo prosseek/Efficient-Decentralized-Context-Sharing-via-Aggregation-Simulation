@@ -79,12 +79,16 @@ def empty_list(input):
     return True
 
 
-def empty_dictionary(input):
+def is_empty_dictionary(input):
     """
     >>> a = {33: [[], []], 2: [[], []], 3: [[], []], 35: [[], []]}
-    >>> empty_dictionary(a)
+    >>> is_empty_dictionary(a)
+    True
+    >>> a = {}
+    >>> is_empty_dictionary(a)
     True
     """
+    if input == {}: return True
     for key, value in input.items():
         if type(value) is list:
             if not empty_list(value): return False

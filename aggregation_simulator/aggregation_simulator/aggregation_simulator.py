@@ -50,13 +50,8 @@ class AggregationSimulator(object):
         if "disconnection_rate" in config:
             disconnection_rate = float(config["disconnection_rate"])
 
-        # if os.path.exists(test_directory):
-        #     shutil.rmtree(test_directory)
-
         # configurations
         for h in hosts:
-            h.context_aggregator.set_config(config)
-            h.context_aggregator.set_config(config)
             h.context_aggregator.set_config(config)
 
         timestamp = timestamp
@@ -84,7 +79,7 @@ class AggregationSimulator(object):
                         for n in ns:
 
                             # When host has nothing to send to neighbors, just skip it
-                            if [[],[]] == h.context_aggregator.output.dictionary[n]:
+                            if not h.context_aggregator.output.dictionary[n]:
                                 continue
 
                             if disconnection_rate > 0.0 :
