@@ -3,6 +3,8 @@
 In this class, we use list as a main container class.
 """
 import copy
+import random
+
 from utils_same import *
 from context.context import Context
 
@@ -170,7 +172,8 @@ class Disaggregator(object):
                 break
 
             # sort the aggregates, for this we need a list
-            aggregates_list = sorted(aggregates, key=lambda m: (len(m), list(m.get_cohorts_as_set())))
+            # We introduce randomness in the selection of divider of aggregated contexts
+            aggregates_list = sorted(aggregates, key=lambda m: (len(m), random.random()))
 
             for i, c in enumerate(aggregates_list):
                 super_contexts = aggregates_list[i+1:]

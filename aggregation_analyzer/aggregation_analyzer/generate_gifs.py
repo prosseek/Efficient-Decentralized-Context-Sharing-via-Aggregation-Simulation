@@ -83,7 +83,6 @@ class GenerateGifs(object):
             output_dir_name = network_name + os.sep + condition + os.sep + sub_name + os.sep + host
             GenerateGifs.generate_gifs_for_one_host(output_dir_name, host, correct_value, values)
 
-
 if __name__ == "__main__":
     import doctest
     doctest.testmod()

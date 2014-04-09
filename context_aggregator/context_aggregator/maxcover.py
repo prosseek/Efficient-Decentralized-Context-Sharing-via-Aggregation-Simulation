@@ -41,7 +41,8 @@ class MaxCover(object):
         result = []
         for i in self.results_in_list:
             result.append(self.conversion_dictionary[frozenset(i)])
-        return result
+        # We need to return a list of results
+        return [result]
 
     ########################################
 

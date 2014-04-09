@@ -395,7 +395,7 @@ class ContextAggregator(object):
         # ASSORT
         primes = set()
         non_primes = set()
-        selected_non_primes = set()
+        selected_non_primes_list = [set()]
         if self.is_aggregation_mode(): # if self.configuration(ContextAggregator.PM) == ContextAggregator.AGGREGATION_MODE:
             if combined_aggregates:
                 primes, non_primes = get_prime(combined_aggregates)
@@ -403,58 +403,75 @@ class ContextAggregator(object):
                     m = GreedyMaxCover()
                     #m = MaxCover()
                     if previous_selection:
-                        selected_non_primes = m.run(non_primes, previous_selection)
+                        selected_non_primes_list = m.run(non_primes, previous_selection)
                     else:
-                        selected_non_primes = m.run(non_primes)
-            self.new_aggregate = self.create_new_aggregate(contexts=[combined_singles, primes, selected_non_primes], timestamp=timestamp)
-            aggregates = contexts_to_standard({self.new_aggregate})
-            self.average = self.new_aggregate.value # In aggregation, average is the value of new aggregates
-        else:
+                        selected_non_primes_list = m.run(non_primes)
+
+            for selected_non_primes in selected_non_primes_list:
+                self.new_aggregate = self.create_new_aggregate(contexts=[combined_singles, primes, selected_non_primes], timestamp=timestamp)
+                aggregates = contexts_to_standard({self.new_aggregate})
+                self.average = self.new_aggregate.value # In aggregation, average is the value of new aggregates
+
+                self.assorted_context_database.set(combined_singles, primes, non_primes, selected_non_primes, timestamp)
+
+                # Only filtered singles are the candidates
+                self.filtered_singles = self.filter_singles(combined_singles)
+
+                variation = self.data - self.average
+                percentage_variation = abs(variation)/self.average*100.0
+                #print "iteration (%d), host (%d) variation (%4.2f)" % (iteration, self.id, percentage_variation)
+
+                if self.is_aggregation_mode() and percentage_variation > self.config["threshold"]: # Threshold is 50 as now
+                    context = Context(value=self.data, cohorts=[self.id], hopcount=Context.SPECIAL_CONTEXT, timestamp=timestamp)
+                    # update the current context to have special context flag
+                    # HINT: You may just update it without checking.
+                    print "Weird, diesseminate myself %d %d" % (self.id, iteration)
+                    # it just compares the id and hopcount is ignored in comparison
+                    remove_if_in(context, self.filtered_singles)
+                    self.filtered_singles.add(context)
+                    # the single context in the db should be updated
+                    self.context_database.update_context_hopcount(self.id, Context.SPECIAL_CONTEXT)
+
+                # OutputSelector requires all the data format as standard
+                singles = contexts_to_standard(self.filtered_singles)
+                # if not is_standard(singles):
+                #     print singles
+
+                new_info = add_standards(singles, aggregates)
+                inputs_in_standard_form = {}
+                for key, value in self.input.get_dictionary().items():
+                    inputs_in_standard_form[key] = contexts_to_standard(value)
+                history = self.context_history.get(timestamp)
+
+                # TODO:
+                # For the convention, None is returned when nothing is found in Container, and this
+                # causes an error condition.
+                # However, for testing code, this value can be None, so make this code for by passing the error
+                if history is None: history = {}
+                selector = OutputSelector(inputs=inputs_in_standard_form, context_history=history, new_info=new_info, neighbors=neighbors)
+                result = selector.run()
+
+                if not empty_dictionary(result):
+                    return result
+
+            return dict()
+
+        else: # single case
+
             self.average = get_average(self.get_singles(-1))
             aggregates = [[],[]]
-
-        # SMCHO - simulation purposes
-
-        self.assorted_context_database.set(combined_singles, primes, non_primes, selected_non_primes, timestamp)
-
-        # Only filtered singles are the candidates
-        self.filtered_singles = self.filter_singles(combined_singles)
-
-        variation = self.data - self.average
-        percentage_variation = abs(variation)/self.average*100.0
-        #print "iteration (%d), host (%d) variation (%4.2f)" % (iteration, self.id, percentage_variation)
-
-        if self.is_aggregation_mode() and percentage_variation > self.config["threshold"]: # Threshold is 50 as now
-            context = Context(value=self.data, cohorts=[self.id], hopcount=Context.SPECIAL_CONTEXT, timestamp=timestamp)
-            # update the current context to have special context flag
-            # HINT: You may just update it without checking.
-            print "Weird, diesseminate myself %d %d" % (self.id, iteration)
-            # it just compares the id and hopcount is ignored in comparison
-            remove_if_in(context, self.filtered_singles)
-            self.filtered_singles.add(context)
-            # the single context in the db should be updated
-            self.context_database.update_context_hopcount(self.id, Context.SPECIAL_CONTEXT)
-
-        # OutputSelector requires all the data format as standard
-        singles = contexts_to_standard(self.filtered_singles)
-        # if not is_standard(singles):
-        #     print singles
-
-        new_info = add_standards(singles, aggregates)
-        inputs_in_standard_form = {}
-        for key, value in self.input.get_dictionary().items():
-            inputs_in_standard_form[key] = contexts_to_standard(value)
-        history = self.context_history.get(timestamp)
-
-        # TODO:
-        # For the convention, None is returned when nothing is found in Container, and this
-        # causes an error condition.
-        # However, for testing code, this value can be None, so make this code for by passing the error
-        if history is None: history = {}
-        selector = OutputSelector(inputs=inputs_in_standard_form, context_history=history, new_info=new_info, neighbors=neighbors)
-        result = selector.run()
-
-        return result
+            self.assorted_context_database.set(combined_singles, primes, non_primes, selected_non_primes, timestamp)
+            self.filtered_singles = self.filter_singles(combined_singles)
+            singles = contexts_to_standard(self.filtered_singles)
+            new_info = add_standards(singles, aggregates)
+            inputs_in_standard_form = {}
+            for key, value in self.input.get_dictionary().items():
+                inputs_in_standard_form[key] = contexts_to_standard(value)
+            history = self.context_history.get(timestamp)
+            if history is None: history = {}
+            selector = OutputSelector(inputs=inputs_in_standard_form, context_history=history, new_info=new_info, neighbors=neighbors)
+            result = selector.run()
+            return result
 
     def is_this_new_timestamp(self, timestamp=0):
         """Checks if this is the start of timestamp

@@ -17,7 +17,7 @@ class GetStatistics(object):
                 sub_name = "singles"
                 try: s = self.execute_fn(fn, condition, sub_name)
                 except: s = None
-                sub_name = "aggregations"
+                sub_name = "aggregates"
                 try: a = self.execute_fn(fn, condition, sub_name)
                 except: a = None
                 return (s,a)
@@ -34,7 +34,7 @@ class GetStatistics(object):
         >>> network_dir = get_simple_test_dir() + os.sep + "test_network1"
         >>> r = ReadReports(network_dir)
         >>> s = GetStatistics(r)
-        >>> s.get_size("normal","aggregations") == ([42, 14, 28], [42, 14, 28])
+        >>> s.get_size("normal","aggregates") == ([42, 14, 28], [42, 14, 28])
         True
         >>> s.get_size("normal","singles") == ([56, 56, 0], [56, 56, 0])
         True
@@ -53,7 +53,7 @@ class GetStatistics(object):
         >>> network_dir = get_simple_test_dir() + os.sep + "test_network1"
         >>> r = ReadReports(network_dir)
         >>> s = GetStatistics(r)
-        >>> s.get_speed("normal","aggregations") == [4.75, 4, 5]
+        >>> s.get_speed("normal","aggregates") == [4.75, 4, 5]
         True
         >>> s.get_speed("normal") == ([4.75, 4, 5], [4.75, 4, 5])
         True
@@ -71,7 +71,7 @@ class GetStatistics(object):
         >>> network_dir = get_simple_test_dir() + os.sep + "test_network1"
         >>> r = ReadReports(network_dir)
         >>> s = GetStatistics(r)
-        >>> s.get_accuracy("normal","aggregations") == [100.0, 67.98]
+        >>> s.get_accuracy("normal","aggregates") == [100.0, 67.98]
         True
         >>> s.get_accuracy("normal") == ([100.0, 100.0], [100.0, 67.98])
         True
@@ -88,7 +88,7 @@ class GetStatistics(object):
         >>> network_dir = get_simple_test_dir() + os.sep + "test_network1"
         >>> r = ReadReports(network_dir)
         >>> s = GetStatistics(r)
-        >>> s.get_identified_rate("normal","aggregations") == [100.0, 8, 8, 56.25, 4, 8]
+        >>> s.get_identified_rate("normal","aggregates") == [100.0, 8, 8, 56.25, 4, 8]
         True
         >>> s.get_identified_rate("normal") == ([100.0, 8, 8, 100.0, 8, 8], [100.0, 8, 8, 56.25, 4, 8])
         True
@@ -105,7 +105,7 @@ class GetStatistics(object):
         >>> network_dir = get_simple_test_dir() + os.sep + "test_network1"
         >>> r = ReadReports(network_dir)
         >>> s = GetStatistics(r)
-        >>> s.get_cohorts("normal","aggregations") == [1.75, 3, 1]
+        >>> s.get_cohorts("normal","aggregates") == [1.75, 3, 1]
         True
         >>> s.get_cohorts("normal") == ([0.0, 0, 0], [1.75, 3, 1])
         True

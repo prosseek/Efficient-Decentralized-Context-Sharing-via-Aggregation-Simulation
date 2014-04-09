@@ -9,6 +9,9 @@ def get_dir(network_dir, condition, sub_name, host, timestamp=0):
     directory = network_dir + os.sep + condition + os.sep + sub_name + os.sep + host + os.sep + timestamp
     return directory
 
+def get_pseudo_test_dir():
+    return get_configuration("config.cfg", "TestDirectory", "pseudo_test_root_dir")
+
 def get_intel_test_dir():
     return get_configuration("config.cfg", "TestDirectory", "intel_test_root_dir")
 
