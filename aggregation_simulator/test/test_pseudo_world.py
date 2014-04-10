@@ -24,6 +24,10 @@ test_name = "pseudo_realworld_50"
 d = os.path.join(get_test_files_directory(), test_name)
 network_file_path50 = os.path.join(d, test_name + ".txt")
 sample_file_path50=os.path.join(d, test_name + ".sample.txt")
+test_name = "pseudo_realworld_70"
+d = os.path.join(get_test_files_directory(), test_name)
+network_file_path70 = os.path.join(d, test_name + ".txt")
+sample_file_path70=os.path.join(d, test_name + ".sample.txt")
 
 class TestPseudoWorld(unittest.TestCase):
     def setUp(self):
@@ -69,6 +73,7 @@ class TestPseudoWorld(unittest.TestCase):
         }
         return runit(**params)
 
+    # *****************************
     def test_pseudo30_aggregates(self):
         params = {
             "simulation_root_dir":simulation_root_dir,
@@ -100,6 +105,34 @@ class TestPseudoWorld(unittest.TestCase):
             "simulation_root_dir":simulation_root_dir,
             "network_file_path":network_file_path50,
             "sample_file_path":sample_file_path50,
+            "condition":"normal",
+            "test_sub_name":"aggregates",
+            "disconnection_rate":0.0,
+            "drop_rate":0.0,
+            "threshold":sys.maxint
+        }
+        return runit(**params)
+
+
+    # ***********************
+    def test_pseudo70_singles(self):
+        params = {
+            "simulation_root_dir":simulation_root_dir,
+            "network_file_path":network_file_path70,
+            "sample_file_path":sample_file_path70,
+            "condition":"normal",
+            "test_sub_name":"singles",
+            "disconnection_rate":0.0,
+            "drop_rate":0.0,
+            "threshold":sys.maxint
+        }
+        return runit(**params)
+
+    def test_pseudo70_aggregates(self):
+        params = {
+            "simulation_root_dir":simulation_root_dir,
+            "network_file_path":network_file_path70,
+            "sample_file_path":sample_file_path70,
             "condition":"normal",
             "test_sub_name":"aggregates",
             "disconnection_rate":0.0,

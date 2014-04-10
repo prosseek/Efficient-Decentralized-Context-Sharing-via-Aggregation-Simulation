@@ -58,8 +58,8 @@ class ContextDatabase(object):
 
     def reset(self):
 
-        self.singles = None
-        self.aggregates = None
+        self.singles = {}
+        self.aggregates = {}
 
     def set(self, singles, aggregates, timestamp=0):
         """
@@ -73,23 +73,21 @@ class ContextDatabase(object):
         >>> same(cd.get_singles(), [[0],[]])
         True
         """
+        assert type(singles) is set
+        assert type(aggregates) is set
+
         if timestamp not in self.timestamp:
-            self.timestamp[timestamp] = ContextDatabase.Container()
+           self.timestamp[timestamp] = ContextDatabase.Container()
 
-        #before = len(self.timestamp[timestamp].singles)
-        for s in singles:
-            self.timestamp[timestamp].singles.add(s)
-        #after = len(self.timestamp[timestamp].singles)
-        #if after > before:
-        #    print "change %d" % (after - before)
+        self.timestamp[timestamp].singles =  singles
 
-        #before = len(self.timestamp[timestamp].aggregates)
-        for a in aggregates:
-            self.timestamp[timestamp].aggregates.add(a)
-        #after = len(self.timestamp[timestamp].aggregates)
-        #if after > before:
-        #    print "change %d" % (after - before)
+        #for s in singles:
+        #   self.timestamp[timestamp].singles.add(s)
 
+        self.timestamp[timestamp].aggregates =  aggregates
+
+        # for a in aggregates:
+        #    self.timestamp[timestamp].aggregates.add(a)
 
     def get_singles(self, timestamp=0):
         """When timestamp is negative number, it returns the newest timestamp
@@ -112,6 +110,18 @@ class ContextDatabase(object):
         return None
 
     def get_aggregates(self, timestamp=0):
+        """
+        >>> cd = ContextDatabase()
+        >>> s ={Context(value=1.0, cohorts=[0])}
+        >>> a ={Context(value=2.0, cohorts=[1,2])}
+        >>> cd.set(s, a, 0)
+        >>> r = cd.get_aggregates()
+        >>> len(r) == 1 and type(r) is set
+        True
+        >>> cd = ContextDatabase()
+        >>> cd.set([],[],0)
+        >>> cd.get_aggregates()
+        """
         if timestamp < 0: timestamp = self.get_last_timestamp()
         return self.timestamp[timestamp].aggregates
 

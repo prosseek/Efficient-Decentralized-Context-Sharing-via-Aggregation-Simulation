@@ -94,6 +94,28 @@ def is_empty_dictionary(input):
             if not empty_list(value): return False
     return True
 
+
+def get_matching_aggregate_contexts(aggregate_contexts, list_of_lists):
+    """
+
+    >>> aggrs = {Context(value=0.0, cohorts={0,1,2}), Context(value=0.0, cohorts={1,3}), Context(value=0.0, cohorts={2,4})}
+    >>> r = get_matching_aggregate_contexts(aggrs, [[1,3],[2,4]])
+    >>> same({Context(value=0.0, cohorts={1,3}), Context(value=0.0, cohorts={2,4})}, r)
+    True
+    >>> r = get_matching_aggregate_contexts(aggrs, [[1,3],[2,6]])
+    >>> same({Context(value=0.0, cohorts={1,3})}, r)
+    True
+    """
+    result = set()
+    if aggregate_contexts:
+        for c in aggregate_contexts:
+            cohorts = c.get_cohorts_as_set()
+            #print list_of_lists
+            #for l in list_of_lists:
+            if set(list_of_lists) == cohorts:
+                result.add(c)
+    return result
+
 def get_matching_single_contexts(single_contexts, set_of_numbers):
     """
 

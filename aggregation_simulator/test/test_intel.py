@@ -42,6 +42,7 @@ class TestIntel(unittest.TestCase):
         }
         return runit(**params)
 
+    # *************************************
     def test_with_intel6_aggregate(self):
         params = {
             "simulation_root_dir":simulation_root_dir,

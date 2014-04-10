@@ -122,12 +122,14 @@ class GreedyMaxCover(MaxCover):
         GreedyMaxCover._solve_from_size(lists, result3)
         size3 = MaxCover.length_of_total_elements(result3)
 
+        # Find the distinct set of possible selections
+
         if size1 > size2:
-            if size1 > size3: return result1
-            else: return result3
+            if size1 > size3: return [result1]
+            else: return [result3]
         else:
-            if size2 > size3: return result2
-            else: return result3
+            if size2 > size3: return [result2]
+            else: return [result3]
 
 if __name__ == "__main__":
     import doctest

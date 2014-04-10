@@ -37,12 +37,17 @@ class MaxCover(object):
         inputs = map(list, self.conversion_dictionary.keys())
         if previous_selection is not None:
             previous_selection = aggregated_contexts_to_list_of_standard(previous_selection)
-        self.results_in_list = self.solve(inputs, previous_selection)
-        result = []
-        for i in self.results_in_list:
-            result.append(self.conversion_dictionary[frozenset(i)])
+        results_in_list = self.solve(inputs, previous_selection)
+
+        results = []
+
+        for r in results_in_list:
+            result = []
+            for i in r:
+                result.append(self.conversion_dictionary[frozenset(i)])
+            results.append(result)
         # We need to return a list of results
-        return [result]
+        return results
 
     ########################################
 

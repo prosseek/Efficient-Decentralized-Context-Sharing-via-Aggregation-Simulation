@@ -190,6 +190,8 @@ def is_dictionary_standard(input):
     >>> in2 = {}
     >>> is_dictionary_standard(in2)
     False
+    >>> in3 = {32: [[], [38, 44, 42, 28, 29, 45]], 33: [[], [38, 44, 42, 28, 29, 45]], 35: [[], [38, 44, 42, 28, 29, 45]], 36: [[], [38, 44, 42, 28, 29, 45]]}
+    >>> is_dictionary_standard(in3)
     """
     assert type(input) is dict, "input is not dictionary"
     if input == {}: return False
@@ -199,6 +201,9 @@ def is_dictionary_standard(input):
 
 def is_standard(input):
     """
+    >>> in0 = [[], [38, 44, 42, 28, 29, 45]]
+    >>> is_standard(in0)
+    True
     >>> in1 = [[-2,-1],[]]
     >>> is_standard(in1)
     True
@@ -227,6 +232,15 @@ def is_standard(input):
     if type(input) is not list: return False
     if len(input) != 2: return False
     if type(input[0]) is not list or type(input[1]) is not list: return False
+    if input == [[],[]]: return True
+    if input[0] == []:
+        for i in input[1]:
+            if type(i) not in [long, int]: return False
+        return True
+    if input[1] == []:
+        for i in input[0]:
+            if type(i) not in [long, int]: return False
+        return True
     for i in input[0]:
         if type(i) not in [long, int]: return False
     for i in input[1]:

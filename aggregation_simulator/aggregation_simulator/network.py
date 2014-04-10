@@ -27,7 +27,10 @@ class Network(object):
         self.network = {}
         self.network_file = None
         if network_file is not None:
-            self.network = self.read(network_file)
+            if type(network_file) is str:
+                self.network = self.read(network_file)
+            elif type(network_file) is dict:
+                self.network = network_file
 
     def read(self, network_file):
         """
@@ -40,6 +43,19 @@ class Network(object):
             self.network = self.network_file_parse_into_dictionary(network_file = self.network_file)
             #self.network = self.make_symmetric_network(self.network)
 
+        return self.network
+
+    def write(self, network_file):
+        hosts = self.get_host_ids()
+
+        with open(network_file, "w") as f:
+            for h in hosts:
+                neighbors = str(self.get_neighbors(h))[1:-1].replace(",","")
+                connection = "%d: %s\n" % (h, neighbors)
+                f.write(connection)
+            f.close()
+
+    def get_network(self):
         return self.network
 
     def get_host_ids(self):

@@ -341,6 +341,54 @@ class ContextAggregator(object):
         #self.current_sample = sampled_value
         return sampled_value, special_flag
 
+
+    @staticmethod
+    def get_score(cohorts, sent_history_as_set):
+        """Returns the number of elements cohorts - sent_history_as_set
+
+        >>> a = {1,2,3,4}
+        >>> b = {4,5,6,7}
+        >>> ContextAggregator.get_score(a, b)
+        3
+        """
+        return len(cohorts - sent_history_as_set)
+
+    @staticmethod
+    def get_output_from_nps(aggregates, history, neighbors):
+        """Find the aggregate that has the largest set of contexts that are not sent to neighbors
+
+        >>> a = {Context(value=1.0, cohorts=[1,2,3]), Context(value=1.0, cohorts=[1,2,3,4]), Context(value=1.0, cohorts=[1,2,3,4,5])}
+        >>> h = {1:[[],[1,3]], 2:[[],[1,3]]}
+        >>> neighbors = [1,2]
+        >>> r = ContextAggregator.get_output_from_nps(a, h, neighbors)
+        >>> same(r[1], [[],[1,2,3,4,5]])
+        True
+        """
+        if len(aggregates) == 0: return {}
+        if len(neighbors) == 0: return {}
+
+        result = {}
+        for n in neighbors:
+            # get the aggregation
+            sent_history_as_set = set(history[n][1])
+            scores = {}
+            for a in aggregates:
+                cohorts = a.get_cohorts_as_set()
+                key = str(list(cohorts))
+                scores[key] = ContextAggregator.get_score(cohorts, sent_history_as_set)
+
+            keys = sorted(scores, key=lambda e: -scores[e])
+
+            # when sending only one context
+            if scores[keys[0]] > 0:
+                winner = eval(keys[0])
+                result[n] = [[],winner]
+            else:
+                result[n] = [[],[]]
+
+        return result
+        #self.context_database.aggregates, self.context_history.get(timestamp), neighbors)
+
     ###################################
     # DATA FLOW
     ###################################
@@ -403,15 +451,17 @@ class ContextAggregator(object):
         """
         # 1. collect all the contexts
         input_contexts = self.get_received_data()
-        # db_singles = self.get_database_singles(timestamp)
-        # db_aggregates = self.get_database_aggregates(timestamp)
+        db_singles = self.get_database_singles(timestamp)
+        db_aggregates = self.get_database_aggregates(timestamp)
         input_singles, input_aggregates = separate_single_and_group_contexts(input_contexts)
         history = self.context_history.get(timestamp)
         inputs_in_standard_form = self.input.get_in_standard_from()
 
-        # 2. union, remove the redundancies
-        # unique_singles = ContextAggregator.remove_same_id_singles(input_singles.union(db_singles))
-        # unique_aggregates = ContextAggregator.remove_same_id_aggregates(input_aggregates.union(db_aggregates))
+        unique_singles = ContextAggregator.remove_same_id_singles(input_singles.union(db_singles))
+        unique_aggregates = ContextAggregator.remove_same_id_aggregates(input_aggregates.union(db_aggregates))
+
+        union_contexts = unique_aggregates | unique_singles
+        disaggregator = Disaggregator(union_contexts)
 
         # 3. Run disaggregator
         try_count = 0
@@ -435,15 +485,6 @@ class ContextAggregator(object):
             attempt_count = 10
             found_new = False
             for i in range(attempt_count):
-
-                db_singles = self.get_database_singles(timestamp)
-                db_aggregates = self.get_database_aggregates(timestamp)
-
-                unique_singles = ContextAggregator.remove_same_id_singles(input_singles.union(db_singles))
-                unique_aggregates = ContextAggregator.remove_same_id_aggregates(input_aggregates.union(db_aggregates))
-
-                union_contexts = unique_aggregates | unique_singles
-                disaggregator = Disaggregator(union_contexts)
 
                 disaggregated_singles, disaggregated_aggregates = disaggregator.run()
                 if not disaggregated_aggregates:
@@ -511,7 +552,9 @@ class ContextAggregator(object):
             previous_selection = self.assorted_context_database.get_selected_non_primes(timestamp)
             selected_non_primes_list = GreedyMaxCover().run(non_primes, previous_selection)
 
-            for selected_non_primes in selected_non_primes_list:
+            # the greedy max cover can return multiple candidates for the case when
+            # there is nothing to send to the neighboring nodes
+            for i, selected_non_primes in enumerate(selected_non_primes_list):
                 param = {
                     "singles":disaggregated_singles,
                     "filtered_singles":filtered_singles,
@@ -520,6 +563,13 @@ class ContextAggregator(object):
                     "timestamp":timestamp,
                     "iteration":iteration
                 }
+                if not selected_non_primes:
+                    #print "SHOOT %s" % aggregated_contexts_to_list_of_standard(selected_non_primes)
+                    break
+
+                if i > 0:
+                    print "(host %d) %d try with %s" % (self.id, i, aggregated_contexts_to_list_of_standard(selected_non_primes))
+
                 new_info, new_aggregates = self.get_new_info(**param)
                 selector_result = OutputSelector(inputs=inputs_in_standard_form, context_history=history, new_info=new_info, neighbors=neighbors).run()
                 res_val = self.set_database_and_return(selector_result, new_aggregates, disaggregated_singles, disaggregated_aggregates, primes, non_primes, selected_non_primes, timestamp)
@@ -527,7 +577,12 @@ class ContextAggregator(object):
                 if not is_empty_dictionary(selector_result):
                     return res_val
 
-        # no output found
+            # try to send the NP that has the largest unsent data
+            result = ContextAggregator.get_output_from_nps(self.context_database.get_aggregates(timestamp), self.context_history.get(timestamp), neighbors)
+            if result:
+                return result, disaggregated_singles, disaggregated_aggregates, new_aggregates
+
+        # with all my efforts, no output found just return none
         return self.set_database_and_return(dict(), new_aggregates, disaggregated_singles, disaggregated_aggregates, primes, non_primes, selected_non_primes, timestamp)
 
     def dataflow_singles_mode(self, neighbors, timestamp, iteration):
@@ -609,6 +664,7 @@ class ContextAggregator(object):
     def is_nothing_to_send(self):
         return is_empty_dictionary(self.output.dictionary)
 
+
     def send(self, neighbor = None, timestamp=0):
         """
 
@@ -633,22 +689,30 @@ class ContextAggregator(object):
 
         result = {}
         output_dictionary = self.output.dictionary
-        if neighbor is None:
-            for o in output_dictionary:
-                single_contexts = self.output.generate_single_contexts(o=o, single_contexts=self.get_database_singles(timestamp))
-                aggregate_context = self.output.generate_aggregate_contexts(o=o, aggregate_contexts=self.new_aggregate)
-                result[o] = single_contexts | aggregate_context
-                self.context_history.add_to_history(node_number=o, value=output_dictionary[o], timestamp=timestamp)
+        # if neighbor is None:
+        #     for o in output_dictionary:
+        #         single_contexts = self.output.generate_single_contexts(o=o, single_contexts=self.get_database_singles(timestamp))
+        #         aggregate_context = self.output.generate_aggregate_contexts(o=o, aggregate_contexts={self.new_aggregate} | self.get_database_aggregates(timestamp))
+        #         result[o] = single_contexts | aggregate_context
+        #         self.context_history.add_to_history(node_number=o, value=output_dictionary[o], timestamp=timestamp)
+        # else:
+        assert type(neighbor) in [int, long]
+        assert neighbor in output_dictionary
+        #assert self.new_aggregate is not None, "aggregate is None"
+
+        # TODO
+        # Duplication of code
+        o = neighbor
+        single_contexts = self.output.generate_single_contexts(o=o, single_contexts=self.get_database_singles(timestamp))
+        #print self.get_database_aggregates(timestamp)
+
+        if not self.new_aggregate:
+            new_aggregate = set()
         else:
-            assert type(neighbor) in [int, long]
-            assert neighbor in output_dictionary
-            # TODO
-            # Duplication of code
-            o = neighbor
-            single_contexts = self.output.generate_single_contexts(o=o, single_contexts=self.get_database_singles(timestamp))
-            aggregate_context = self.output.generate_aggregate_contexts(o=o, aggregate_contexts=self.new_aggregate)
-            result[o] = single_contexts | aggregate_context
-            self.context_history.add_to_history(node_number=o, value=output_dictionary[o], timestamp=timestamp)
+            new_aggregate = {self.new_aggregate}
+        aggregate_context = self.output.generate_aggregate_contexts(o=o, aggregate_contexts= (new_aggregate  | self.get_database_aggregates(timestamp)))
+        result[o] = single_contexts | aggregate_context
+        self.context_history.add_to_history(node_number=o, value=output_dictionary[o], timestamp=timestamp)
 
         return result
 
@@ -702,7 +766,7 @@ class ContextAggregator(object):
             if special_flag:
                 hopcount = Context.SPECIAL_CONTEXT
             context = Context(value=sampled_data, cohorts=[self.id], hopcount=hopcount, timestamp=timestamp)
-            self.set_database(singles=[context], aggregates=[], timestamp=timestamp)
+            self.set_database(singles={context}, aggregates=set(), timestamp=timestamp)
 
             # store the context in the history and process
             result = {}

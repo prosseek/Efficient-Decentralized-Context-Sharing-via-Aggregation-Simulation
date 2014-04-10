@@ -3,7 +3,7 @@
 """
 
 from inputoutput import InputOutput
-from utils import get_matching_single_contexts, is_empty_dictionary
+from utils import get_matching_single_contexts, is_empty_dictionary, get_matching_aggregate_contexts
 from utils_standard import *
 
 class Output(InputOutput):
@@ -100,11 +100,11 @@ class Output(InputOutput):
         return single_contexts
 
     def generate_aggregate_contexts(self, o, aggregate_contexts):
-        aggregate = self.dictionary[o][1]
-        if aggregate:
-            # aggregate should be turned into set(), so you need to convert it into list first
-            aggregate = [aggregate_contexts]
-        return set(aggregate)
+        # print aggregate_contexts
+        # This is output class, and we need to find the context that has aggregate as a cohort in it
+        aggregate = self.get_aggregates(o) # returns [...]
+        aggregate_contexts = get_matching_aggregate_contexts(aggregate_contexts, aggregate)
+        return aggregate_contexts
 
     def is_empty(self):
         """

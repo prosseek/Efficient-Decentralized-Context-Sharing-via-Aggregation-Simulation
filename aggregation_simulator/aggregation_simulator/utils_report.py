@@ -242,6 +242,10 @@ class StatisticalReport(object):
             average_number_per_cohort = 0 if number_of_cohorts == 0 else 1.0*number_of_ids_from_cohorts/number_of_cohorts
             number_of_id_aggregate = number_of_ids_from_cohorts + number_of_id_singles
 
+            if number_of_id_aggregate <= host_size:
+                pass
+                assert number_of_id_aggregate <= host_size, "How come number of id is more than host size?"
+
             estimated_average = estimate_average(identified_singles, identified_aggregates)
             estimate_values = get_estimated_values(identified_values, average=estimated_average)
             average_error = calculate_error(correct_average, estimated_average)
