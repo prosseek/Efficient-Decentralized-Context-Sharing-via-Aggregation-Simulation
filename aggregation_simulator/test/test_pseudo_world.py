@@ -29,6 +29,7 @@ d = os.path.join(get_test_files_directory(), test_name)
 network_file_path70 = os.path.join(d, test_name + ".txt")
 sample_file_path70=os.path.join(d, test_name + ".sample.txt")
 
+
 class TestPseudoWorld(unittest.TestCase):
     def setUp(self):
         pass
@@ -133,6 +134,41 @@ class TestPseudoWorld(unittest.TestCase):
             "simulation_root_dir":simulation_root_dir,
             "network_file_path":network_file_path70,
             "sample_file_path":sample_file_path70,
+            "condition":"normal",
+            "test_sub_name":"aggregates",
+            "disconnection_rate":0.0,
+            "drop_rate":0.0,
+            "threshold":sys.maxint
+        }
+        return runit(**params)
+
+    def test_pseudo70_2d_singles(self):
+        test_name = "pseudo_realworld_70_2d"
+        d = os.path.join(get_test_files_directory(), test_name)
+        network_file_path70_2d = os.path.join(d, test_name + ".txt")
+        sample_file_path70_2d = os.path.join(d, test_name + ".sample.txt")
+        params = {
+            "simulation_root_dir":simulation_root_dir,
+            "network_file_path":network_file_path70_2d,
+            "sample_file_path":sample_file_path70_2d,
+            "condition":"normal",
+            "test_sub_name":"singles",
+            "disconnection_rate":0.0,
+            "drop_rate":0.0,
+            "threshold":sys.maxint
+        }
+        return runit(**params)
+
+    def test_pseudo70_2d_aggregates(self):
+        test_name = "pseudo_realworld_70_2d"
+        d = os.path.join(get_test_files_directory(), test_name)
+        network_file_path70_2d = os.path.join(d, test_name + ".txt")
+        sample_file_path70_2d = os.path.join(d, test_name + ".sample.txt")
+
+        params = {
+            "simulation_root_dir":simulation_root_dir,
+            "network_file_path":network_file_path70_2d,
+            "sample_file_path":sample_file_path70_2d,
             "condition":"normal",
             "test_sub_name":"aggregates",
             "disconnection_rate":0.0,

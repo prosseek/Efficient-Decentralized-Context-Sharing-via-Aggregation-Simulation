@@ -42,9 +42,9 @@ def reduce_average_network_link(network, new_network_path, goal):
 if __name__ == "__main__":
     network_name = "pseudo_realworld_70"
     network = get_test_files_directory() + os.sep + network_name + os.sep + network_name + ".txt"
-    network_name = "pseudo_realworld_70_d2"
+    network_name = "pseudo_realworld_70_2d"
     new_network = get_test_files_directory() + os.sep + network_name + os.sep + network_name + ".txt"
     print get_average_network_link(network)
 
-    reduce_average_network_link(network, new_network,2)
+    reduce_average_network_link(network, new_network,3)
     #print get_average_network_link(new_network)
