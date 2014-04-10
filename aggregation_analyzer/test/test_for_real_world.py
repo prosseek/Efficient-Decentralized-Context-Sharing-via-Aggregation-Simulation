@@ -11,8 +11,8 @@ class TestForRealWorld(unittest.TestCase):
     def setUp(self):
         pass
 
-    def get(self, network_dir, condition):
-        d = ReadReports(network_dir)
+    def get(self, network_dir, condition, auto_read = True, use_cache = True):
+        d = ReadReports(network_dir, auto_read, use_cache)
         s = GetStatistics(d)
         print s.get_size(condition)
         print s.get_accuracy(condition)
@@ -23,7 +23,7 @@ class TestForRealWorld(unittest.TestCase):
     def test_intel6(self):
         network_dir = os.path.join(get_intel_test_dir(), "real_world_intel_6")
         condition = 'normal'
-        self.get(network_dir, condition)
+        self.get(network_dir, condition, use_cache = False)
         # (([5975, 5975, 0], [5975, 5975, 0]), ([1623, 176, 1447], [1623, 176, 1447]))
         # ([100.0, 100.0], [99.60333333333335, 98.11074074074077])
         # ([100.0, 54, 54, 100.0, 54, 54], [89.67888888888898, 48, 54, 16.459629629629635, 8, 54])

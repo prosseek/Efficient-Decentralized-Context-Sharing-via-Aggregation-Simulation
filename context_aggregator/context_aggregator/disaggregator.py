@@ -176,6 +176,7 @@ class Disaggregator(object):
             # sort the aggregates, for this we need a list
             # We introduce randomness in the selection of divider of aggregated contexts
             aggregates_list = sorted(aggregates, key=lambda m: (len(m), random.random()))
+            #print aggregated_contexts_to_list_of_standard(aggregates_list)
             #aggregates_list = sorted(aggregates, key=lambda m: (len(m), list(m.get_cohorts_as_set())))
 
             for i, c in enumerate(aggregates_list):

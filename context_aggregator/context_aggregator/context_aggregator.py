@@ -403,80 +403,129 @@ class ContextAggregator(object):
         """
         # 1. collect all the contexts
         input_contexts = self.get_received_data()
-        db_singles = self.get_database_singles(timestamp)
-        db_aggregates = self.get_database_aggregates(timestamp)
+        # db_singles = self.get_database_singles(timestamp)
+        # db_aggregates = self.get_database_aggregates(timestamp)
         input_singles, input_aggregates = separate_single_and_group_contexts(input_contexts)
         history = self.context_history.get(timestamp)
         inputs_in_standard_form = self.input.get_in_standard_from()
 
         # 2. union, remove the redundancies
-        unique_singles = ContextAggregator.remove_same_id_singles(input_singles.union(db_singles))
-        unique_aggregates = ContextAggregator.remove_same_id_aggregates(input_aggregates.union(db_aggregates))
+        # unique_singles = ContextAggregator.remove_same_id_singles(input_singles.union(db_singles))
+        # unique_aggregates = ContextAggregator.remove_same_id_aggregates(input_aggregates.union(db_aggregates))
 
         # 3. Run disaggregator
-        union_contexts = unique_aggregates | unique_singles
-        disaggregated_singles, disaggregated_aggregates = Disaggregator(union_contexts).run()
-        # remove generated redundancies
-        disaggregated_singles = ContextAggregator.remove_same_id_singles(disaggregated_singles)
-        disaggregated_aggregates = ContextAggregator.remove_same_id_aggregates(disaggregated_aggregates)
+        try_count = 0
+        disaggregated_aggregates_set = set()
 
-        filtered_singles = ContextAggregator.filter_singles_by_hopcount(disaggregated_singles, self.configuration)
+        # It tries 10 times with different disaggregation setup, and give up
+        # giving up means that it does not find the output
+        while True:
+            try_count += 1
+            if try_count > 5:
+                #print "Did my best node(%d) - %d" % (self.id, try_count)
+                break
+            else:
+                pass
+                #if try_count > 1:
+                #    print "(host %d) try count %d" % (self.id, try_count)
 
-        if not disaggregated_aggregates: # no aggregates and treat the same as singles only case
-            # 3. The code is the same as singles except the singles are filtered out
-            primes = set()
-            non_primes = set()
-            selected_non_primes = set()
-            param = {
-                "singles":disaggregated_singles,
-                "filtered_singles":filtered_singles,
-                "primes":primes,
-                "selected_non_primes":selected_non_primes,
-                "timestamp":timestamp,
-                "iteration":iteration
-            }
-            new_info, new_aggregates = self.get_new_info(**param)
-            selector_result = OutputSelector(inputs=inputs_in_standard_form, context_history=history, new_info=new_info, neighbors=neighbors).run()
-            return self.set_database_and_return(selector_result, new_aggregates, disaggregated_singles, disaggregated_aggregates, primes, non_primes, selected_non_primes, timestamp)
+            # It's in the while loop, and it means that it tries to find different aggregation.
+            # It again tries to find 10 times to find a new set of aggregation data
 
-        primes, non_primes = get_prime(disaggregated_aggregates)
+            attempt_count = 10
+            found_new = False
+            for i in range(attempt_count):
 
-        if not non_primes: # only primes
-            assert primes is not None, "No primes and non-primes, it's an error condition"
+                db_singles = self.get_database_singles(timestamp)
+                db_aggregates = self.get_database_aggregates(timestamp)
 
-            non_primes = set()
-            selected_non_primes = set()
-            param = {
-                "singles":disaggregated_singles,
-                "filtered_singles":filtered_singles,
-                "primes":primes,
-                "selected_non_primes":selected_non_primes,
-                "timestamp":timestamp,
-                "iteration":iteration
-            }
-            new_info, new_aggregates = self.get_new_info(**param)
-            selector_result = OutputSelector(inputs=inputs_in_standard_form, context_history=history, new_info=new_info, neighbors=neighbors).run()
-            return self.set_database_and_return(selector_result, new_aggregates, disaggregated_singles, disaggregated_aggregates, primes, non_primes, selected_non_primes, timestamp)
+                unique_singles = ContextAggregator.remove_same_id_singles(input_singles.union(db_singles))
+                unique_aggregates = ContextAggregator.remove_same_id_aggregates(input_aggregates.union(db_aggregates))
 
-        # for non-prime cases
-        previous_selection = self.assorted_context_database.get_selected_non_primes(timestamp)
-        m = GreedyMaxCover()
-        selected_non_primes_list = m.run(non_primes, previous_selection)
+                union_contexts = unique_aggregates | unique_singles
+                disaggregator = Disaggregator(union_contexts)
 
-        for selected_non_primes in selected_non_primes_list:
-            param = {
-                "singles":disaggregated_singles,
-                "filtered_singles":filtered_singles,
-                "primes":primes,
-                "selected_non_primes":selected_non_primes,
-                "timestamp":timestamp,
-                "iteration":iteration
-            }
-            new_info, new_aggregates = self.get_new_info(**param)
-            selector_result = OutputSelector(inputs=inputs_in_standard_form, context_history=history, new_info=new_info, neighbors=neighbors).run()
+                disaggregated_singles, disaggregated_aggregates = disaggregator.run()
+                if not disaggregated_aggregates:
+                    found_new = True # Not technically correct, but it will not cause an error due to just breaking out
+                    break
+                aggregates_token = str(aggregated_contexts_to_list_of_standard(disaggregated_aggregates))
+                if aggregates_token not in disaggregated_aggregates_set:
+                    found_new = True
+                    #if i > 0:
+                    #    print "Host (%d): trying %d(th) with token %s" % (self.id, i, aggregates_token, )
+                    disaggregated_aggregates_set.add(aggregates_token)
+                    break
 
-            if not is_empty_dictionary(selector_result):
+            if not found_new:
+                #print "Host (%d): Not found the new aggregates history (%d)" % (self.id, len(disaggregated_aggregates_set))
+                break
+
+            # remove generated redundancies
+            disaggregated_singles = ContextAggregator.remove_same_id_singles(disaggregated_singles)
+            disaggregated_aggregates = ContextAggregator.remove_same_id_aggregates(disaggregated_aggregates)
+
+            filtered_singles = ContextAggregator.filter_singles_by_hopcount(disaggregated_singles, self.configuration)
+
+            if not disaggregated_aggregates: # no aggregates and treat the same as singles only case
+                # 3. The code is the same as singles except the singles are filtered out
+                primes = set()
+                non_primes = set()
+                selected_non_primes = set()
+                param = {
+                    "singles":disaggregated_singles,
+                    "filtered_singles":filtered_singles,
+                    "primes":primes,
+                    "selected_non_primes":selected_non_primes,
+                    "timestamp":timestamp,
+                    "iteration":iteration
+                }
+                new_info, new_aggregates = self.get_new_info(**param)
+                selector_result = OutputSelector(inputs=inputs_in_standard_form, context_history=history, new_info=new_info, neighbors=neighbors).run()
                 return self.set_database_and_return(selector_result, new_aggregates, disaggregated_singles, disaggregated_aggregates, primes, non_primes, selected_non_primes, timestamp)
+
+            primes, non_primes = get_prime(disaggregated_aggregates)
+
+            if not non_primes: # only primes
+                assert primes is not None, "No primes and non-primes, it's an error condition"
+
+                non_primes = set()
+                selected_non_primes = set()
+                param = {
+                    "singles":disaggregated_singles,
+                    "filtered_singles":filtered_singles,
+                    "primes":primes,
+                    "selected_non_primes":selected_non_primes,
+                    "timestamp":timestamp,
+                    "iteration":iteration
+                }
+                new_info, new_aggregates = self.get_new_info(**param)
+                selector_result = OutputSelector(inputs=inputs_in_standard_form, context_history=history, new_info=new_info, neighbors=neighbors).run()
+                res_val = self.set_database_and_return(selector_result, new_aggregates, disaggregated_singles, disaggregated_aggregates, primes, non_primes, selected_non_primes, timestamp)
+                if not is_empty_dictionary(selector_result):
+                    return res_val
+                # try again if there is no output
+                continue
+
+            # for non-prime cases
+            previous_selection = self.assorted_context_database.get_selected_non_primes(timestamp)
+            selected_non_primes_list = GreedyMaxCover().run(non_primes, previous_selection)
+
+            for selected_non_primes in selected_non_primes_list:
+                param = {
+                    "singles":disaggregated_singles,
+                    "filtered_singles":filtered_singles,
+                    "primes":primes,
+                    "selected_non_primes":selected_non_primes,
+                    "timestamp":timestamp,
+                    "iteration":iteration
+                }
+                new_info, new_aggregates = self.get_new_info(**param)
+                selector_result = OutputSelector(inputs=inputs_in_standard_form, context_history=history, new_info=new_info, neighbors=neighbors).run()
+                res_val = self.set_database_and_return(selector_result, new_aggregates, disaggregated_singles, disaggregated_aggregates, primes, non_primes, selected_non_primes, timestamp)
+
+                if not is_empty_dictionary(selector_result):
+                    return res_val
 
         # no output found
         return self.set_database_and_return(dict(), new_aggregates, disaggregated_singles, disaggregated_aggregates, primes, non_primes, selected_non_primes, timestamp)

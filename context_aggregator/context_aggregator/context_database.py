@@ -75,8 +75,21 @@ class ContextDatabase(object):
         """
         if timestamp not in self.timestamp:
             self.timestamp[timestamp] = ContextDatabase.Container()
-        self.timestamp[timestamp].singles = singles
-        self.timestamp[timestamp].aggregates = aggregates
+
+        #before = len(self.timestamp[timestamp].singles)
+        for s in singles:
+            self.timestamp[timestamp].singles.add(s)
+        #after = len(self.timestamp[timestamp].singles)
+        #if after > before:
+        #    print "change %d" % (after - before)
+
+        #before = len(self.timestamp[timestamp].aggregates)
+        for a in aggregates:
+            self.timestamp[timestamp].aggregates.add(a)
+        #after = len(self.timestamp[timestamp].aggregates)
+        #if after > before:
+        #    print "change %d" % (after - before)
+
 
     def get_singles(self, timestamp=0):
         """When timestamp is negative number, it returns the newest timestamp

@@ -99,7 +99,6 @@ class GreedyMaxCover(MaxCover):
             l = GreedyMaxCover.remove_itself_and_enemies(lists, l)
             GreedyMaxCover._solve_from_size(l, selected_paths)
 
-
     def solve(self, lists, previous_selection=set()):
         """
         >>> x = {Context(value=1.0, cohorts={1,2,3}), Context(value=2.0, cohorts={2,3,4})}
@@ -129,8 +128,6 @@ class GreedyMaxCover(MaxCover):
         else:
             if size2 > size3: return result2
             else: return result3
-
-
 
 if __name__ == "__main__":
     import doctest
