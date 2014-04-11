@@ -85,16 +85,62 @@ class MultipleRunner(object):
             results[key] = avg_lists_column(values)
         return results
 
+test_names = ["real_world_intel_6", "real_world_intel_6"]
+test_names = ["test_network1"]
+test_sub_names = ["singles", "aggregates"]
+
+def test_change_drop_rate():
+    for t in test_names:
+        for d in range(0, 55, 10):
+            drop_rate = d
+            for n in test_sub_names:
+                condition = "c%d_0_0" % int(drop_rate)
+                config = {
+                    "network_dir":t,
+                    "condition":condition,
+                    "test_sub_name":n,
+                    "disconnection_rate":0.0,
+                    "drop_rate":d,
+                    "threshold":sys.maxint
+                }
+                m = MultipleRunner(config)
+                m.run(5)
+
+def test_change_discon_rate():
+    for t in test_names:
+        for d in range(0, 55, 10):
+            discon_rate = d
+            for n in test_sub_names:
+                condition = "c0_%d_0" % int(discon_rate)
+                config = {
+                    "network_dir":t,
+                    "condition":condition,
+                    "test_sub_name":n,
+                    "disconnection_rate":discon_rate,
+                    "drop_rate":0.0,
+                    "threshold":sys.maxint
+                }
+                m = MultipleRunner(config)
+                m.run(5)
+
+def test_change_threshold_rate():
+    for t in test_names:
+        for d in range(0, 20, 2):
+            threshold = d
+            for n in test_sub_names:
+                condition = "c_0_0_%d" % int(threshold)
+                config = {
+                    "network_dir":t,
+                    "condition":condition,
+                    "test_sub_name":n,
+                    "disconnection_rate":0.0,
+                    "drop_rate":0.0,
+                    "threshold":threshold
+                }
+                m = MultipleRunner(config)
+                m.run(5)
+
 if __name__ == "__main__":
-    test1 =  "real_world_intel_6"
-    #test1 =  "test_network1"
-    config = {
-        "network_dir":test1,
-        "condition":"normal",
-        "test_sub_name":"aggregates",
-        "disconnection_rate":0.0,
-        "drop_rate":0.0,
-        "threshold":sys.maxint
-    }
-    m = MultipleRunner(config)
-    m.run(5)
+    test_change_drop_rate()
+    test_change_discon_rate()
+    test_change_threshold_rate()
