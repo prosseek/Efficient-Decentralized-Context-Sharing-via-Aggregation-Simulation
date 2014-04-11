@@ -83,10 +83,25 @@ def avg_lists_column(input):
     >>> input = [[1,2,3],[1,2,3],[1,2,3]]
     >>> avg_lists_column(input) == [1,2,3]
     True
+    >>> input = [([1,2], [3,4],[5,6]), ([7,8],[9,10],[11,6])]
+    >>> avg_lists_column(input) ==  ([4, 5], [6, 7], [8, 6])
+    True
     """
-    r = map(sum, zip(*input))
-    length = len(input)
-    return map(lambda m: m/length, r)
+    # input checking
+    assert len(input), "Error, there is no input"
+    if len(input) == 1: return input
+
+    t = type(input[0])
+
+    if t is list:
+        r = map(sum, zip(*input))
+        length = len(input)
+        return map(lambda m: m/length, r)
+    else:
+        assert t is tuple
+        y = zip(*input)
+        r = [avg_lists_column(i) for i in y]
+        return tuple(r)
 
 def max_lists_column(input):
     """Sums a list of list column by column

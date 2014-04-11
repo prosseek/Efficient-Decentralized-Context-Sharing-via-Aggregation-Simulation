@@ -115,6 +115,15 @@ class GetStatistics(object):
         fn = lambda condition, sub_name: self.get_processed_information.get_cohorts(condition, sub_name)
         return self.execute_fn(fn, condition, sub_name)
 
+    def run(self, condition = None, sub_name = None):
+        results = {}
+        results["size"] = self.get_size(condition, sub_name)
+        results["speed"] = self.get_speed(condition, sub_name)
+        results["accuracy"] = self.get_accuracy(condition, sub_name)
+        results["identification_rate"] = self.get_identified_rate(condition, sub_name)
+        results["cohorst"] = self.get_cohorts(condition, sub_name)
+        return results
+
 if __name__ == "__main__":
     import doctest
     doctest.testmod()

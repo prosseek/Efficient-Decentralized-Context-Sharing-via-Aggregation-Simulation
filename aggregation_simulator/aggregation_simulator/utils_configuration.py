@@ -13,6 +13,9 @@ def get_network1():
     assert os.path.exists(file_path), "No %s exists - check if it is deleted" % file_path
     return file_path
 
+def get_reports_directory():
+    return get_configuration("config.cfg", "TestDirectory","reports_directory")
+
 def get_test_files_directory():
     """
     >>> get_test_files_directory() is not None
