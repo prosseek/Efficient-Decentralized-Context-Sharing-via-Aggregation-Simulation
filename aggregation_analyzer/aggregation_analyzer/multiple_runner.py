@@ -87,31 +87,34 @@ class MultipleRunner(object):
 
 test_names = ["real_world_intel_6", "real_world_intel_6"]
 test_names = ["test_network1"]
+test_names = ["real_world_intel_6"]
 test_sub_names = ["singles", "aggregates"]
 
-def test_change_drop_rate():
+def test_change_drop_rate(start, stop, increase):
+    global run_count
     for t in test_names:
-        for d in range(0, 55, 10):
-            drop_rate = d
+        for d in range(start, stop, increase):
+            drop_rate = d/100.0
             for n in test_sub_names:
-                condition = "c%d_0_0" % int(drop_rate)
+                condition = "%s_%d_0_0" % ("c", int(d))
                 config = {
                     "network_dir":t,
                     "condition":condition,
                     "test_sub_name":n,
                     "disconnection_rate":0.0,
-                    "drop_rate":d,
+                    "drop_rate":drop_rate,
                     "threshold":sys.maxint
                 }
                 m = MultipleRunner(config)
-                m.run(5)
+                m.run(run_count)
 
-def test_change_discon_rate():
+def test_change_discon_rate(start, stop, increase):
+    global run_count
     for t in test_names:
-        for d in range(0, 55, 10):
-            discon_rate = d
+        for d in range(start, stop, increase):
+            discon_rate = d/100.0
             for n in test_sub_names:
-                condition = "c0_%d_0" % int(discon_rate)
+                condition = "c0_%d_0" % int(d)
                 config = {
                     "network_dir":t,
                     "condition":condition,
@@ -121,11 +124,12 @@ def test_change_discon_rate():
                     "threshold":sys.maxint
                 }
                 m = MultipleRunner(config)
-                m.run(5)
+                m.run(run_count)
 
-def test_change_threshold_rate():
+def test_change_threshold_rate(start, stop, increase):
+    global run_count
     for t in test_names:
-        for d in range(0, 20, 2):
+        for d in range(start, stop, increase):
             threshold = d
             for n in test_sub_names:
                 condition = "c_0_0_%d" % int(threshold)
@@ -138,9 +142,10 @@ def test_change_threshold_rate():
                     "threshold":threshold
                 }
                 m = MultipleRunner(config)
-                m.run(5)
+                m.run(run_count)
 
 if __name__ == "__main__":
-    test_change_drop_rate()
-    test_change_discon_rate()
-    test_change_threshold_rate()
+    run_count = 1
+    test_change_drop_rate(10, 60, 10)
+    test_change_discon_rate(10, 60, 10)
+    test_change_threshold_rate(1, 10, 1)

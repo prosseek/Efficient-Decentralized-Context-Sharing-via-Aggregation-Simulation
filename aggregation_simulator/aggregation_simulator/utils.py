@@ -43,6 +43,7 @@ def check_drop(drop_rate):
     """
     # This value should be around 200
     # print len(filter(lambda m: m < drop_rate, [random() for i in range(1000)]))
+    assert 0<= drop_rate <= 1.0, "drop rate wrong (%5.3f), it should be between 1 and 0"
     return random.random() < drop_rate
 
 if __name__ == "__main__":
