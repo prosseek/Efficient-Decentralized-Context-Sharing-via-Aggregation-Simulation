@@ -94,18 +94,20 @@ class MultipleRunner(object):
         return results
 
 test_names = ["real_world_intel_6", "real_world_intel_6"]
-test_names = ["test_network1"]
-test_names = ["real_world_intel_6"]
+test_names = ["pseudo_realworld_100", "pseudo_realworld_100_2d","pseudo_realworld_49", "pseudo_realworld_49_2d"]
+#test_names = ["test_network1"]
+#test_names = ["real_world_intel_6"]
 test_sub_names = ["singles", "aggregates"]
 
-def test_change_drop_rate(start, stop, increase):
+def test_change_drop_rate(start, stop, increase, sub_dir="test_change_drop_rate"):
     global run_count
     for t in test_names:
         for d in range(start, stop, increase):
             drop_rate = d/100.0
             for n in test_sub_names:
-                condition = "%s_%d_0_0" % ("c", int(d))
+                condition = "c_%d_0_0" % (int(d))
                 config = {
+                    "report_sub_dir":sub_dir,
                     "network_dir":t,
                     "condition":condition,
                     "test_sub_name":n,
@@ -116,14 +118,15 @@ def test_change_drop_rate(start, stop, increase):
                 m = MultipleRunner(config)
                 m.run(run_count)
 
-def test_change_discon_rate(start, stop, increase):
+def test_change_discon_rate(start, stop, increase, sub_dir="test_change_discon_rate"):
     global run_count
     for t in test_names:
         for d in range(start, stop, increase):
             discon_rate = d/100.0
             for n in test_sub_names:
-                condition = "c0_%d_0" % int(d)
+                condition = "c_0_%d_0" % int(d)
                 config = {
+                    "report_sub_dir":sub_dir,
                     "network_dir":t,
                     "condition":condition,
                     "test_sub_name":n,
@@ -134,7 +137,7 @@ def test_change_discon_rate(start, stop, increase):
                 m = MultipleRunner(config)
                 m.run(run_count)
 
-def test_change_threshold_rate(start, stop, increase):
+def test_change_threshold_rate(start, stop, increase, sub_dir="test_change_threshold_rate"):
     global run_count
     for t in test_names:
         for d in range(start, stop, increase):
@@ -142,6 +145,7 @@ def test_change_threshold_rate(start, stop, increase):
             for n in test_sub_names:
                 condition = "c_0_0_%d" % int(threshold)
                 config = {
+                    "report_sub_dir":sub_dir,
                     "network_dir":t,
                     "condition":condition,
                     "test_sub_name":n,
@@ -154,6 +158,7 @@ def test_change_threshold_rate(start, stop, increase):
 
 if __name__ == "__main__":
     run_count = 1
+    test_category_name = "hello"
     test_change_drop_rate(10, 60, 10)
     test_change_discon_rate(10, 60, 10)
     test_change_threshold_rate(1, 10, 1)
