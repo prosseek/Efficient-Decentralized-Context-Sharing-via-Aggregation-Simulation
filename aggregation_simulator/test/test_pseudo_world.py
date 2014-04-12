@@ -24,11 +24,22 @@ test_name = "pseudo_realworld_50"
 d = os.path.join(get_test_files_directory(), test_name)
 network_file_path50 = os.path.join(d, test_name + ".txt")
 sample_file_path50=os.path.join(d, test_name + ".sample.txt")
-test_name = "pseudo_realworld_70"
+test_name = "pseudo_realworld_100"
 d = os.path.join(get_test_files_directory(), test_name)
-network_file_path70 = os.path.join(d, test_name + ".txt")
-sample_file_path70=os.path.join(d, test_name + ".sample.txt")
-
+network_file_path100 = os.path.join(d, test_name + ".txt")
+sample_file_path100=os.path.join(d, test_name + ".sample.txt")
+test_name = "pseudo_realworld_100_2d"
+d = os.path.join(get_test_files_directory(), test_name)
+network_file_path100_2d = os.path.join(d, test_name + ".txt")
+sample_file_path100_2d = os.path.join(d, test_name + ".sample.txt")
+test_name = "pseudo_realworld_49"
+d = os.path.join(get_test_files_directory(), test_name)
+network_file_path49 = os.path.join(d, test_name + ".txt")
+sample_file_path49=os.path.join(d, test_name + ".sample.txt")
+test_name = "pseudo_realworld_49_2d"
+d = os.path.join(get_test_files_directory(), test_name)
+network_file_path49_2d = os.path.join(d, test_name + ".txt")
+sample_file_path49_2d = os.path.join(d, test_name + ".sample.txt")
 
 class TestPseudoWorld(unittest.TestCase):
     def setUp(self):
@@ -116,11 +127,11 @@ class TestPseudoWorld(unittest.TestCase):
 
 
     # ***********************
-    def test_pseudo70_singles(self):
+    def test_pseudo100_singles(self):
         params = {
             "simulation_root_dir":simulation_root_dir,
-            "network_file_path":network_file_path70,
-            "sample_file_path":sample_file_path70,
+            "network_file_path":network_file_path100,
+            "sample_file_path":sample_file_path100,
             "condition":"normal",
             "test_sub_name":"singles",
             "disconnection_rate":0.0,
@@ -129,11 +140,11 @@ class TestPseudoWorld(unittest.TestCase):
         }
         return runit(**params)
 
-    def test_pseudo70_aggregates(self):
+    def test_pseudo100_aggregates(self):
         params = {
             "simulation_root_dir":simulation_root_dir,
-            "network_file_path":network_file_path70,
-            "sample_file_path":sample_file_path70,
+            "network_file_path":network_file_path100,
+            "sample_file_path":sample_file_path100,
             "condition":"normal",
             "test_sub_name":"aggregates",
             "disconnection_rate":0.0,
@@ -142,15 +153,11 @@ class TestPseudoWorld(unittest.TestCase):
         }
         return runit(**params)
 
-    def test_pseudo70_2d_singles(self):
-        test_name = "pseudo_realworld_70_2d"
-        d = os.path.join(get_test_files_directory(), test_name)
-        network_file_path70_2d = os.path.join(d, test_name + ".txt")
-        sample_file_path70_2d = os.path.join(d, test_name + ".sample.txt")
+    def test_pseudo100_2d_singles(self):
         params = {
             "simulation_root_dir":simulation_root_dir,
-            "network_file_path":network_file_path70_2d,
-            "sample_file_path":sample_file_path70_2d,
+            "network_file_path":network_file_path100_2d,
+            "sample_file_path":sample_file_path100_2d,
             "condition":"normal",
             "test_sub_name":"singles",
             "disconnection_rate":0.0,
@@ -159,16 +166,70 @@ class TestPseudoWorld(unittest.TestCase):
         }
         return runit(**params)
 
-    def test_pseudo70_2d_aggregates(self):
-        test_name = "pseudo_realworld_70_2d"
+    def test_pseudo100_2d_aggregates(self):
+        test_name = "pseudo_realworld_100_2d"
         d = os.path.join(get_test_files_directory(), test_name)
         network_file_path70_2d = os.path.join(d, test_name + ".txt")
         sample_file_path70_2d = os.path.join(d, test_name + ".sample.txt")
 
         params = {
             "simulation_root_dir":simulation_root_dir,
-            "network_file_path":network_file_path70_2d,
-            "sample_file_path":sample_file_path70_2d,
+            "network_file_path":network_file_path100_2d,
+            "sample_file_path":sample_file_path100_2d,
+            "condition":"normal",
+            "test_sub_name":"aggregates",
+            "disconnection_rate":0.0,
+            "drop_rate":0.0,
+            "threshold":sys.maxint
+        }
+        return runit(**params)
+
+    # 49 ##############################
+    # ***********************
+    def test_pseudo49_singles(self):
+        params = {
+            "simulation_root_dir":simulation_root_dir,
+            "network_file_path":network_file_path49,
+            "sample_file_path":sample_file_path49,
+            "condition":"normal",
+            "test_sub_name":"singles",
+            "disconnection_rate":0.0,
+            "drop_rate":0.0,
+            "threshold":sys.maxint
+        }
+        return runit(**params)
+
+    def test_pseudo49_aggregates(self):
+        params = {
+            "simulation_root_dir":simulation_root_dir,
+            "network_file_path":network_file_path49,
+            "sample_file_path":sample_file_path49,
+            "condition":"normal",
+            "test_sub_name":"aggregates",
+            "disconnection_rate":0.0,
+            "drop_rate":0.0,
+            "threshold":sys.maxint
+        }
+        return runit(**params)
+
+    def test_pseudo49_2d_singles(self):
+        params = {
+            "simulation_root_dir":simulation_root_dir,
+            "network_file_path":network_file_path49_2d,
+            "sample_file_path":sample_file_path49_2d,
+            "condition":"normal",
+            "test_sub_name":"singles",
+            "disconnection_rate":0.0,
+            "drop_rate":0.0,
+            "threshold":sys.maxint
+        }
+        return runit(**params)
+
+    def test_pseudo49_2d_aggregates(self):
+        params = {
+            "simulation_root_dir":simulation_root_dir,
+            "network_file_path":network_file_path49_2d,
+            "sample_file_path":sample_file_path49_2d,
             "condition":"normal",
             "test_sub_name":"aggregates",
             "disconnection_rate":0.0,

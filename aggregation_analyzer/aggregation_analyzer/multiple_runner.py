@@ -19,7 +19,15 @@ class MultipleRunner(object):
         self.disconnection_rate = config["disconnection_rate"]
         self.drop_rate = config["drop_rate"]
         self.threshold = config["threshold"]
-        output_dir = get_reports_directory() + os.sep + config["network_dir"]
+
+        global test_category_name
+
+        if "report_sub_dir" in config:
+            self.report_sub_dir = config["report_sub_dir"]
+        else:
+            self.report_sub_dir = "variety"
+
+        output_dir = get_reports_directory() + os.sep + test_category_name + os.sep + config["network_dir"] + os.sep + self.report_sub_dir
         if not os.path.exists(output_dir):
             os.makedirs(output_dir)
         name = "report_{condition}_{test_sub_name}_{drop_rate}_{disconnection_rate}_{threshold}.txt".format(**config)
@@ -85,9 +93,9 @@ class MultipleRunner(object):
             results[key] = avg_lists_column(values)
         return results
 
-test_names = ["real_world_intel_6", "real_world_intel_10"]
-#test_names = ["test_network1"]
-#test_names = ["real_world_intel_6"]
+test_names = ["real_world_intel_6", "real_world_intel_6"]
+test_names = ["test_network1"]
+test_names = ["real_world_intel_6"]
 test_sub_names = ["singles", "aggregates"]
 
 def test_change_drop_rate(start, stop, increase):

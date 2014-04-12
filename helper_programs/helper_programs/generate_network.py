@@ -35,8 +35,8 @@ def con(location_file, file_path,limit=10):
 if __name__ == "__main__":
     current_dir = os.path.dirname(os.path.abspath(__file__))
     pdf_dir = current_dir + os.sep + ".." + os.sep + "mote_loc_data" + os.sep + "pdf"
-    loc_data = os.path.join(pdf_dir, "mote_locs_100.txt")
+    loc_data = os.path.join(pdf_dir, "mote_locs_49.txt")
     result_dir = current_dir + os.sep + ".." + os.sep + "test"
-    result_file_path = os.path.join(result_dir, "pseudo_realworld_200.txt")
-    con(loc_data, result_file_path, 70)
+    result_file_path = os.path.join(result_dir, "pseudo_realworld_49.txt")
+    con(loc_data, result_file_path, 90)
     #con(location_file, "network6.txt", 6)

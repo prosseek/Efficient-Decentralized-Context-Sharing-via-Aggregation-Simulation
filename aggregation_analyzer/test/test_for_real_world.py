@@ -82,15 +82,25 @@ class TestForRealWorld(unittest.TestCase):
         # ([18.45, 13, 22], [28.64, 21, 38])
         # ([0.0, 0, 0], [3.5669999999999993, 75, 21])
 
-    #
-    def test_pseudo30_th5(self):
-        network_dir = os.path.join(get_pseudo_test_dir(), "pseudo_realworld_30")
-        condition = 'th5'
-        self.get(network_dir, condition)
-    def test_pseudo50_th5(self):
-        network_dir = os.path.join(get_pseudo_test_dir(), "pseudo_realworld_50")
-        condition = 'th5'
-        self.get(network_dir, condition)
+    #########################
+    def test_pseudo49(self):
+        network_dir = os.path.join(get_pseudo_test_dir(), "pseudo_realworld_49")
+        condition = 'normal'
+        self.get(network_dir, condition, use_cache = False)
+        #(([4116, 4116, 0], [4116, 4116, 0]), ([1664, 168, 1496], [1664, 168, 1496]))
+        #([100.0, 100.0], [99.61306122448981, 95.72367346938776])
+        #([100.0, 49, 49, 100.0, 49, 49], [84.8393877551021, 41, 49, 13.908979591836735, 6, 49])
+        #([10.346938775510203, 7, 12], [13.73469387755102, 11, 16])
+        #([0.0, 0, 0], [4.3310204081632655, 34, 8])
 
+    def test_pseudo49_2d(self):
+        network_dir = os.path.join(get_pseudo_test_dir(), "pseudo_realworld_49_2d")
+        condition = 'normal'
+        self.get(network_dir, condition,  use_cache = False)
+        #(([2891, 2891, 0], [2891, 2891, 0]), ([1364, 118, 1246], [1364, 118, 1246]))
+        #([100.0, 100.0], [99.8328571428571, 96.10999999999999])
+        #([100.0, 49, 49, 100.0, 49, 49], [92.79653061224495, 45, 49, 15.658571428571435, 7, 49])
+        #([12.040816326530612, 10, 13], [17.163265306122447, 14, 19])
+        #([0.0, 0, 0], [3.018571428571429, 37, 12])
 if __name__ == "__main__":
     unittest.main(verbosity=2)

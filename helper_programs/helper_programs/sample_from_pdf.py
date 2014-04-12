@@ -93,15 +93,15 @@ def run():
     >>> run()
     """
     print pdf_dir
-    loc_data = os.path.join(pdf_dir, "mote_locs_100.txt")
-    sample_data = os.path.join(pdf_dir, "sensor.100.txt")
+    loc_data = os.path.join(pdf_dir, "mote_locs_49.txt")
+    sample_data = os.path.join(pdf_dir, "sensor.49.txt")
     lines = readlines(ad_file5)
 
     row_count = len(lines)
     col_count = len(lines[0])
     # 50 -> 50x50 = 2500
     # 22 -> 22x22 = 484
-    res, res2 = get_positions(row_count, 10, disturbance_range=3.0)
+    res, res2 = get_positions(row_count, 7, disturbance_range=3.0)
 
     f_loc = open(loc_data, "w")
     f_sample = open(sample_data, "w")
