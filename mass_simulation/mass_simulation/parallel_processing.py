@@ -170,7 +170,7 @@ def run_various_parallel(network_dir, condition, variation):
             }
             configs.append(config)
         value += increase
-
+    network_file_path = "" # This is wrong
     jobs = []
     for config in configs:
         jobs.append((network_file_path, fn.submit(config)))
@@ -190,37 +190,37 @@ def run_mass_parallel(subdir):
     return run_networks_in_directory(network_files)
 
 if __name__ == "__main__":
-    #test_files_directory=%(project_root_dir)s/contextAggregator/aggregation_simulator/test_files
-    simulation_root_dir = get_configuration("config.cfg","TestDirectory","various_simulation_root_dir")
-    if not os.path.exists(simulation_root_dir): os.makedirs(simulation_root_dir)
-    base_directory = get_configuration("config.cfg","TestDirectory","test_files_directory")
-    network_files = [
-        "pseudo_realworld_50",
-        "pseudo_realworld_30",
-        "real_world_intel_6",
-        "real_world_intel_10"
-        #"test_network1"
-    ]
-    choices = {"drop_rate":(5, 0.0, 50.0, 5.0), "disconnection_rate":(20, 0.0, 50.0, 5.0)}
-    #choices = {"drop_rate":(2, 0.0, 5.0, 5.0)}
-    for file in network_files:
-        # make ready for the simulation
-        file_name = os.path.join(base_directory, file)
-        network_file_path = os.path.join(file_name, file + ".txt")
-        sample_file_path = os.path.join(file_name, file + ".sample.txt")
-        assert os.path.exists(network_file_path), "no %s exists" % network_file_path
-        assert os.path.exists(sample_file_path), "no %s exists" % sample_file_path
+    # #test_files_directory=%(project_root_dir)s/contextAggregator/aggregation_simulator/test_files
+    # simulation_root_dir = get_configuration("config.cfg","TestDirectory","various_simulation_root_dir")
+    # if not os.path.exists(simulation_root_dir): os.makedirs(simulation_root_dir)
+    # base_directory = get_configuration("config.cfg","TestDirectory","test_files_directory")
+    # network_files = [
+    #     "pseudo_realworld_50",
+    #     "pseudo_realworld_30",
+    #     "real_world_intel_6",
+    #     "real_world_intel_10"
+    #     #"test_network1"
+    # ]
+    # choices = {"drop_rate":(5, 0.0, 50.0, 5.0), "disconnection_rate":(20, 0.0, 50.0, 5.0)}
+    # #choices = {"drop_rate":(2, 0.0, 5.0, 5.0)}
+    # for file in network_files:
+    #     # make ready for the simulation
+    #     file_name = os.path.join(base_directory, file)
+    #     network_file_path = os.path.join(file_name, file + ".txt")
+    #     sample_file_path = os.path.join(file_name, file + ".sample.txt")
+    #     assert os.path.exists(network_file_path), "no %s exists" % network_file_path
+    #     assert os.path.exists(sample_file_path), "no %s exists" % sample_file_path
+    #
+    #     network_dir = make_ready_for_one_file_simulation(simulation_root_dir=simulation_root_dir,
+    #                                                      network_file_path=network_file_path,
+    #                                                      sample_file_path=sample_file_path)
+    #
+    #     for key, value in choices.items():
+    #         print key, value
+    #         run_various_parallel(network_dir, key, value)
 
-        network_dir = make_ready_for_one_file_simulation(simulation_root_dir=simulation_root_dir,
-                                                         network_file_path=network_file_path,
-                                                         sample_file_path=sample_file_path)
-
-        for key, value in choices.items():
-            print key, value
-            run_various_parallel(network_dir, key, value)
-
-    # subdirs = ["10_100_10_80/mesh"] # ,"10_100_10_80/tree","200_500_50_50/mesh","200_500_50_50/tree"]
-    # # 10_100_10_10/mesh, 10_100_10_10/tree
-    # for subdir in subdirs:
-    #     run_mass_parallel(subdir)
+    subdirs = ["10_100_10_80/mesh","10_100_10_80/tree"] # ,"200_500_50_50/mesh","200_500_50_50/tree"]
+    # 10_100_10_10/mesh, 10_100_10_10/tree
+    for subdir in subdirs:
+        run_mass_parallel(subdir)
 

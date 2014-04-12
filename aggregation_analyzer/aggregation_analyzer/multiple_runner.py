@@ -85,9 +85,9 @@ class MultipleRunner(object):
             results[key] = avg_lists_column(values)
         return results
 
-test_names = ["real_world_intel_6", "real_world_intel_6"]
-test_names = ["test_network1"]
-test_names = ["real_world_intel_6"]
+test_names = ["real_world_intel_6", "real_world_intel_10"]
+#test_names = ["test_network1"]
+#test_names = ["real_world_intel_6"]
 test_sub_names = ["singles", "aggregates"]
 
 def test_change_drop_rate(start, stop, increase):
