@@ -100,7 +100,7 @@ class MultipleRunAndAnalysis(object):
                 run_count = 1 # TODO, temporary
             else:
                 run_count = count
-            average, results = self.execute(sub_name, count)
+            average, results = self.execute(sub_name, run_count)
             report_file_name = "report_%s.txt" % sub_name
             report_file_path = self.report_file_dir + os.sep + report_file_name
             self.write(report_file_path, average, results)
