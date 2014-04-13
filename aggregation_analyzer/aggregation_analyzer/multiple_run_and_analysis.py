@@ -37,7 +37,7 @@ class MultipleRunAndAnalysis(object):
         drop_rate = config["drop_rate"]
         self.drop_rate = 1.0*drop_rate/100.0 # WARNING, drop rate is converted in here.
         self.threshold = config.get("threshold", sys.maxint)
-        if self.threshold == sys.maxint:
+        if self.threshold > sys.maxint/2.0:
             threshold_name = "no"
         else:
             threshold_name = self.threshold
@@ -48,7 +48,7 @@ class MultipleRunAndAnalysis(object):
         if not os.path.exists(self.report_file_dir):
             os.makedirs(self.report_file_dir)
 
-        self.results = []
+        #self.results = []
 
         # create or copy path if necessary
         simulation_root_dir = self.sims_dir
@@ -62,6 +62,7 @@ class MultipleRunAndAnalysis(object):
         """It executes the simulation count times to average the result"""
         assert count > 0, "count should be more than 0"
 
+        results = []
         for i in range(count):
             print "Run %d of %s started" % ((i+1), sub_name)
             #for sub_name in ["singles", "aggregates"]:
@@ -78,8 +79,8 @@ class MultipleRunAndAnalysis(object):
             s = GetStatistics(d).run(self.condition, sub_name)
             print s
             print "End analysis of %d run started" % (i+1)
-            self.results.append(s)
-        return MultipleRunAndAnalysis.get_average(self.results), self.results
+            results.append(s)
+        return MultipleRunAndAnalysis.get_average(results), results
 
     def write(self, output_file_path, average, results):
         pp = pprint.PrettyPrinter(indent=4)
@@ -88,7 +89,11 @@ class MultipleRunAndAnalysis(object):
             f.write("avg=" + pp.pformat(average) + "\n\n")
             f.write("results=" + pp.pformat(results) + "\n")
 
-    def run(self, count=5):
+    def run(self, count=None):
+
+        if count is None:
+            count = self.config.get("run_count", 5)
+
         # get the average
         for sub_name in ["singles", "aggregates"]:
             average, results = self.execute(sub_name, count)

@@ -2,6 +2,7 @@ import sys
 import pp
 import glob
 import os
+import pprint
 
 #sys.path.insert(0, "/Users/smcho/code/PyCharmProjects/contextAggregator/aggregation_simulator")
 
@@ -39,6 +40,7 @@ methods = (MultipleRunAndAnalysis,
            separate_single_and_group_contexts,
            GetStatistics,
            avg,
+           remove_if_in,
            avg_lists_column,
            GetInformation,
            GetProcessedInformation,
@@ -139,21 +141,23 @@ def run_parallel(configs):
     job_server.print_stats()
 
 def get_configs(sim_config):
+    run_count = sim_config.get("run_count", 5)
+
     drop_rate_start = sim_config.get("drop_rate_start", 0)
-    drop_rate_end = sim_config.get("drop_rate_end", drop_rate_start+1)
-    drop_rate_step = sim_config.get("drop_rate_step", drop_rate_start+1)
+    drop_rate_end = sim_config.get("drop_rate_end", 1)
+    drop_rate_step = sim_config.get("drop_rate_step", 1)
     drop_rate_range = (drop_rate_start, drop_rate_end, drop_rate_step)
 
-    # disconnection_rate_start = sim_config.get("disconnection_rate_start", 0)
-    # disconnection_rate_end = sim_config.get("disconnection_rate_end", disconnection_rate_start+1)
-    # disconnection_rate_step = sim_config.get("disconnection_rate_step", disconnection_rate_start+1)
-    # disconnection_rate_range = (disconnection_rate_start, disconnection_rate_end, disconnection_rate_step)
-    #
-    # threshold_rate_start = sim_config.get("threshold_rate_start", 0)
-    # threshold_rate_end = sim_config.get("threshold_rate_end", threshold_rate_start+1)
-    # threshold_rate_step = sim_config.get("threshold_rate_step", threshold_rate_start+1)
-    # threshold_range = (threshold_rate_start, threshold_rate_end, threshold_rate_step)
-    #
+    disconnection_rate_start = sim_config.get("disconnection_rate_start", 0)
+    disconnection_rate_end = sim_config.get("disconnection_rate_end", 1)
+    disconnection_rate_step = sim_config.get("disconnection_rate_step", 1)
+    disconnection_rate_range = (disconnection_rate_start, disconnection_rate_end, disconnection_rate_step)
+
+    threshold_rate_start = sim_config.get("threshold_rate_start", sys.maxint-1)
+    threshold_rate_end = sim_config.get("threshold_rate_end", sys.maxint)
+    threshold_rate_step = sim_config.get("threshold_rate_step", 1)
+    threshold_range = (threshold_rate_start, threshold_rate_end, threshold_rate_step)
+
     configs = []
 
     test_name = sim_config["test_name"]
@@ -166,8 +170,6 @@ def get_configs(sim_config):
     drop_rate_range = (drop_rate_start, drop_rate_end, drop_rate_step)
 
     threshold = sys.maxint
-    disconnection_rate = 0.0
-
 
     test_files_dir = get_test_files_dir() # We know where the test files are
     network_file_path = os.path.join(test_files_dir, test_name) + os.sep + test_name +  ".txt"
@@ -175,32 +177,57 @@ def get_configs(sim_config):
     results = []
 
     for drop_rate in range(*drop_rate_range):
-
-        sim_config = {
-            "network_file_path": network_file_path,
-            "run_count":10,
-            # make ready code will create the subdir, so you don't need to sepcify it.
-            "sims_dir":sims_dir,
-            "reports_dir":reports_dir,
-            "disconnection_rate":disconnection_rate,
-            "drop_rate":drop_rate,
-            "threshold":threshold
-        }
-        results.append(sim_config)
+        for disconnection_rate in range(*disconnection_rate_range):
+            for threshold in range(*threshold_range):
+                sim_config = {
+                    "network_file_path": network_file_path,
+                    "run_count":run_count,
+                    # make ready code will create the subdir, so you don't need to sepcify it.
+                    "sims_dir":sims_dir,
+                    "reports_dir":reports_dir,
+                    "disconnection_rate":disconnection_rate,
+                    "drop_rate":drop_rate,
+                    "threshold":threshold
+                }
+                results.append(sim_config)
     return results
 
-if __name__ == "__main__":
+def get_configs_for_massive_simulation():
+
+    for glob.glob():
+
     sim_config = {}
-    sim_config["test_name"] = "test_network1"
+    sim_config["test_name"] = test_name
     sim_config["reports_dir"] = get_reports_dir()
     sim_config["sims_dir"] = get_sims_dir()
-
-    drop_rate_start = 0
-    sim_config["drop_rate_start"] =  drop_rate_start
-    sim_config["drop_rate_end"] = drop_rate_start+10
-    sim_config["drop_rate_step"] = 1
+    sim_config["run_count"] = 5
 
     configs = get_configs(sim_config)
-    print configs
+    return configs
+
+def get_configs_for_disconnection_rate(test_name, start, end, step):
+    sim_config = {}
+    sim_config["test_name"] = test_name
+    sim_config["reports_dir"] = get_reports_dir()
+    sim_config["sims_dir"] = get_sims_dir()
+    sim_config["run_count"] = 5
+
+    # drop_rate_start = 0
+    # sim_config["drop_rate_start"] =  drop_rate_start
+    # sim_config["drop_rate_end"] = drop_rate_start+10
+    # sim_config["drop_rate_step"] = 1
+
+    disconnection_rate = 0
+    sim_config["disconnection_rate_start"] =  start
+    sim_config["disconnection_rate_end"] = end
+    sim_config["disconnection_rate_step"] = step
+
+    configs = get_configs(sim_config)
+    return configs
+
+if __name__ == "__main__":
+    #configs = get_configs_for_disconnection_rate("test_network1", 0, 10, 2)
+    configs = get_configs_for_massive_simulation()
+    pprint.pprint(configs)
     run_parallel(configs)
 

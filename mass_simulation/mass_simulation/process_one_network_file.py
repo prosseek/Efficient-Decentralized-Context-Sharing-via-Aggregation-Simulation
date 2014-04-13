@@ -23,7 +23,7 @@ def process_one_file(sim_config):
 if __name__ == "__main__":
     sim_config = {
         "network_file_path": network_file_path,
-        "run_count":10,
+        "run_count":7,
         "sims_dir":sims_file_dir,
         "reports_dir":reports_file_dir,
         "disconnection_rate":disconnection_rate,
