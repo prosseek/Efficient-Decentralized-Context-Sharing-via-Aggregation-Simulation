@@ -115,7 +115,7 @@ methods = (MultipleRunAndAnalysis,
 )
 modules = ("re", "os",
            "ConfigParser",
-           "shutil","copy","operator","random","cPickle","glob","pprint"
+           "shutil","copy","operator","random","cPickle","glob","pprint","warnings"
 )
 
 def run_parallel(configs):
@@ -192,19 +192,6 @@ def get_configs(sim_config):
                 results.append(sim_config)
     return results
 
-def get_configs_for_massive_simulation():
-
-    for glob.glob():
-
-    sim_config = {}
-    sim_config["test_name"] = test_name
-    sim_config["reports_dir"] = get_reports_dir()
-    sim_config["sims_dir"] = get_sims_dir()
-    sim_config["run_count"] = 5
-
-    configs = get_configs(sim_config)
-    return configs
-
 def get_configs_for_disconnection_rate(test_name, start, end, step):
     sim_config = {}
     sim_config["test_name"] = test_name
@@ -225,9 +212,35 @@ def get_configs_for_disconnection_rate(test_name, start, end, step):
     configs = get_configs(sim_config)
     return configs
 
+def get_configs_for_massive_simulation(directory, name):
+
+    results = []
+    files = glob.glob(directory + os.sep + "*.txt")
+
+    for f in files:
+        #print file
+        sim_config = {}
+        sim_config["reports_dir"] = get_reports_dir() + os.sep + name
+        sim_config["sims_dir"] = get_sims_dir() + os.sep + name
+        sim_config["run_count"] = 10
+        sim_config["network_file_path"] =  f
+        results.append(sim_config)
+
+    return results
+
 if __name__ == "__main__":
+    light_trees_dir = get_configuration("config.cfg", "TestDirectory", "light_trees_dir")
+    light_meshes_dir = get_configuration("config.cfg", "TestDirectory", "light_meshes_dir")
+    dense_trees_dir = get_configuration("config.cfg", "TestDirectory", "dense_trees_dir")
+    dense_meshes_dir = get_configuration("config.cfg", "TestDirectory", "dense_meshes_dir")
+
     #configs = get_configs_for_disconnection_rate("test_network1", 0, 10, 2)
-    configs = get_configs_for_massive_simulation()
-    pprint.pprint(configs)
+    configs = get_configs_for_massive_simulation(light_trees_dir, "light_trees")
+    #print configs
+    #pprint.pprint(configs)
+    run_parallel(configs)
+    configs = get_configs_for_massive_simulation(dense_trees_dir, "dense_trees")
+    #print configs
+    #pprint.pprint(configs)
     run_parallel(configs)
 

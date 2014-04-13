@@ -32,9 +32,9 @@ class MultipleRunAndAnalysis(object):
         # condition directory in the network directory
 
         #self.test_sub_name = config["test_sub_name"]
-        disconnection_rate = config["disconnection_rate"]
+        disconnection_rate = config.get("disconnection_rate", 0)
         self.disconnection_rate = 1.0*disconnection_rate/100.0 # Warning, disconnection rate is converted here
-        drop_rate = config["drop_rate"]
+        drop_rate = config.get("drop_rate", 0)
         self.drop_rate = 1.0*drop_rate/100.0 # WARNING, drop rate is converted in here.
         self.threshold = config.get("threshold", sys.maxint)
         if self.threshold > sys.maxint/2.0:
