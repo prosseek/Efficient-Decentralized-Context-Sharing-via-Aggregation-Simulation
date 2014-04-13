@@ -95,10 +95,11 @@ class MultipleRunAndAnalysis(object):
             count = self.config.get("run_count", 5)
 
         # get the average
-        for sub_name in ["singles", "aggregates"]:
-            if sub_name == "singles":
-                if self.disconnection_rate == 0.0 and self.drop_rate == 0.0:
-                    count = 1 # TODO, temporary
+        for sub_name in ["aggregates","singles"]:
+            if sub_name == "singles" and self.disconnection_rate == 0.0 and self.drop_rate == 0.0:
+                run_count = 1 # TODO, temporary
+            else:
+                run_count = count
             average, results = self.execute(sub_name, count)
             report_file_name = "report_%s.txt" % sub_name
             report_file_path = self.report_file_dir + os.sep + report_file_name
