@@ -234,15 +234,11 @@ if __name__ == "__main__":
     dense_trees_dir = get_configuration("config.cfg", "TestDirectory", "dense_trees_dir")
     dense_meshes_dir = get_configuration("config.cfg", "TestDirectory", "dense_meshes_dir")
 
-    #configs = get_configs_for_disconnection_rate("test_network1", 0, 10, 2)
-    configs = get_configs_for_massive_simulation(dense_meshes_dir, "dense_meshes")
-    #print configs
-    #pprint.pprint(configs)
-    run_parallel(configs)
-    #configs = get_configs_for_massive_simulation(dense_trees_dir, "dense_trees")
-    #print configs
-    #pprint.pprint(configs)
-    #run_parallel(configs)
-    #configs = get_configs_for_massive_simulation(dense_trees_dir, "dense_trees")
-    #run_parallel(configs)
+    dirs = [light_trees_dir, light_meshes_dir, dense_trees_dir,dense_meshes_dir]
+    names = ["light_trees_dir", "light_meshes_dir", "dense_trees_dir","dense_meshes_dir"]
+    for i,directory in enumerate(dirs):
+        name = names[i]
+        configs = get_configs_for_massive_simulation(directory, name)
+        run_parallel(configs)
+
 
