@@ -241,4 +241,6 @@ if __name__ == "__main__":
         configs = get_configs_for_massive_simulation(directory, name)
         run_parallel(configs)
 
-
+    # meshes = "/Users/smcho/Desktop/mesh"
+    # m = get_configs_for_massive_simulation(meshes, "mesh20")
+    # run_parallel(m)

@@ -26,7 +26,8 @@ class MultipleRunAndAnalysis(object):
         self.reports_dir = config["reports_dir"]
 
         # recover test name and enclosing directory
-        self.test_name = os.path.basename(self.network_file_path).split('.')[0]
+        splitted = os.path.basename(self.network_file_path).split('.')[:-1]
+        self.test_name = 'p'.join(splitted) # a_3.4 -> a_3p4
         self.network_data_dir = os.path.dirname(self.network_file_path)
 
         # condition directory in the network directory
