@@ -5,6 +5,12 @@ import os
 
 #sys.path.insert(0, "/Users/smcho/code/PyCharmProjects/contextAggregator/aggregation_simulator")
 
+from aggregation_analyzer.utils_location import *
+from aggregation_analyzer.multiple_run_and_analysis import MultipleRunAndAnalysis
+from aggregation_analyzer.utils import *
+from aggregation_analyzer.read_reports import ReadReports
+from aggregation_analyzer.get_statistics import GetStatistics
+from aggregation_analyzer.get_processed_information import GetProcessedInformation, GetInformation
 from process_one_network_file import *
 from utils import *
 from aggregation_simulator.network import *
@@ -28,11 +34,24 @@ from context_aggregator.disaggregator import *
 from context_aggregator.greedy_maxcover import *
 from context_aggregator.maxcover import *
 
-methods = (process_one_network_file,
-           process_singles_and_aggregates,
-           get_test_name,
+methods = (MultipleRunAndAnalysis,
+           ReadReports,
+           separate_single_and_group_contexts,
+           GetStatistics,
+           avg,
+           avg_lists_column,
+           GetInformation,
+           GetProcessedInformation,
+           simple_dict_to_list,
+           get_host_names,
+           sum_lists_column,
+           get_dir,
+           get_index_with_true,
+           recover_to_list,
+           starts_with,
+           is_dictionary_standard,
+           get_matching_aggregate_contexts,
            make_ready_for_one_file_simulation,
-           get_mass_simulation_root_dir,
            get_configuration,
            find_configuration_file,
            get_sample_from_network_file,
@@ -94,12 +113,13 @@ methods = (process_one_network_file,
 )
 modules = ("re", "os",
            "ConfigParser",
-           "shutil","copy","operator","random"
+           "shutil","copy","operator","random","cPickle","glob","pprint"
 )
 
-def run_networks_in_directory(network_files):
+def run_parallel(configs):
     def function_to_run(config):
-        return process_one_network_file(**config)
+        m = MultipleRunAndAnalysis(config)
+        return m.run()
 
     ppservers = ("146.6.28.105:30000",)
     #ppservers=()
@@ -108,16 +128,9 @@ def run_networks_in_directory(network_files):
 
     fn = pp.Template(job_server, function_to_run, methods, modules)
 
-    config = {
-        "simulation_root_directory":None,
-        "sample_file":None,
-        "condition":"normal",
-        "disconnection_rate":0.0,
-        "drop_rate":0.0
-    }
     jobs = []
-    for network_file in network_files:
-        config["network_file"] = network_file
+    for config in configs:
+        network_file = os.path.basename(config["network_file_path"])
         jobs.append((network_file, fn.submit(config)))
 
     for input, job in jobs:
@@ -125,102 +138,69 @@ def run_networks_in_directory(network_files):
 
     job_server.print_stats()
 
-def run_various_parallel(network_dir, condition, variation):
-    """
-    choices = {"drop_rate":(20, 0.0, 50.0, 5.0), "disconnection_rate":(20, 0.0, 50.0, 5.0)}
-    <- 20 means 20 times iteration
-    <- 0.0 5.0 10.0 ... 50.0 inclusive
-    for key, value in choices.items():
-            print key, value
-            run_various_parallel(network_file, sample_file, key, value)
-    """
-    def function_to_run(config):
-        return process_singles_and_aggregates(**config)
+def get_configs(sim_config):
+    drop_rate_start = sim_config.get("drop_rate_start", 0)
+    drop_rate_end = sim_config.get("drop_rate_end", drop_rate_start+1)
+    drop_rate_step = sim_config.get("drop_rate_step", drop_rate_start+1)
+    drop_rate_range = (drop_rate_start, drop_rate_end, drop_rate_step)
 
-    print "The directory where network file is located %s %s" % (network_file_path, os.path.exists(network_file_path))
-    ppservers = ("146.6.28.105:30000",)
-
-    job_server = pp.Server(ppservers=ppservers)
-
-    fn = pp.Template(job_server, function_to_run, methods, modules)
-    iter = variation[0]
-    start = variation[1]
-    stop = variation[2]
-    increase = variation[3]
+    # disconnection_rate_start = sim_config.get("disconnection_rate_start", 0)
+    # disconnection_rate_end = sim_config.get("disconnection_rate_end", disconnection_rate_start+1)
+    # disconnection_rate_step = sim_config.get("disconnection_rate_step", disconnection_rate_start+1)
+    # disconnection_rate_range = (disconnection_rate_start, disconnection_rate_end, disconnection_rate_step)
+    #
+    # threshold_rate_start = sim_config.get("threshold_rate_start", 0)
+    # threshold_rate_end = sim_config.get("threshold_rate_end", threshold_rate_start+1)
+    # threshold_rate_step = sim_config.get("threshold_rate_step", threshold_rate_start+1)
+    # threshold_range = (threshold_rate_start, threshold_rate_end, threshold_rate_step)
+    #
     configs = []
 
+    test_name = sim_config["test_name"]
+    reports_dir = sim_config["reports_dir"]
+    sims_dir = sim_config["sims_dir"]
+
+    drop_rate_start = sim_config.get("drop_rate_start", 0)
+    drop_rate_end = sim_config.get("drop_rate_end", drop_rate_start+1)
+    drop_rate_step = sim_config.get("drop_rate_step", drop_rate_start+1)
+    drop_rate_range = (drop_rate_start, drop_rate_end, drop_rate_step)
+
+    threshold = sys.maxint
     disconnection_rate = 0.0
-    drop_rate = 0.0
-
-    value = start
-    while value <= stop:
-
-        if condition == "drop_rate":
-            disconnection_rate = value
-        else:
-            drop_rate = value
-
-        for i in range(iter):
-            condition_name = "%s_droprate_%s_discountrate_%s_iter_%d" % (condition, drop_rate, disconnection_rate, i) # drop_rate or disconnection_rate
-            config = {
-                "network_dir":network_dir,
-                "condition":condition_name,
-                "disconnection_rate":disconnection_rate,
-                "drop_rate":drop_rate
-            }
-            configs.append(config)
-        value += increase
-    network_file_path = "" # This is wrong
-    jobs = []
-    for config in configs:
-        jobs.append((network_file_path, fn.submit(config)))
-
-    for input, job in jobs:
-        print "Processing", input, "is ", job()
-
-    job_server.print_stats()
 
 
-def run_mass_parallel(subdir):
-    directory = os.path.expanduser("~/code/PyCharmProjects/contextAggregator/test_files/data/%s" % subdir)
+    test_files_dir = get_test_files_dir() # We know where the test files are
+    network_file_path = os.path.join(test_files_dir, test_name) + os.sep + test_name +  ".txt"
 
-    print "The directory where multiple networks located %s %s" % (directory, os.path.exists(directory))
-    # get all the simulation files
-    network_files = glob.glob(directory + os.sep + "*.txt")
-    return run_networks_in_directory(network_files)
+    results = []
+
+    for drop_rate in range(*drop_rate_range):
+
+        sim_config = {
+            "network_file_path": network_file_path,
+            "run_count":10,
+            # make ready code will create the subdir, so you don't need to sepcify it.
+            "sims_dir":sims_dir,
+            "reports_dir":reports_dir,
+            "disconnection_rate":disconnection_rate,
+            "drop_rate":drop_rate,
+            "threshold":threshold
+        }
+        results.append(sim_config)
+    return results
 
 if __name__ == "__main__":
-    # #test_files_directory=%(project_root_dir)s/contextAggregator/aggregation_simulator/test_files
-    # simulation_root_dir = get_configuration("config.cfg","TestDirectory","various_simulation_root_dir")
-    # if not os.path.exists(simulation_root_dir): os.makedirs(simulation_root_dir)
-    # base_directory = get_configuration("config.cfg","TestDirectory","test_files_directory")
-    # network_files = [
-    #     "pseudo_realworld_50",
-    #     "pseudo_realworld_30",
-    #     "real_world_intel_6",
-    #     "real_world_intel_10"
-    #     #"test_network1"
-    # ]
-    # choices = {"drop_rate":(5, 0.0, 50.0, 5.0), "disconnection_rate":(20, 0.0, 50.0, 5.0)}
-    # #choices = {"drop_rate":(2, 0.0, 5.0, 5.0)}
-    # for file in network_files:
-    #     # make ready for the simulation
-    #     file_name = os.path.join(base_directory, file)
-    #     network_file_path = os.path.join(file_name, file + ".txt")
-    #     sample_file_path = os.path.join(file_name, file + ".sample.txt")
-    #     assert os.path.exists(network_file_path), "no %s exists" % network_file_path
-    #     assert os.path.exists(sample_file_path), "no %s exists" % sample_file_path
-    #
-    #     network_dir = make_ready_for_one_file_simulation(simulation_root_dir=simulation_root_dir,
-    #                                                      network_file_path=network_file_path,
-    #                                                      sample_file_path=sample_file_path)
-    #
-    #     for key, value in choices.items():
-    #         print key, value
-    #         run_various_parallel(network_dir, key, value)
+    sim_config = {}
+    sim_config["test_name"] = "test_network1"
+    sim_config["reports_dir"] = get_reports_dir()
+    sim_config["sims_dir"] = get_sims_dir()
 
-    subdirs = ["10_100_10_80/mesh","10_100_10_80/tree"] # ,"200_500_50_50/mesh","200_500_50_50/tree"]
-    # 10_100_10_10/mesh, 10_100_10_10/tree
-    for subdir in subdirs:
-        run_mass_parallel(subdir)
+    drop_rate_start = 0
+    sim_config["drop_rate_start"] =  drop_rate_start
+    sim_config["drop_rate_end"] = drop_rate_start+10
+    sim_config["drop_rate_step"] = 1
+
+    configs = get_configs(sim_config)
+    print configs
+    run_parallel(configs)
 

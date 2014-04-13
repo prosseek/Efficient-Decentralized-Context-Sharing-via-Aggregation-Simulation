@@ -24,3 +24,4 @@ aggregation_simulator/test/tmp/real_world_intel_6/singles_only/*
 aggregation_simulator/test/tmp/real_world_intel_6/aggregation/*
 aggregation_simulator/test/tmp/real_world_intel_10/singles_only/*
 aggregation_simulator/test/tmp/real_world_intel_10/aggregation/*
+test_files/backup/*

@@ -1,8 +1,8 @@
 import math
 
-from copy import copy
+import copy
 
-from aggregation_analyzer.read_reports import *
+#from aggregation_analyzer.read_reports import
 from aggregation_analyzer.utils_location import *
 
 def avg(l):
@@ -13,10 +13,12 @@ def avg(l):
     """
     return 1.0*sum(l)/len(l)
 
-def dict_to_list(dictionary):
+### TODO
+### same name in utils_report
+def simple_dict_to_list(dictionary):
     """
     >>> x = {'a':10, 'b':20}
-    >>> dict_to_list(x) == [10,20]
+    >>> simple_dict_to_list(x) == [10,20]
     True
     """
     return [dictionary[key] for key in sorted(dictionary.keys())]
@@ -58,7 +60,7 @@ def get_index_with_true(input):
     >>> get_index_with_true(input)
     7
     """
-    reversed_input = copy(input)
+    reversed_input = copy.copy(input)
     reversed_input.reverse()
     result = -1
     for i, value in enumerate(reversed_input):

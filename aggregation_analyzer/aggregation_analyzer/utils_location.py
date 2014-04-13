@@ -2,12 +2,21 @@ import os
 import glob
 import re
 
-from aggregation_simulator.utils_configuration import get_test_report_root_directory, get_configuration, CONFIGURATION_FILE_FOR_TEST
+from aggregation_simulator.utils_configuration import get_configuration, CONFIGURATION_FILE_FOR_TEST
 
 def get_dir(network_dir, condition, sub_name, host, timestamp=0):
     timestamp = "%04d" % timestamp
     directory = network_dir + os.sep + condition + os.sep + sub_name + os.sep + host + os.sep + timestamp
     return directory
+
+def get_sims_dir():
+    return get_configuration("config.cfg", "TestDirectory", "sims_dir")
+
+def get_reports_dir():
+    return get_configuration("config.cfg", "TestDirectory", "reports_dir")
+
+def get_test_files_dir():
+    return get_configuration("config.cfg", "TestDirectory", "test_files_directory")
 
 def get_pseudo_test_dir():
     return get_configuration("config.cfg", "TestDirectory", "pseudo_test_root_dir")

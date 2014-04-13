@@ -9,7 +9,7 @@ import operator
 
 from utils_location import get_simple_test_dir
 from read_reports import ReadReports
-from utils import *
+from utils import get_index_with_true
 
 class GetInformation(object):
     def __init__(self, r, use_cache=False):
