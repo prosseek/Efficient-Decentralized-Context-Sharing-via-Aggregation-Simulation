@@ -21,24 +21,25 @@ import glob
 import re
 import cPickle
 
-from utils import *
+from utils import starts_with, recover_to_list
 from utils_location import *
 from aggregation_simulator.network import Network
 
 class ReadReports(object):
-    def __init__(self, network_dir, auto_read = True, use_cache = True):
+    def __init__(self, network_dir, condition = None, auto_read = True, use_cache = False):
         self.network_dir = network_dir
+        self.condition = condition
         self.test_name = os.path.basename(network_dir)
         self.report = {}
         if auto_read:
-            self.read_all(use_cache)
+            self.read_all(condition, use_cache)
         self.hosts = self.get_hosts()
 
     #@staticmethod
     def get_hosts(self):
         """
         >>> d = get_simple_test_dir() + os.sep + "test_network1"
-        >>> r = ReadReports.get_hosts(d)
+        >>> r = ReadReports(d).get_hosts()
         >>> r == ['host1', 'host2', 'host3', 'host4', 'host5', 'host6', 'host7', 'host8']
         True
         """
@@ -115,11 +116,12 @@ class ReadReports(object):
 
         return result
 
-    def read_files_from_dir(self):
-        dirs = os.listdir(self.network_dir)
-
-        # d is the condition
-        for condition in dirs:
+    def read_files_from_dir(self, condition=None):
+        if condition is None: # read all conditions
+            dirs = os.listdir(self.network_dir)
+            for c in dirs:
+                self.read_files_from_dir(c)
+        else:
             full_path = os.path.join(self.network_dir, condition)
 
             if os.path.isdir(full_path): # when condition is directory: "normal" ...
@@ -131,14 +133,16 @@ class ReadReports(object):
                         self.report[condition][sub_name] = self.read(condition, sub_name, timestamp=0)
         return self.report
 
-    def read_all(self, use_cache=False):
+    def read_all(self, condition= None, use_cache=False):
         """
         >>> d = get_simple_test_dir() + os.sep + "test_network1"
         >>> r = ReadReports(d)
         >>> results = r.read_all()
         >>> type(results) == dict and results is not None
         True
-        >>> results = r.read_all()
+        >>> results = r.read_all("normal")
+        >>> type(results) == dict and results is not None
+        True
         """
         cache_img = get_configuration("config.cfg","TestDirectory","cache_dir") + os.sep + self.test_name + ".img"
         dirname = os.path.dirname(cache_img)
@@ -146,7 +150,7 @@ class ReadReports(object):
             os.makedirs(dirname)
 
         if not os.path.exists(cache_img) or not use_cache:
-            result = self.read_files_from_dir()
+            result = self.read_files_from_dir(condition)
             with open(cache_img, "w") as f:
                 cPickle.dump(result, f)
                 f.close()
@@ -159,7 +163,7 @@ class ReadReports(object):
         self.report = result
         return result
 
-    def read(self, condition, sub_name, timestamp):
+    def read(self, condition, sub_name, timestamp=0):
         """
         >>> d = get_simple_test_dir() + os.sep + "test_network1"
         >>> r = ReadReports(d)

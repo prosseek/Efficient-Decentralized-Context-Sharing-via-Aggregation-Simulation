@@ -45,6 +45,12 @@ def make_ready_for_one_file_simulation(simulation_root_dir, network_file_path, s
         if not os.path.exists(network_dir):
             os.makedirs(network_dir)
             shutil.copy(network_file_path, network_dir)
+        else: # network exists, so check if networkfile is there
+            target_network_file_path = os.path.join(simulation_root_dir, network_name + ".txt")
+            if not os.path.exists(target_network_file_path):
+                shutil.copy(network_file_path, network_dir)
+
+
 
     sample_generate = True
     if sample_file_path is not None:

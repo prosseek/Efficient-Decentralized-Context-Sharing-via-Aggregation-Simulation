@@ -1,7 +1,7 @@
 import os
 import operator
 
-from utils import sum_lists_column, dict_to_list, avg, avg_lists_column
+from utils import sum_lists_column, simple_dict_to_list, avg, avg_lists_column
 from utils_location import get_simple_test_dir
 from read_reports import ReadReports
 from get_information import GetInformation
@@ -78,14 +78,15 @@ class GetProcessedInformation(object):
     def get_speed(self, condition, sub_name):
         """
         >>> d = get_simple_test_dir() + os.sep + "test_network1"
-        >>> info = GetProcessedInformation(ReadReports(d))
+        >>> r = ReadReports(d)
+        >>> info = GetProcessedInformation(r)
         >>> info.get_speed("normal","singles") == [4.75, 4, 5]
         True
         """
         # {'host7': 5, 'host6': 4, 'host5': 5, 'host4': 5, 'host3': 4, 'host2': 5, 'host1': 5, 'host8': 5}
         null_io = self.information.get_last_non_null_io(condition, sub_name)
         #print self.information.get_null_io(condition, sub_name)
-        l = dict_to_list(null_io)
+        l = simple_dict_to_list(null_io)
         return [avg(l), min(l), max(l)]
 
     def get_accuracy(self, condition, sub_name):
@@ -96,7 +97,7 @@ class GetProcessedInformation(object):
         True
         """
         precisions = self.information.get_precision(condition, sub_name)
-        lists = dict_to_list(precisions)
+        lists = simple_dict_to_list(precisions)
         last_list = map(lambda m: m[-1], lists)
         return avg_lists_column(last_list)
 
@@ -108,7 +109,7 @@ class GetProcessedInformation(object):
         True
         """
         precisions = self.information.get_identified_rate(condition, sub_name)
-        lists = dict_to_list(precisions)
+        lists = simple_dict_to_list(precisions)
         last_list = map(lambda m: m[-1], lists)
         return avg_lists_column(last_list)
 
@@ -120,7 +121,7 @@ class GetProcessedInformation(object):
         True
         """
         precisions = self.information.get_average_number_of_cohorts(condition, sub_name)
-        lists = dict_to_list(precisions)
+        lists = simple_dict_to_list(precisions)
         last_list = map(lambda m: m[-1], lists)
         return avg_lists_column(last_list)
 
