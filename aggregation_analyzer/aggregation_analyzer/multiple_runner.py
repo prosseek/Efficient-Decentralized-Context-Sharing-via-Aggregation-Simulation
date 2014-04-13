@@ -93,7 +93,7 @@ class MultipleRunner(object):
             results[key] = avg_lists_column(values)
         return results
 
-test_names = ["real_world_intel_6", "real_world_intel_6"]
+#test_names = ["real_world_intel_6", "real_world_intel_6"]
 test_names = ["pseudo_realworld_100", "pseudo_realworld_100_2d","pseudo_realworld_49", "pseudo_realworld_49_2d"]
 #test_names = ["test_network1"]
 #test_names = ["real_world_intel_6"]
@@ -157,8 +157,8 @@ def test_change_threshold_rate(start, stop, increase, sub_dir="test_change_thres
                 m.run(run_count)
 
 if __name__ == "__main__":
-    run_count = 1
-    test_category_name = "hello"
-    test_change_drop_rate(10, 60, 10)
-    test_change_discon_rate(10, 60, 10)
-    test_change_threshold_rate(1, 10, 1)
+    run_count = 10
+    test_category_name = "pseudo2"
+    test_change_drop_rate(60, 100, 10)
+    test_change_discon_rate(60, 100, 10)
+    test_change_threshold_rate(11, 30, 1)
