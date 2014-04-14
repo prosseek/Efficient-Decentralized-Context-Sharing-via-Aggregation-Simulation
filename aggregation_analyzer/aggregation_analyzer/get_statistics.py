@@ -121,6 +121,7 @@ class GetStatistics(object):
         results["speed"] = self.get_speed(condition, sub_name)
         results["accuracy"] = self.get_accuracy(condition, sub_name)
         results["identification_rate"] = self.get_identified_rate(condition, sub_name)
+        # Bug! The name should be cohorts
         results["cohorst"] = self.get_cohorts(condition, sub_name)
         return results
 

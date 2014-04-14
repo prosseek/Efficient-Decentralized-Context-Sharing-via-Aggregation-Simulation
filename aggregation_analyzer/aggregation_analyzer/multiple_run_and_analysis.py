@@ -123,63 +123,6 @@ class MultipleRunAndAnalysis(object):
             results[key] = avg_lists_column(values)
         return results
 
-# def test_change_drop_rate(start, stop, increase, sub_dir="test_change_drop_rate"):
-#     global run_count
-#     for t in test_names:
-#         for d in range(start, stop, increase):
-#             drop_rate = d/100.0
-#             for n in test_sub_names:
-#                 condition = "c_%d_0_0" % (int(d))
-#                 config = {
-#                     "report_sub_dir":sub_dir,
-#                     "network_dir":t,
-#                     "condition":condition,
-#                     "test_sub_name":n,
-#                     "disconnection_rate":0.0,
-#                     "drop_rate":drop_rate,
-#                     "threshold":sys.maxint
-#                 }
-#                 m = MultipleRunAndAnalysis(config)
-#                 m.run(run_count)
-#
-# def test_change_discon_rate(start, stop, increase, sub_dir="test_change_discon_rate"):
-#     global run_count
-#     for t in test_names:
-#         for d in range(start, stop, increase):
-#             discon_rate = d/100.0
-#             for n in test_sub_names:
-#                 condition = "c_0_%d_0" % int(d)
-#                 config = {
-#                     "report_sub_dir":sub_dir,
-#                     "network_dir":t,
-#                     "condition":condition,
-#                     "test_sub_name":n,
-#                     "disconnection_rate":discon_rate,
-#                     "drop_rate":0.0,
-#                     "threshold":sys.maxint
-#                 }
-#                 m = MultipleRunAndAnalysis(config)
-#                 m.run(run_count)
-#
-# def test_change_threshold_rate(start, stop, increase, sub_dir="test_change_threshold_rate"):
-#     global run_count
-#     for t in test_names:
-#         for d in range(start, stop, increase):
-#             threshold = d
-#             for n in test_sub_names:
-#                 condition = "c_0_0_%d" % int(threshold)
-#                 config = {
-#                     "report_sub_dir":sub_dir,
-#                     "network_dir":t,
-#                     "condition":condition,
-#                     "test_sub_name":n,
-#                     "disconnection_rate":0.0,
-#                     "drop_rate":0.0,
-#                     "threshold":threshold
-#                 }
-#                 m = MultipleRunAndAnalysis(config)
-#                 m.run(run_count)
-
 if __name__ == "__main__":
     sims_dir = get_sims_dir()
     reports_dir = get_reports_dir()
