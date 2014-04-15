@@ -100,7 +100,7 @@ def avg_lists_column(input):
         length = len(input)
         return map(lambda m: m/length, r)
     else:
-        assert t is tuple
+        assert t is tuple, "wrong input %s and type (%s)" % (input, t)
         y = zip(*input)
         r = [avg_lists_column(i) for i in y]
         return tuple(r)

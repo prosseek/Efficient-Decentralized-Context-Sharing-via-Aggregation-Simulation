@@ -1,8 +1,11 @@
 import os
 import distutils.spawn
-from various_simulation_analyzer import VariousSimulationAnalyzer
-from subprocess import Popen, call
 import pprint
+import cPickle
+
+from aggregation_simulator.utils_configuration import *
+from mass_simulation_analyzer import MassSimulationAnalyzer
+from subprocess import Popen, call
 
 GNUPLOT=distutils.spawn.find_executable('gnuplot')
 
@@ -40,50 +43,60 @@ GNUPLOT=distutils.spawn.find_executable('gnuplot')
                                   90: ([1.3, 1, 2], [1.3, 1, 2])}},
 """
 
-class VariousSimulationGnuplotter(object):
-    def __init__(self, network_reports_dir):
-        v = VariousSimulationAnalyzer(network_reports_dir)
-        self.reports = v.run()
+class MassSimulationGnuplotter(object):
+    def __init__(self, network_reports_dir, use_cache=True):
+
+        test_name = os.path.basename(network_reports_dir)
+        cache_img = get_configuration("config.cfg","TestDirectory","cache_dir") + os.sep + test_name + ".img"
+        dirname = os.path.dirname(cache_img)
+        if not os.path.exists(dirname):
+            os.makedirs(dirname)
+
+        if not os.path.exists(cache_img) or not use_cache:
+            v = MassSimulationAnalyzer(network_reports_dir)
+            reports = v.run()
+            with open(cache_img, "w") as f:
+                cPickle.dump(reports, f)
+                f.close()
+        else:
+            # os.path.exists and not ignore_cache
+            with open(cache_img, "r") as f:
+                reports = cPickle.load(f)
+                #result = cPickle.load(f.read())
+                f.close()
+
+        self.reports = reports
 
     def get_reports(self):
         print self.reports
 
-    def get_data(self, control_variable, measurement):
+    def get_data(self, measurement):
         pprint.pprint(self.reports)
 
-        m = measurement
-        if measurement == "accuracy2":
-            m = "accuracy"
-        r = self.reports[control_variable][m]
+        r = self.reports[measurement]
         keys = sorted(r)
 
-        # process this weird case for accuracy
-        # 48: ([[11.31, 8, 14]], [18.966, 15, 22]),
         result = []
         for key in keys:
             values = r[key]
             # 'size': ([81, 70, 11], [81, 70, 11]),
             if measurement == "size":
+                #print values
                 val1 = values[0][0][0]
                 val2 = values[1][0][0]
+            elif measurement in ['speed','cohorts']:
+                val1 = values[0]
+                val2 = values[1]
             else:
-                if measurement == "accuracy2":
-                    print values
-                    val1 = values[0][1]
-                    val2 = values[1][1]
-                else:
-                    print values
-                    val1 = values[0][0]
-                    val2 = values[1][0]
-            #print measurement, values
-            # if type(val1) is list: val1 = val1[0]
-            # elif type(val2) is list: val2 = val2[0]
+                val1 = values[0][0]
+                val2 = values[1][0]
             result.append("%d %5.2f %5.2f" % (key, val1, val2))
-
 
         return "\n".join(result)
 
     def get_code(self, config):
+        file_path = config["file_path"]
+
         lines = ["set terminal pngcairo font 'DroidSerif'"]
         png_name = config.get("png_name", config["file_path"] + ".png")
         config["png_name"] = png_name
@@ -96,14 +109,24 @@ class VariousSimulationGnuplotter(object):
         title = config.get("title", "title")
         lines.append(r'set title "%s"' % title)
         data_file_path = config["data_file_path"]
-        plot = r'plot "{data_file_path}" using 1:2 title "singles" w lp, "{data_file_path}" using 1:3 title "aggregates" w lp'.format(data_file_path=data_file_path)
+
+        if ylabel in ["size"]:
+            lines.append(r'set y2label "reduction ratio (%)"')
+            lines.append(r'unset logscale y2')
+            lines.append(r'set ytics nomirror')
+            lines.append(r'set y2tics')
+            lines.append(r'set logscale y')
+            plot = r'plot "{data_file_path}" using 1:2 title "singles" w lp, "" using 1:3 title "aggregates" w lp, ""  using 1:(($2-$3)/$2)*100 axis x1y2 title "reduction ratio" w lp'.format(data_file_path=data_file_path)
+
+        else:
+            plot = r'plot "{data_file_path}" using 1:2 title "singles" w lp, "{data_file_path}" using 1:3 title "aggregates" w lp '.format(data_file_path=data_file_path)
         lines.append(plot)
         return "\n".join(lines)
 
     def write(self, config):
         measurement = config["measurement"]
-        control_variable = config["control_variable"]
-        data = self.get_data(control_variable, measurement)
+        #control_variable = config["control_variable"]
+        data = self.get_data(measurement)
 
         file_path = config["file_path"]
         data_file_path = file_path + ".data"
@@ -129,18 +152,18 @@ class VariousSimulationGnuplotter(object):
             p.communicate()
 
 
-def plot(control, measure, network_reports_dir, gnuplot_dir):
-    v = VariousSimulationGnuplotter(network_reports_dir)
+def plot(measure, network_reports_dir, gnuplot_dir):
+    v = MassSimulationGnuplotter(network_reports_dir)
     gnuplot_data_dir = gnuplot_dir + os.sep + os.path.basename(network_reports_dir)
     if not os.path.exists(gnuplot_data_dir):
         os.makedirs(gnuplot_data_dir)
-    gnuplot_data =  gnuplot_data_dir + os.sep + "%s_%s.txt" % (control, measure)
-    title = (' '.join(os.path.basename(network_reports_dir).split('_'))).capitalize()
-    xlabel = ('%s %s (%%)' % tuple(control.split('_'))) if control.endswith("rate") else control
+    gnuplot_data =  gnuplot_data_dir + os.sep + "%s.txt" % (measure)
+
+    title = (" ".join(os.path.basename(network_reports_dir).split('_')[0:-1])).capitalize()
+    xlabel = 'node size'
     ylabel = ('%s %s (%%)' % tuple(measure.split('_'))) if measure.endswith("rate") else measure
     config = {
         "file_path": gnuplot_data,
-        'control_variable':control,
         'measurement':measure,
         'xlabel':xlabel,
         'ylabel':ylabel,
@@ -150,19 +173,18 @@ def plot(control, measure, network_reports_dir, gnuplot_dir):
     v.execute(config)
 
 def various_plots(network_reports_dir, gnuplot_dir):
-    plot('drop_rate', 'size', network_reports_dir, gnuplot_dir)
-    plot('disconnection_rate', 'size', network_reports_dir, gnuplot_dir)
-    plot('drop_rate', 'identification_rate', network_reports_dir, gnuplot_dir)
-    plot('disconnection_rate', 'identification_rate', network_reports_dir, gnuplot_dir)
-    plot('drop_rate', 'accuracy', network_reports_dir, gnuplot_dir)
-    plot('disconnection_rate', 'accuracy', network_reports_dir, gnuplot_dir)
-    plot('threshold_rate', 'accuracy', network_reports_dir, gnuplot_dir)
-    plot('threshold_rate', 'accuracy2', network_reports_dir, gnuplot_dir)
-    plot('threshold_rate', 'identification_rate', network_reports_dir, gnuplot_dir)
-    plot('threshold_rate', 'size', network_reports_dir, gnuplot_dir)
+    plot('size', network_reports_dir, gnuplot_dir)
+    plot('identification_rate', network_reports_dir, gnuplot_dir)
+    plot('speed', network_reports_dir, gnuplot_dir)
+    plot('cohorts',network_reports_dir,gnuplot_dir)
+
 if __name__ == "__main__":
-    for t in ["pseudo_realworld_100_2d"]: # ,"pseudo_realworld_49","pseudo_realworld_49_2d","pseudo_realworld_49_tree","pseudo_realworld_100","real_world_intel_6","real_world_intel_6_tree","real_world_intel_10"]: # ,"pseudo_realworld_100","real_world_intel_6_tree"]:
-        network_reports_dir = "/Users/smcho/tmp/reports/%s" % t
-        gnuplot_dir = "/Users/smcho/tmp/imgs/gnuplot"
-        various_plots(network_reports_dir, gnuplot_dir)
-#threshold_rate
+    network_reports_dir = "/Users/smcho/tmp/reports/dense_meshes_dir"
+    gnuplot_dir = "/Users/smcho/tmp/imgs/gnuplot/mass"
+    various_plots(network_reports_dir, gnuplot_dir)
+    # network_reports_dir = "/Users/smcho/tmp/reports/dense_trees_dir"
+    # various_plots(network_reports_dir, gnuplot_dir)
+    network_reports_dir = "/Users/smcho/tmp/reports/light_meshes_dir"
+    various_plots(network_reports_dir, gnuplot_dir)
+    network_reports_dir = "/Users/smcho/tmp/reports/light_trees_dir"
+    various_plots(network_reports_dir, gnuplot_dir)

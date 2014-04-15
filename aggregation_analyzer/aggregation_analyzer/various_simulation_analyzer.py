@@ -46,6 +46,22 @@ class VariousSimulationAnalyzer(SimulationAnalyzer):
             if drop == '0' and discon == '0' and threshold != 'no':
                 self.threshold_rate_list.append(f)
 
+    @staticmethod
+    def bypass_the_bug(key, result):
+        """
+        """
+        if key == "size":
+            t = type(result[0][0])
+            v = result[0][0]
+        else:
+            t = type(result[0])
+            v = result[0]
+
+        if t is list:
+            return result[0]
+        else:
+            return result
+
     def read_singles_aggregates_reports(self, directory, key):
         a = os.path.join(directory, "report_aggregates.txt")
         s = os.path.join(directory, "report_singles.txt")
@@ -53,7 +69,17 @@ class VariousSimulationAnalyzer(SimulationAnalyzer):
         avg1 = avg
         self.exec_file(a, globals())
         avg2 = avg
-        return avg1[key], avg2[key]
+
+        #for some cases, we may have this results, it should outstrip the outer shell.
+        #     avg={   'accuracy': [[100.0, 100.0]],
+        # 'cohorst': [[0.0, 0, 0]], --> [0.0, 0, 0]
+        # 'identification_rate': [[100.0, 100, 100, 100.0, 100, 100]],
+        # 'size': [([28537, 28537, 0], [28537, 28537, 0])],
+        # 'speed': [[11.31, 8, 14]]}
+        result1 = VariousSimulationAnalyzer.bypass_the_bug(key, avg1[key])
+        result2 = VariousSimulationAnalyzer.bypass_the_bug(key, avg2[key])
+
+        return result1, result2
 
     def process_rate(self, lists, key, index):
         """Given key, return the value for the key for various range of drop_rate
@@ -72,7 +98,7 @@ class VariousSimulationAnalyzer(SimulationAnalyzer):
 
     def process_rate_list(self, lists, index):
         results = {}
-        for key in ["identification_rate", "speed", "cohorst", "size"]:
+        for key in ["accuracy","identification_rate", "speed", "cohorst", "size"]:
             results[key] = self.process_rate(lists, key, index)
         return results
 
@@ -85,5 +111,5 @@ class VariousSimulationAnalyzer(SimulationAnalyzer):
         return total_results
 
 if __name__ == "__main__":
-    m = VariousSimulationAnalyzer("/Users/smcho/tmp/reports/test_network1")
+    m = VariousSimulationAnalyzer("/Users/smcho/tmp/reports/pseudo_realworld_100")
     pprint.pprint(m.run())
