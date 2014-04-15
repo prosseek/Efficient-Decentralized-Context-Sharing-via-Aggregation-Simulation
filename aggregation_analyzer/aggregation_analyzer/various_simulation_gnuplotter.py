@@ -70,7 +70,7 @@ class VariousSimulationGnuplotter(object):
         return "\n".join(result)
 
     def get_code(self, config):
-        lines = ["set terminal pngcairo"]
+        lines = ["set terminal pngcairo font 'DroidSerif'"]
         png_name = config.get("png_name", config["file_path"] + ".png")
         config["png_name"] = png_name
 
