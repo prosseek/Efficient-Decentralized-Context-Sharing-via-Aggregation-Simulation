@@ -85,8 +85,8 @@ def get_configs_for_rate(test_name, name, start, end, step):
     return configs
 
 def get_configs_for_various(test_name):
-    normal = get_configs_for_rate(test_name, "disconnection_rate", 0, 10, 10)
-    various_disconnection = get_configs_for_rate(test_name, "disconnection_rate", 10, 91, 10)
+    normal = get_configs_for_rate(test_name, "disconnection_rate", 0, 10, 5)
+    various_disconnection = get_configs_for_rate(test_name, "disconnection_rate", 10, 91, 5)
     various_dropping = get_configs_for_rate(test_name, "drop_rate", 10, 91, 10)
     various_threshold = get_configs_for_rate(test_name, "threshold_rate", 1, 50, 1)
     return normal + various_disconnection + various_dropping + various_threshold

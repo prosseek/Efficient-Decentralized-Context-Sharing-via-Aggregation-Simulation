@@ -166,4 +166,9 @@ def run_various(test_name):
 
 if __name__ == "__main__":
     #run_massive_10_100()
-    run_various("test_network1")
+    # run_various("pseudo_realworld_100")
+    # run_various("pseudo_realworld_100_2d")
+    # run_various("pseudo_realworld_49")
+    # run_various("pseudo_realworld_49_2d")
+    run_various("real_world_intel_10")
+    run_various("real_world_intel_6")
