@@ -253,6 +253,20 @@ class Network(object):
         self.network = self.make_symmetric_network(network)
         return self.network
 
+    def get_average_neighbor_size(self):
+        """Given network path, it will return the number of average neighbors for the network.
+
+        >>> p = get_configuration("config.cfg","TestDirectory","test_files_directory")
+        >>> pth = p + os.sep + "test_network1/test_network1.txt"
+        >>> Network(pth).get_average_neighbor_size()
+        1.75
+        """
+        hosts = self.get_host_ids()
+        r = []
+        for h in hosts:
+            r.append(len(self.get_neighbors(h)))
+        return 1.0*sum(r)/len(r)
+
 if __name__ == "__main__":
     import doctest
     doctest.testmod()
