@@ -33,6 +33,18 @@ class TestTreeAnalyzer(unittest.TestCase):
 
         return r_tree, r_mesh
 
-    def test_tree_analyzer(self):
+    def test_avg_for_simulation(self):
+        d = get_configuration("config.cfg", "TestDirectory", "test_files_directory")
+        names = ["real_world_intel_6_tree", "real_world_intel_6", "real_world_intel_10"
+                 ,"pseudo_realworld_49_tree","pseudo_realworld_49_2d","pseudo_realworld_49"
+                 ,"pseudo_realworld_100_2d", "pseudo_realworld_100"]
+
+        for n in names:
+            print "process - %s" % n
+            filepath = d + os.sep + n + os.sep + n + ".txt"
+            network = Network(filepath)
+            print network.get_average_neighbor_size()
+
+    def atest_tree_analyzer(self):
         pprint.pprint(self.get_avg("less_dense_10_100_dir"))
         pprint.pprint(self.get_avg("more_dense_10_100_dir"))

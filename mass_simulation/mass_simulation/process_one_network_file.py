@@ -33,7 +33,7 @@ if __name__ == "__main__":
     # process_one_file(sim_config)
 
     name = "light_tree"
-    f = "/Users/smcho/code/PyCharmProjects/contextAggregator/test_files/massive_data/10_100_10_10/tree/tree10_5_100_80.txt"
+    f = "/Users/smcho/code/PyCharmProjects/contextAggregator/test_files/massive_data/10_100_10_10/tree/tree100_100_75_79.txt"
     sim_config = {}
     sim_config["reports_dir"] = get_reports_dir() + os.sep + name
     sim_config["sims_dir"] = get_sims_dir() + os.sep + name

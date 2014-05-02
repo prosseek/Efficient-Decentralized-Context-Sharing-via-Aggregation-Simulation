@@ -175,6 +175,9 @@ class Network(object):
                 os.unlink(dot_file_path)
             with open(dot_file_path, 'w') as f:
                 f.write(result)
+                    # dot -Tpng a.dot -o a.png
+            command = "dot -Tpng %s -o %s" % (dot_file_path, dot_file_path + ".png")
+            os.system(command)
         return result
 
     #
@@ -224,6 +227,20 @@ class Network(object):
             return network
 
         return self.clear_network(network)
+
+    def __str__(self):
+        return str(self.get_network())
+
+    def add_node(self, index):
+        """
+        >>> n = Network()
+        >>> n.add_node(1)
+        >>> print n
+        {1: []}
+        """
+        n = self.get_network()
+        if index not in n:
+            n[index] = []
 
     def add_neighbor(self, index, neighbor):
         """

@@ -128,8 +128,8 @@ if __name__ == "__main__":
     reports_dir = get_reports_dir()
     test_files_dir = get_test_files_dir()
 
-    test_names = ["real_world_intel_6", "real_world_intel_6"]
-    test_names = ["pseudo_realworld_100", "pseudo_realworld_100_2d","pseudo_realworld_49", "pseudo_realworld_49_2d"]
+    #test_names = ["real_world_intel_6", "real_world_intel_6"]
+    #test_names = ["pseudo_realworld_100", "pseudo_realworld_100_2d","pseudo_realworld_49", "pseudo_realworld_49_2d"]
 
     test_name = "test_network1"
     network_file_path = os.path.join(test_files_dir, test_name) + os.sep + test_name +  ".txt"

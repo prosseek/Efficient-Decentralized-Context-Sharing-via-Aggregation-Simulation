@@ -119,11 +119,11 @@ class MassSimulationAnalyzer(SimulationAnalyzer):
 
 
 if __name__ == "__main__":
-    m = MassSimulationAnalyzer("/Users/smcho/tmp/reports/dense_meshes_dir")
-    pprint.pprint(m.run())
+    #m = MassSimulationAnalyzer("/Users/smcho/tmp/reports/dense_meshes_dir")
+    #pprint.pprint(m.run())
     # m = MassSimulationAnalyzer("/Users/smcho/tmp/reports/dense_trees_dir")
     # pprint.pprint(m.run())
-    # m = MassSimulationAnalyzer("/Users/smcho/tmp/reports/light_meshes_dir")
-    # pprint.pprint(m.run())
-    # m = MassSimulationAnalyzer("/Users/smcho/tmp/reports/light_trees_dir")
-    # pprint.pprint(m.run())
+    #m = MassSimulationAnalyzer("/Users/smcho/tmp/reports/light_meshes_dir")
+    #pprint.pprint(m.run())
+    m = MassSimulationAnalyzer("/Users/smcho/tmp/reports/trees_dir")
+    pprint.pprint(m.run())

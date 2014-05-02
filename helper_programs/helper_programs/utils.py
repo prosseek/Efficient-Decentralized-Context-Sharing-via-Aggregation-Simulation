@@ -1,5 +1,14 @@
 import math
 
+def same_tree(t1, t2):
+    """
+    >>> t1 = {0:[1,2,3], 1:[0], 2:[0], 3:[0]}
+    >>> t2 = {1:[0], 0:[1,2,3], 3:[0], 2:[0]}
+    >>> same_tree(t1, t2)
+    True
+    """
+    return unicode(t1) == unicode(t2)
+
 def readLocationFile(fileName):
     """
     Given locatin file, returns a dictionary that maps id -> [x,y]

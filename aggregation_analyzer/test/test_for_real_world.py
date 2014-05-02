@@ -12,8 +12,15 @@ class TestForRealWorld(unittest.TestCase):
         pass
 
     def get(self, network_dir, condition, auto_read = True, use_cache = True):
-        d = ReadReports(network_dir, auto_read, use_cache)
+        d = ReadReports(network_dir, auto_read=auto_read, use_cache=use_cache)
         s = GetStatistics(d)
+
+        #self test
+        # for i in range(1, 55):
+        #     dictionary = d.report['normal']['singles']['host%d' % i]
+        #     last_key = sorted(dictionary.keys())[-1]
+        #     print dictionary[last_key]
+
         print s.get_size(condition)
         print s.get_accuracy(condition)
         print s.get_identified_rate(condition)
@@ -21,6 +28,16 @@ class TestForRealWorld(unittest.TestCase):
         print s.get_cohorts(condition)
 
     # *******************
+    def test_intel6_tree(self):
+        network_dir = os.path.join(get_intel_test_dir(), "real_world_intel_6_tree")
+        condition = 'normal'
+        self.get(network_dir, condition, use_cache = False)
+        # (([2862, 2862, 0], [2862, 2862, 0]), ([1570, 106, 1464], [1570, 106, 1464]))
+        # ([100.0, 100.0], [99.76648148148149, 98.58425925925923])
+        # ([100.0, 54, 54, 100.0, 54, 54], [93.41592592592593, 50, 54, 31.61870370370371, 17, 54])
+        # ([26.11111111111111, 18, 34], [23.574074074074073, 18, 25])
+        # ([0.0, 0, 0], [2.672407407407407, 33, 12])
+
 
     def test_intel6(self):
         network_dir = os.path.join(get_intel_test_dir(), "real_world_intel_6")
@@ -83,6 +100,37 @@ class TestForRealWorld(unittest.TestCase):
         # ([0.0, 0, 0], [3.5669999999999993, 75, 21])
 
     #########################
+
+    def test_pseudo100(self):
+        network_dir = os.path.join(get_pseudo_test_dir(), "pseudo_realworld_100")
+        condition = 'normal'
+        self.get(network_dir, condition, use_cache = False)
+        # (([28537, 28537, 0], [28537, 28537, 0]), ([6578, 436, 6142], [6578, 436, 6142]))
+        # ([100.0, 100.0], [99.64469999999997, 96.00010000000002])
+        # ([100.0, 100, 100, 100.0, 100, 100], [72.9, 72, 100, 10.6, 10, 100])
+        # ([11.31, 8, 14], [19.2, 15, 23])
+        # ([0.0, 0, 0], [5.114300000000002, 62, 12])
+
+    def test_pseudo100_2d(self):
+        network_dir = os.path.join(get_pseudo_test_dir(), "pseudo_realworld_100_2d")
+        condition = 'normal'
+        self.get(network_dir, condition,  use_cache = False)
+        # (([13705, 13705, 0], [13705, 13705, 0]), ([5210, 254, 4956], [5210, 254, 4956]))
+        # ([100.0, 100.0], [99.70270000000004, 95.97559999999994])
+        # ([100.0, 100, 100, 100.0, 100, 100], [82.78, 82, 100, 7.55, 7, 100])
+        # ([18.45, 13, 22], [28.64, 21, 38])
+        # ([0.0, 0, 0], [3.5669999999999993, 75, 21])
+
+    def test_pseudo49_tree(self):
+        network_dir = os.path.join(get_pseudo_test_dir(), "pseudo_realworld_49_tree")
+        condition = 'normal'
+        self.get(network_dir, condition, use_cache = False)
+        # (([2352, 2352, 0], [2352, 2352, 0]), ([1065, 96, 969], [1065, 96, 969]))
+        # ([100.0, 100.0], [100.0, 96.35795918367347])
+        # ([100.0, 49, 49, 100.0, 49, 49], [100.0, 49, 49, 17.91, 8, 49])
+        # ([18.408163265306122, 13, 23], [18.408163265306122, 13, 23])
+        # ([0.0, 0, 0], [2.9073469387755098, 40, 13])
+
     def test_pseudo49(self):
         network_dir = os.path.join(get_pseudo_test_dir(), "pseudo_realworld_49")
         condition = 'normal'

@@ -111,7 +111,6 @@ class Output(InputOutput):
         >>> r = Output()
         >>> r.is_empty()
         True
-        >>> r.
         """
         return is_empty_dictionary(self.dictionary)
 

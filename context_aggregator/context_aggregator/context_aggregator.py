@@ -53,6 +53,7 @@ Refrence
 --------
 `Context Aggregation <http://wiki.rubichev/contextAggregation/design/>`_
 """
+import sys
 from utils import *
 from utils_same import *
 
@@ -315,7 +316,7 @@ class ContextAggregator(object):
         return results
 
     @staticmethod
-    def sample(samples, timestamp=0):
+    def sample(samples=None, timestamp=0):
         """Sampling means read (acuquire) data at timestamp, and create a single context out of the data
         """
         #samples = self.get_sample_data()
@@ -403,8 +404,12 @@ class ContextAggregator(object):
         average = new_aggregate.value
         variation = self.get_data() - average
         percentage_variation = abs(variation)/average*100.0
+        if "threshold" not in self.config:
+            threshold = sys.maxint
+        else:
+            threshold = self.config["threshold"]
 
-        if percentage_variation > self.config["threshold"]: # Threshold is 50 as now
+        if percentage_variation > threshold: # Threshold is 50 as now
             context = Context(value=self.get_data(), cohorts=[self.id], hopcount=Context.SPECIAL_CONTEXT, timestamp=timestamp)
             print "Weird, diesseminate myself %d %d" % (self.id, iteration)
             # it just compares the id and hopcount is ignored in comparison
