@@ -175,6 +175,9 @@ class Network(object):
                 os.unlink(dot_file_path)
             with open(dot_file_path, 'w') as f:
                 f.write(result)
+                    # dot -Tpng a.dot -o a.png
+            command = "dot -Tpng %s -o %s" % (dot_file_path, dot_file_path + ".png")
+            os.system(command)
         return result
 
     #
@@ -225,6 +228,20 @@ class Network(object):
 
         return self.clear_network(network)
 
+    def __str__(self):
+        return str(self.get_network())
+
+    def add_node(self, index):
+        """
+        >>> n = Network()
+        >>> n.add_node(1)
+        >>> print n
+        {1: []}
+        """
+        n = self.get_network()
+        if index not in n:
+            n[index] = []
+
     def add_neighbor(self, index, neighbor):
         """
         >>> file_path = get_configuration(CONFIGURATION_FILE_FOR_TEST, "TestDirectory", "test1")
@@ -252,6 +269,20 @@ class Network(object):
 
         self.network = self.make_symmetric_network(network)
         return self.network
+
+    def get_average_neighbor_size(self):
+        """Given network path, it will return the number of average neighbors for the network.
+
+        >>> p = get_configuration("config.cfg","TestDirectory","test_files_directory")
+        >>> pth = p + os.sep + "test_network1/test_network1.txt"
+        >>> Network(pth).get_average_neighbor_size()
+        1.75
+        """
+        hosts = self.get_host_ids()
+        r = []
+        for h in hosts:
+            r.append(len(self.get_neighbors(h)))
+        return 1.0*sum(r)/len(r)
 
 if __name__ == "__main__":
     import doctest

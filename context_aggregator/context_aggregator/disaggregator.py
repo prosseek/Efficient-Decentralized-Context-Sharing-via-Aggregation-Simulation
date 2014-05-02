@@ -123,8 +123,6 @@ class Disaggregator(object):
             if sup > input_sub:
                 r = sup - input_sub
                 if r is not None:
-                    if r.value > 26:
-                        pass
                     if r.is_single():
                         singles.add(r)
                     else:

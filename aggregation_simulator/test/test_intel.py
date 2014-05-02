@@ -23,10 +23,43 @@ test_name = "real_world_intel_10"
 d = os.path.join(get_test_files_directory(), test_name)
 network_file_path10 = os.path.join(d, test_name + ".txt")
 sample_file_path10=os.path.join(d, test_name + ".sample.txt")
+test_name = "real_world_intel_6_tree"
+d = os.path.join(get_test_files_directory(), test_name)
+network_file_path6tree = os.path.join(d, test_name + ".txt")
+sample_file_path6tree=os.path.join(d, test_name + ".sample.txt")
 
 class TestIntel(unittest.TestCase):
     def setUp(self):
         pass
+
+
+    # real world 6m
+    def test_with_intel_6_tree_singles_only(self):
+        params = {
+            "simulation_root_dir":simulation_root_dir,
+            "network_file_path":network_file_path6tree,
+            "sample_file_path":sample_file_path6tree,
+            "condition":"normal",
+            "test_sub_name":"singles",
+            "disconnection_rate":0.0,
+            "drop_rate":0.0,
+            "threshold":sys.maxint
+        }
+        return runit(**params)
+
+    # *************************************
+    def test_with_intel6_tree_aggregate(self):
+        params = {
+            "simulation_root_dir":simulation_root_dir,
+            "network_file_path":network_file_path6tree,
+            "sample_file_path":sample_file_path6tree,
+            "condition":"normal",
+            "test_sub_name":"aggregates",
+            "disconnection_rate":0.0,
+            "drop_rate":0.0,
+            "threshold":sys.maxint
+        }
+        return runit(**params)
 
     # real world 6m
     def test_with_intel6_singles_only(self):
