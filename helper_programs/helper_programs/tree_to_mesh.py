@@ -173,22 +173,21 @@ class TreeToMesh:
             mesh[b].append(a)
 
         return mesh
-            
-if __name__ == "__main__":
-    # generate node 20
-    trees = "/Users/smcho/code/PyCharmProjects/contextAggregator/test_files/massive_data/10_100_10_80/tree"
-    files = glob.glob(trees + os.sep + "tree20*.txt")
-    result_dir = "/Users/smcho/Desktop/mesh"
-    connection_rate = 0.7
+
+def generate(trees, result_dir, connection_rate):
+    files = glob.glob(trees + os.sep + "tree_*.txt")
     for f in files:
+        print f + "%5.1f" % connection_rate
         file_name = os.path.basename(f)
         mesh_name = file_name.replace("tree","mesh")
-        split_names = mesh_name.split('_')
-        split_names.insert(3, str(connection_rate))
-        mesh_file_name = '_'.join(split_names)
+        mesh_file_name = mesh_name # '_'.join(split_names)
         mesh_file_path = os.path.join(result_dir, mesh_file_name)
         t = Network(f)
         h = TreeGen.tree_to_mesh(t.network, connection_rate)
+        #print h
         a = Network(h)
         a.write(mesh_file_path)
         a.dot_gen(mesh_file_path + ".dot")
+if __name__ == "__main__":
+    #generate(trees = "/Users/smcho/Desktop/networks/trees", result_dir = "/Users/smcho/Desktop/networks/mesh_light", connection_rate = 0.05)
+    generate(trees = "/Users/smcho/Desktop/networks/trees", result_dir = "/Users/smcho/Desktop/networks/mesh_dense", connection_rate = 0.20)

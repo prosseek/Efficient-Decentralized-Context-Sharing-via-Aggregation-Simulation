@@ -64,7 +64,7 @@ def get_configs_for_massive_simulation(directory, name):
         sim_config = {}
         sim_config["reports_dir"] = get_reports_dir() + os.sep + name
         sim_config["sims_dir"] = get_sims_dir() + os.sep + name
-        sim_config["run_count"] = 10
+        sim_config["run_count"] = 1
         sim_config["network_file_path"] = f
         results.append(sim_config)
 

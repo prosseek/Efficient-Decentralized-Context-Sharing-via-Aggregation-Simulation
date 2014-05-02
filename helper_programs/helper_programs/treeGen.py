@@ -109,11 +109,11 @@ class TreeGen:
 
     @staticmethod
     def get_two_node_values(range):
-        a = 0
-        b = 0
+        a = 1
+        b = 1
         while a == b:
-            a = random.randrange(range)
-            b = random.randrange(range)
+            a = random.randrange(1, range+1)
+            b = random.randrange(1, range+1)
 
         return min(a,b), max(a,b)
 
@@ -136,6 +136,7 @@ class TreeGen:
             if iteration_count > node_size:
                 print >> sys.stderr, "node_size(%d) iter_count(%d)" % (node_size, iteration_count)
                 raise Exception("Too many iterations")
+        print "link size %d" % len(result)
         return result
 
     @staticmethod
@@ -157,7 +158,8 @@ class TreeGen:
         """
         assert percentage < 0.9  # Let's make it less than 90%.
         node_size = len(tree)
-        additional_node_size = int(node_size * percentage)
+        # there should be at least one links
+        additional_node_size = max(1, int(node_size * percentage + 0.5))
 
         links = TreeGen.get_new_link_set_from_tree(tree, additional_node_size)
 
