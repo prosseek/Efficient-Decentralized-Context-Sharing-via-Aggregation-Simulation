@@ -144,13 +144,14 @@ def run_parallel(configs):
 
 
 def run_massive_10_100():
-    light_trees_dir = get_configuration("config.cfg", "TestDirectory", "light_trees_dir")
-    light_meshes_dir = get_configuration("config.cfg", "TestDirectory", "light_meshes_dir")
-    dense_trees_dir = get_configuration("config.cfg", "TestDirectory", "dense_trees_dir")
-    dense_meshes_dir = get_configuration("config.cfg", "TestDirectory", "dense_meshes_dir")
+    trees_dir = get_configuration("config.cfg", "TestDirectory", "trees_dir")
+    #light_meshes_dir = get_configuration("config.cfg", "TestDirectory", "light_meshes_dir")
+    #dense_meshes_dir = get_configuration("config.cfg", "TestDirectory", "dense_meshes_dir")
 
-    dirs = [light_trees_dir, light_meshes_dir, dense_trees_dir,dense_meshes_dir]
-    names = ["light_trees_dir", "light_meshes_dir", "dense_trees_dir","dense_meshes_dir"]
+    #dirs = [trees_dir, light_meshes_dir, dense_meshes_dir]
+    dirs = [trees_dir]
+    names = ["trees_dir"]
+    #names = ["trees_dir", "light_meshes_dir", "dense_meshes_dir"]
     for i, directory in enumerate(dirs):
         n = names[i]
         configs = get_configs_for_massive_simulation(directory, n)
@@ -165,10 +166,10 @@ def run_various(test_name):
         process_one_file(mp)
 
 if __name__ == "__main__":
-    #run_massive_10_100()
+    run_massive_10_100()
     # run_various("pseudo_realworld_100")
     # run_various("pseudo_realworld_100_2d")
     # run_various("pseudo_realworld_49")
     # run_various("pseudo_realworld_49_2d")
-    run_various("real_world_intel_10")
-    run_various("real_world_intel_6")
+    #run_various("real_world_intel_10")
+    #run_various("real_world_intel_6")
