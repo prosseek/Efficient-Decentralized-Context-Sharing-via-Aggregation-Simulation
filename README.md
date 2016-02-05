@@ -1,5 +1,4 @@
-contextAggregator
-=================
+# Efficient Decentralized Context Sharing via Aggregation Simulation
 
 Simulation analysis for the paper [Efficient Decentralized Context Sharing via Smart Aggregation](http://mpc.ece.utexas.edu/media/uploads/publishing/mass2014_grapevineaggregation.pdf). 
 
