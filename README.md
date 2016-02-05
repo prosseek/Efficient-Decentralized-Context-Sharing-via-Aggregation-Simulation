@@ -1,9 +1,7 @@
 contextAggregator
 =================
 
-my research project for efficient context sharing
-
-1. set `config.txt1` for directory information setup.
+Simulation analysis for the paper [Efficient Decentralized Context Sharing via Smart Aggregation](http://mpc.ece.utexas.edu/media/uploads/publishing/mass2014_grapevineaggregation.pdf). 
 
 Bug
 ===
